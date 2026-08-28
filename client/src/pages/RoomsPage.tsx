@@ -170,7 +170,7 @@ export const RoomsPage: React.FC = () => {
           contact: guestPhone,
         },
         theme: {
-          color: '#0B1849',
+          color: '#47614d',
         },
         modal: {
           ondismiss: function () {
@@ -217,14 +217,14 @@ export const RoomsPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#FFFCE1] text-[#0B1849] py-16 max-w-7xl mx-auto px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-16 max-w-7xl mx-auto px-6 lg:px-8">
       {/* Header */}
-      <div className="text-center max-w-3xl mx-auto mb-16 border-b border-[#0B1849]/15 pb-8">
-        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#596277] block mb-2">
+      <div className="text-center max-w-3xl mx-auto mb-16 border-b border-[#cbc0ad] pb-8">
+        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666] block mb-2">
           Direct Booking Rates
         </span>
-        <h1 className="editorial-section-title text-[#0B1849]">Rooms & Luxury Suites</h1>
-        <p className="font-sans text-xs sm:text-sm text-[#596277] mt-3 max-w-xl mx-auto leading-relaxed">
+        <h1 className="editorial-section-title text-[#333333]">Rooms & Luxury Suites</h1>
+        <p className="font-sans text-xs sm:text-sm text-[#666666] mt-3 max-w-xl mx-auto leading-relaxed">
           Guaranteed direct tariffs. Transparent 12% GST breakdown, CP (Breakfast included) or Non-CP options.
         </p>
 
@@ -234,8 +234,8 @@ export const RoomsPage: React.FC = () => {
             onClick={() => setFilterAc('all')}
             className={`px-5 py-2 rounded-sm text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${
               filterAc === 'all'
-                ? 'bg-[#0B1849] text-[#FFFCE1]'
-                : 'bg-[#FFFCE1] text-[#0B1849] border border-[#0B1849]/20 hover:border-[#0B1849]'
+                ? 'bg-[#47614d] text-[#f7f7f2]'
+                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
             }`}
           >
             All Categories ({roomTypes.length})
@@ -244,8 +244,8 @@ export const RoomsPage: React.FC = () => {
             onClick={() => setFilterAc('ac')}
             className={`px-5 py-2 rounded-sm text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${
               filterAc === 'ac'
-                ? 'bg-[#0B1849] text-[#FFFCE1]'
-                : 'bg-[#FFFCE1] text-[#0B1849] border border-[#0B1849]/20 hover:border-[#0B1849]'
+                ? 'bg-[#47614d] text-[#f7f7f2]'
+                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
             }`}
           >
             Air Conditioned (A/C)
@@ -254,8 +254,8 @@ export const RoomsPage: React.FC = () => {
             onClick={() => setFilterAc('nonac')}
             className={`px-5 py-2 rounded-sm text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${
               filterAc === 'nonac'
-                ? 'bg-[#0B1849] text-[#FFFCE1]'
-                : 'bg-[#FFFCE1] text-[#0B1849] border border-[#0B1849]/20 hover:border-[#0B1849]'
+                ? 'bg-[#47614d] text-[#f7f7f2]'
+                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
             }`}
           >
             Non-A/C Premium
@@ -268,7 +268,7 @@ export const RoomsPage: React.FC = () => {
         {filteredRooms.map((room) => (
           <div
             key={room._id}
-            className="bg-[#FFFCE1] rounded-sm overflow-hidden border border-[#0B1849]/15 shadow-sm flex flex-col justify-between hover:border-[#0B1849]/40 transition-all duration-300"
+            className="bg-[#f7f7f2] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm flex flex-col justify-between hover:border-[#cbc0ad] transition-all duration-300"
           >
             <div>
               <div className="relative h-64 overflow-hidden">
@@ -277,57 +277,57 @@ export const RoomsPage: React.FC = () => {
                   alt={room.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-4 left-4 bg-[#0B1849] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#FFDE74]">
+                <div className="absolute top-4 left-4 bg-[#47614d] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#d9b57d]">
                   {room.isAc ? 'A/C Executive' : 'Non A/C Premium'}
                 </div>
               </div>
 
               <div className="p-7 space-y-4">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-2xl font-serif text-[#0B1849]">{room.name}</h3>
-                  <span className="text-[10px] font-sans text-[#596277] bg-[#0B1849]/5 px-2.5 py-1 rounded-sm uppercase tracking-wider font-semibold border border-[#0B1849]/10">
+                  <h3 className="text-2xl font-serif text-[#333333]">{room.name}</h3>
+                  <span className="text-[10px] font-sans text-[#666666] bg-[#0B1849]/5 px-2.5 py-1 rounded-sm uppercase tracking-wider font-semibold border border-[#cbc0ad]">
                     Max {room.maxOccupancy} Guests
                   </span>
                 </div>
 
-                <p className="text-xs font-sans text-[#596277] leading-relaxed">{room.description}</p>
+                <p className="text-xs font-sans text-[#666666] leading-relaxed">{room.description}</p>
 
                 {/* Amenities list */}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {room.amenities?.map((amenity: string, idx: number) => (
                     <span
                       key={idx}
-                      className="text-[10px] font-sans px-2.5 py-1 rounded-sm bg-[#0B1849]/5 text-[#0B1849] flex items-center gap-1 border border-[#0B1849]/10 font-medium"
+                      className="text-[10px] font-sans px-2.5 py-1 rounded-sm bg-[#0B1849]/5 text-[#333333] flex items-center gap-1 border border-[#cbc0ad] font-medium"
                     >
-                      <Check size={11} className="text-[#0B1849]" /> {amenity}
+                      <Check size={11} className="text-[#333333]" /> {amenity}
                     </span>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="p-7 pt-0 border-t border-[#0B1849]/10 mt-4 space-y-4">
-              <div className="flex justify-between items-center bg-[#0B1849]/5 p-3.5 rounded-sm border border-[#0B1849]/10 text-xs">
+            <div className="p-7 pt-0 border-t border-[#cbc0ad] mt-4 space-y-4">
+              <div className="flex justify-between items-center bg-[#0B1849]/5 p-3.5 rounded-sm border border-[#cbc0ad] text-xs">
                 <div>
-                  <span className="text-[#596277] text-[10px] font-sans uppercase tracking-wider block font-semibold">Non-CP Plan (Room Only)</span>
-                  <span className="text-xl font-serif font-bold text-[#0B1849]">₹{room.basePrice}</span>
-                  <span className="text-[10px] font-sans text-[#596277]"> / night + GST</span>
+                  <span className="text-[#666666] text-[10px] font-sans uppercase tracking-wider block font-semibold">Non-CP Plan (Room Only)</span>
+                  <span className="text-xl font-serif font-bold text-[#333333]">₹{room.basePrice}</span>
+                  <span className="text-[10px] font-sans text-[#666666]"> / night + GST</span>
                 </div>
                 <div className="text-right">
                   <span className="text-emerald-700 text-[10px] font-sans uppercase tracking-wider block font-semibold">CP Plan (With Breakfast)</span>
                   <span className="text-xl font-serif font-bold text-emerald-800">₹{room.cpPrice || room.basePrice + 150}</span>
-                  <span className="text-[10px] font-sans text-[#596277]"> / night + GST</span>
+                  <span className="text-[10px] font-sans text-[#666666]"> / night + GST</span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-sans uppercase tracking-wider text-[#596277] font-semibold">Instant Reservation</span>
+                <span className="text-[10px] font-sans uppercase tracking-wider text-[#666666] font-semibold">Instant Reservation</span>
                 <button
                   onClick={() => {
                     setSelectedRoom(room);
                     setPlanType('NON_CP');
                   }}
-                  className="px-5 py-2.5 rounded-sm bg-[#0B1849] text-[#FFFCE1] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#0B1849]/90 transition-all cursor-pointer"
+                  className="px-5 py-2.5 rounded-sm bg-[#47614d] text-[#f7f7f2] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#374c3c] transition-all cursor-pointer"
                 >
                   Select & Book
                 </button>
@@ -343,50 +343,50 @@ export const RoomsPage: React.FC = () => {
           <motion.div
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0B1849] text-[#FFFCE1] border border-[#FFFCE1]/20 rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl"
+            className="bg-[#47614d] text-[#f7f7f2] border border-[#f7f7f2]/20 rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl"
           >
             <button
               onClick={() => setSelectedRoom(null)}
-              className="absolute top-6 right-6 p-2 rounded-full bg-[#FFFCE1]/10 text-[#FFFCE1]/70 hover:text-[#FFFCE1]"
+              className="absolute top-6 right-6 p-2 rounded-full bg-[#f7f7f2]/10 text-[#f7f7f2]/70 hover:text-[#f7f7f2]"
             >
               <X size={20} />
             </button>
 
-            <div className="mb-6 border-b border-[#FFFCE1]/10 pb-4">
-              <span className="text-[#FFDE74] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
-              <h2 className="text-3xl font-serif text-[#FFFCE1]">{selectedRoom.name}</h2>
-              <p className="text-xs font-sans text-[#FFFCE1]/70 mt-1">Base Rate: ₹{selectedRoom.basePrice} / night</p>
+            <div className="mb-6 border-b border-[#f7f7f2]/10 pb-4">
+              <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
+              <h2 className="text-3xl font-serif text-[#f7f7f2]">{selectedRoom.name}</h2>
+              <p className="text-xs font-sans text-[#f7f7f2]/70 mt-1">Base Rate: ₹{selectedRoom.basePrice} / night</p>
             </div>
 
             <form onSubmit={handleBookingSubmit} className="space-y-6">
               {/* Dates & Guests */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[10px] font-sans uppercase tracking-wider text-[#FFFCE1]/80 mb-1.5 font-semibold">Check-In</label>
+                  <label className="block text-[10px] font-sans uppercase tracking-wider text-[#f7f7f2]/80 mb-1.5 font-semibold">Check-In</label>
                   <input
                     type="date"
                     value={checkIn}
                     onChange={(e) => setCheckIn(e.target.value)}
-                    className="w-full bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1] focus:border-[#FFDE74] focus:outline-none"
+                    className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2] focus:border-[#d9b57d] focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-sans uppercase tracking-wider text-[#FFFCE1]/80 mb-1.5 font-semibold">Check-Out</label>
+                  <label className="block text-[10px] font-sans uppercase tracking-wider text-[#f7f7f2]/80 mb-1.5 font-semibold">Check-Out</label>
                   <input
                     type="date"
                     value={checkOut}
                     onChange={(e) => setCheckOut(e.target.value)}
-                    className="w-full bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1] focus:border-[#FFDE74] focus:outline-none"
+                    className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2] focus:border-[#d9b57d] focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-sans uppercase tracking-wider text-[#FFFCE1]/80 mb-1.5 font-semibold">Guests</label>
+                  <label className="block text-[10px] font-sans uppercase tracking-wider text-[#f7f7f2]/80 mb-1.5 font-semibold">Guests</label>
                   <select
                     value={numGuests}
                     onChange={(e) => setNumGuests(parseInt(e.target.value))}
-                    className="w-full bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                    className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                   >
                     <option value={1}>1 Guest</option>
                     <option value={2}>2 Guests</option>
@@ -396,8 +396,8 @@ export const RoomsPage: React.FC = () => {
               </div>
 
               {/* CP vs Non-CP Plan Selection */}
-              <div className="p-4 bg-[#FFFCE1]/5 rounded-sm border border-[#FFFCE1]/15 space-y-3">
-                <span className="text-[10px] font-sans font-bold text-[#FFDE74] uppercase block tracking-wider">
+              <div className="p-4 bg-[#f7f7f2]/5 rounded-sm border border-[#f7f7f2]/15 space-y-3">
+                <span className="text-[10px] font-sans font-bold text-[#d9b57d] uppercase block tracking-wider">
                   Select Room Booking Plan *
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -406,15 +406,15 @@ export const RoomsPage: React.FC = () => {
                     onClick={() => setPlanType('NON_CP')}
                     className={`p-3.5 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       planType === 'NON_CP'
-                        ? 'bg-[#FFFCE1]/15 border-[#FFDE74] text-[#FFFCE1]'
-                        : 'bg-transparent border-[#FFFCE1]/15 text-[#FFFCE1]/60 hover:border-[#FFFCE1]/30'
+                        ? 'bg-[#f7f7f2]/15 border-[#d9b57d] text-[#f7f7f2]'
+                        : 'bg-transparent border-[#f7f7f2]/15 text-[#f7f7f2]/60 hover:border-[#f7f7f2]/30'
                     }`}
                   >
-                    <span className="text-xs font-sans font-bold text-[#FFDE74] flex items-center justify-between">
+                    <span className="text-xs font-sans font-bold text-[#d9b57d] flex items-center justify-between">
                       🏨 Non-CP Plan (Room Only)
                       <span className="text-sm font-serif font-extrabold">₹{selectedRoom.basePrice}</span>
                     </span>
-                    <span className="text-[10px] font-sans text-[#FFFCE1]/70">Standard rate, breakfast not included</span>
+                    <span className="text-[10px] font-sans text-[#f7f7f2]/70">Standard rate, breakfast not included</span>
                   </button>
 
                   <button
@@ -422,25 +422,25 @@ export const RoomsPage: React.FC = () => {
                     onClick={() => setPlanType('CP')}
                     className={`p-3.5 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       planType === 'CP'
-                        ? 'bg-emerald-500/20 border-emerald-400 text-[#FFFCE1]'
-                        : 'bg-transparent border-[#FFFCE1]/15 text-[#FFFCE1]/60 hover:border-[#FFFCE1]/30'
+                        ? 'bg-emerald-500/20 border-emerald-400 text-[#f7f7f2]'
+                        : 'bg-transparent border-[#f7f7f2]/15 text-[#f7f7f2]/60 hover:border-[#f7f7f2]/30'
                     }`}
                   >
                     <span className="text-xs font-sans font-bold text-emerald-400 flex items-center justify-between">
                       🍳 CP Plan (With Breakfast)
                       <span className="text-sm font-serif font-extrabold">₹{selectedRoom.cpPrice || selectedRoom.basePrice + 150}</span>
                     </span>
-                    <span className="text-[10px] font-sans text-[#FFFCE1]/70">Complimentary morning breakfast included</span>
+                    <span className="text-[10px] font-sans text-[#f7f7f2]/70">Complimentary morning breakfast included</span>
                   </button>
                 </div>
               </div>
 
               {/* Meal Plan Addons */}
-              <div className="p-4 bg-[#FFFCE1]/5 rounded-sm border border-[#FFFCE1]/15 space-y-3">
-                <span className="text-[10px] font-sans font-bold text-[#FFDE74] uppercase block tracking-wider">
+              <div className="p-4 bg-[#f7f7f2]/5 rounded-sm border border-[#f7f7f2]/15 space-y-3">
+                <span className="text-[10px] font-sans font-bold text-[#d9b57d] uppercase block tracking-wider">
                   Optional Dining Addons (Per Guest/Night)
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-sans text-[#FFFCE1]/90">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-sans text-[#f7f7f2]/90">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -478,27 +478,27 @@ export const RoomsPage: React.FC = () => {
                   placeholder="Coupon Code (e.g. WELCOME10)"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="flex-1 bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans uppercase text-[#FFFCE1]"
+                  className="flex-1 bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans uppercase text-[#f7f7f2]"
                 />
                 <button
                   type="button"
                   onClick={() => toast.info('Coupon applied automatically!')}
-                  className="px-4 py-2 bg-[#FFFCE1]/10 text-xs font-sans uppercase font-bold rounded-sm hover:bg-[#FFFCE1]/20 text-[#FFDE74]"
+                  className="px-4 py-2 bg-[#f7f7f2]/10 text-xs font-sans uppercase font-bold rounded-sm hover:bg-[#f7f7f2]/20 text-[#d9b57d]"
                 >
                   Apply
                 </button>
               </div>
 
               {/* Guest Details */}
-              <div className="space-y-3 pt-4 border-t border-[#FFFCE1]/10">
-                <span className="text-[10px] font-sans font-bold text-[#FFDE74] uppercase block tracking-wider">Guest Information</span>
+              <div className="space-y-3 pt-4 border-t border-[#f7f7f2]/10">
+                <span className="text-[10px] font-sans font-bold text-[#d9b57d] uppercase block tracking-wider">Guest Information</span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <input
                     type="text"
                     placeholder="Full Name *"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
-                    className="bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                    className="bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                     required
                   />
                   <input
@@ -506,7 +506,7 @@ export const RoomsPage: React.FC = () => {
                     placeholder="Email Address *"
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
-                    className="bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                    className="bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                     required
                   />
                   <input
@@ -514,7 +514,7 @@ export const RoomsPage: React.FC = () => {
                     placeholder="Phone Number *"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    className="bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                    className="bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                     required
                   />
                 </div>
@@ -523,19 +523,19 @@ export const RoomsPage: React.FC = () => {
                   placeholder="Special Requests / Arrival Time"
                   value={specialRequests}
                   onChange={(e) => setSpecialRequests(e.target.value)}
-                  className="w-full bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                  className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                 />
               </div>
 
               {/* Price Breakdown Calculation */}
               {calcResult && (
-                <div className="p-4 bg-[#FFFCE1]/5 rounded-sm border border-[#FFFCE1]/15 space-y-2 text-xs font-sans">
-                  <div className="flex justify-between text-[#FFFCE1]/80">
+                <div className="p-4 bg-[#f7f7f2]/5 rounded-sm border border-[#f7f7f2]/15 space-y-2 text-xs font-sans">
+                  <div className="flex justify-between text-[#f7f7f2]/80">
                     <span>Room ({calcResult.pricing.numNights} nights x ₹{calcResult.pricing.roomPricePerNight}):</span>
                     <span>₹{calcResult.pricing.roomTotal}</span>
                   </div>
                   {calcResult.pricing.mealPlanTotal > 0 && (
-                    <div className="flex justify-between text-[#FFFCE1]/80">
+                    <div className="flex justify-between text-[#f7f7f2]/80">
                       <span>Meals Addon:</span>
                       <span>₹{calcResult.pricing.mealPlanTotal}</span>
                     </div>
@@ -546,11 +546,11 @@ export const RoomsPage: React.FC = () => {
                       <span>- ₹{calcResult.pricing.discountAmount}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-[#FFFCE1]/60">
+                  <div className="flex justify-between text-[#f7f7f2]/60">
                     <span>GST (12%):</span>
                     <span>₹{calcResult.pricing.taxAmount}</span>
                   </div>
-                  <div className="flex justify-between text-sm font-bold text-[#FFDE74] pt-2 border-t border-[#FFFCE1]/10">
+                  <div className="flex justify-between text-sm font-bold text-[#d9b57d] pt-2 border-t border-[#f7f7f2]/10">
                     <span>Total Amount Payable:</span>
                     <span>₹{calcResult.pricing.totalAmount}</span>
                   </div>
@@ -561,7 +561,7 @@ export const RoomsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={submittingBooking || !calcResult?.availability?.isAvailable}
-                className="w-full py-4 rounded-sm bg-[#FFFCE1] text-[#0B1849] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#FFDE74] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="w-full py-4 rounded-sm bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#d9b57d] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <CreditCard size={16} /> Pay Online via Razorpay (₹{calcResult?.pricing?.totalAmount || selectedRoom.basePrice})
               </button>

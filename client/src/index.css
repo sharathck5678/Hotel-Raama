@@ -1,85 +1,144 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Manrope:wght@200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Outfit:wght@200..800&family=Plus+Jakarta+Sans:wght@200..800&display=swap');
 @import "tailwindcss";
 
 @layer base {
   :root {
-    --color-cream: #FFFCE1;
-    --color-navy: #0B1849;
-    --color-gold: #FFDE74;
-    --color-muted: #596277;
+    /* Colors */
+    --color-text-primary: #333333;
+    --color-text-light: #f7f7f2;
+    --color-text-accent: #d9b57d;
     
-    --bg-primary: #FFFCE1;
-    --bg-surface: #FFFCE1;
-    --bg-card: #FFFCE1;
-    --text-primary: #0B1849;
-    --text-secondary: #596277;
-    --border-color: rgba(11, 24, 73, 0.15);
-    --gold-accent: #FFDE74;
-    --navy-header: #0B1849;
-  }
-
-  .dark {
-    --bg-primary: #0B1849;
-    --bg-surface: #0B1849;
-    --bg-card: #0B1849;
-    --text-primary: #FFFCE1;
-    --text-secondary: #A3B1C6;
-    --border-color: rgba(255, 252, 225, 0.15);
-    --gold-accent: #FFDE74;
-    --navy-header: #0B1849;
+    --color-bg-primary: #f7f7f2;
+    --color-bg-soft: #f8f7f3;
+    --color-bg-card: #ffffff;
+    
+    --color-accent-green: #47614d;
+    --color-accent-green-hover: #374c3c;
+    --color-accent-sand: #cbc0ad;
+    --color-accent-salmon: #fa8072;
+    --color-accent-danger: #b60000;
+    
+    /* Radius */
+    --radius-pill: 500px;
+    --radius-large: 60px;
+    --radius-card: 20px;
+    
+    /* Spacing */
+    --space-1: 24px;
+    --space-2: 32px;
+    --space-3: 16px;
+    --space-4: 48px;
+    --space-5: 8px;
+    --space-6: 88px;
+    --space-7: 10px;
+    --space-8: 56px;
+    --space-9: 12px;
+    --space-10: 192px;
   }
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Manrope', sans-serif;
-  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: var(--color-bg-primary, #f7f7f2);
+  color: var(--color-text-primary, #333333);
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  letter-spacing: 0.02em;
+  transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, .font-serif, .font-serif-luxury, .font-display, .font-anton {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 500;
+/* Typography Hierarchy */
+.type-1 {
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 25.6px;
+  letter-spacing: 1.6px;
 }
 
-/* Editorial Animations & Utilities */
+.type-2 {
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22.4px;
+  letter-spacing: 1.6px;
+}
+
+.type-3 {
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  font-size: 28px;
+  font-weight: 200;
+  line-height: 44.8px;
+  letter-spacing: 1.6px;
+}
+
+.type-4 {
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  font-size: 28px;
+  font-weight: 200;
+  line-height: 39.2px;
+}
+
+.type-5 {
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 25.6px;
+  letter-spacing: 1.6px;
+}
+
+/* Editorial Hero & Section Titles */
 .editorial-hero-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(3rem, 7.5vw, 7.5rem);
-  line-height: 0.92;
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  font-size: clamp(2.5rem, 6.5vw, 5.5rem);
+  font-weight: 300;
+  line-height: 1.05;
   letter-spacing: -0.02em;
 }
 
 .editorial-section-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(2.25rem, 5vw, 5rem);
-  line-height: 0.95;
+  font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
+  font-size: clamp(2rem, 4.5vw, 3.75rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
-.text-breathing {
-  animation: textBreathe 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Shape Language */
+.rounded-card {
+  border-radius: var(--radius-card, 20px);
 }
 
-@keyframes textBreathe {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.rounded-surface {
+  border-radius: var(--radius-large, 60px);
+}
+
+.rounded-pill {
+  border-radius: var(--radius-pill, 500px);
+}
+
+/* Interaction Focus Ring */
+.focus-design:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #d9b57d;
+  outline-offset: 0px;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #FFFCE1;
+  background: #f7f7f2;
 }
 ::-webkit-scrollbar-thumb {
-  background: #0B1849;
-  border-radius: 2px;
+  background: #cbc0ad;
+  border-radius: 500px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #47614d;
 }

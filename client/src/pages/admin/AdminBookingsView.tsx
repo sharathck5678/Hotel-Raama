@@ -37,23 +37,23 @@ export const AdminBookingsView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-[#0B1849]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0B1849]"></div>
+      <div className="flex items-center justify-center py-20 text-[#333333]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#cbc0ad]"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 text-[#0B1849]">
-      <div className="border-b border-[#0B1849]/15 pb-4">
-        <h1 className="text-2xl font-serif text-[#0B1849]">Room Reservations Desk</h1>
-        <p className="text-xs font-sans text-[#596277]">Manage guest check-ins, check-outs, and tax invoices</p>
+    <div className="space-y-6 text-[#333333]">
+      <div className="border-b border-[#cbc0ad] pb-4">
+        <h1 className="text-2xl font-serif text-[#333333]">Room Reservations Desk</h1>
+        <p className="text-xs font-sans text-[#666666]">Manage guest check-ins, check-outs, and tax invoices</p>
       </div>
 
-      <div className="bg-[#0B1849] text-[#FFFCE1] rounded-sm border border-[#FFFCE1]/15 overflow-hidden shadow-xl font-sans text-xs">
+      <div className="bg-[#47614d] text-[#f7f7f2] rounded-sm border border-[#f7f7f2]/15 overflow-hidden shadow-xl font-sans text-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#FFFCE1]/10 text-[#FFDE74] uppercase font-bold border-b border-[#FFFCE1]/15 text-[10px] tracking-wider">
+            <thead className="bg-[#f7f7f2]/10 text-[#d9b57d] uppercase font-bold border-b border-[#f7f7f2]/15 text-[10px] tracking-wider">
               <tr>
                 <th className="p-4">Booking Ref</th>
                 <th className="p-4">Guest Name</th>
@@ -66,20 +66,20 @@ export const AdminBookingsView: React.FC = () => {
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#FFFCE1]/10 text-[#FFFCE1]/80">
+            <tbody className="divide-y divide-[#f7f7f2]/10 text-[#f7f7f2]/80">
               {bookings.map((b) => (
-                <tr key={b._id} className="hover:bg-[#FFFCE1]/5 transition-colors">
-                  <td className="p-4 font-serif font-bold text-[#FFDE74]">{b.bookingId}</td>
+                <tr key={b._id} className="hover:bg-[#f7f7f2]/5 transition-colors">
+                  <td className="p-4 font-serif font-bold text-[#d9b57d]">{b.bookingId}</td>
                   <td className="p-4 font-semibold text-white">{b.guestName}</td>
                   <td className="p-4">
                     <div>{b.guestPhone}</div>
-                    <div className="text-[10px] text-[#FFFCE1]/50">{b.guestEmail}</div>
+                    <div className="text-[10px] text-[#f7f7f2]/50">{b.guestEmail}</div>
                   </td>
-                  <td className="p-4 font-medium text-[#FFFCE1]">{b.roomTypeId?.name || 'Executive'}</td>
+                  <td className="p-4 font-medium text-[#f7f7f2]">{b.roomTypeId?.name || 'Executive'}</td>
                   <td className="p-4 text-[11px]">
                     {new Date(b.checkIn).toLocaleDateString()} - {new Date(b.checkOut).toLocaleDateString()}
                   </td>
-                  <td className="p-4 font-serif font-bold text-[#FFDE74]">₹{b.totalAmount}</td>
+                  <td className="p-4 font-serif font-bold text-[#d9b57d]">₹{b.totalAmount}</td>
                   <td className="p-4">
                     <span
                       className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider ${
@@ -106,7 +106,7 @@ export const AdminBookingsView: React.FC = () => {
                     {b.bookingStatus === 'CHECKED_IN' && (
                       <button
                         onClick={() => handleStatusUpdate(b._id, 'CHECKED_OUT')}
-                        className="px-2.5 py-1 bg-[#FFFCE1] text-[#0B1849] hover:bg-[#FFDE74] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                        className="px-2.5 py-1 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
                       >
                         Check Out
                       </button>
@@ -115,7 +115,7 @@ export const AdminBookingsView: React.FC = () => {
                       href={getBookingInvoiceUrl(b.token || b._id)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#FFFCE1]/10 hover:bg-[#FFFCE1]/20 text-[#FFFCE1] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#f7f7f2]/10 hover:bg-[#f7f7f2]/20 text-[#f7f7f2] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all"
                     >
                       <Download size={11} /> Invoice
                     </a>

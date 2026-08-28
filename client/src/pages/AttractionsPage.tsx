@@ -12,13 +12,13 @@ export const AttractionsPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FFFCE1] text-[#0B1849] py-16 max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
-      <div className="text-center max-w-3xl mx-auto border-b border-[#0B1849]/15 pb-8">
-        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#596277] block mb-2">
+    <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-16 max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
+      <div className="text-center max-w-3xl mx-auto border-b border-[#cbc0ad] pb-8">
+        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666] block mb-2">
           Hassan Sightseeing & Heritage
         </span>
-        <h1 className="editorial-section-title text-[#0B1849]">Nearby Heritage Attractions</h1>
-        <p className="font-sans text-xs sm:text-sm text-[#596277] mt-3 max-w-xl mx-auto leading-relaxed">
+        <h1 className="editorial-section-title text-[#333333]">Nearby Heritage Attractions</h1>
+        <p className="font-sans text-xs sm:text-sm text-[#666666] mt-3 max-w-xl mx-auto leading-relaxed">
           Hotel Raama is located on B.M. Road, offering seamless highway connectivity to Belur, Halebidu, Shravanabelagola, and Sakleshpur.
         </p>
       </div>
@@ -27,30 +27,30 @@ export const AttractionsPage: React.FC = () => {
         {attractions.map((spot) => (
           <div
             key={spot._id}
-            className="bg-[#FFFCE1] rounded-sm overflow-hidden border border-[#0B1849]/15 hover:border-[#0B1849]/40 transition-all duration-300 flex flex-col justify-between shadow-sm"
+            className="bg-[#f7f7f2] rounded-sm overflow-hidden border border-[#cbc0ad] hover:border-[#cbc0ad] transition-all duration-300 flex flex-col justify-between shadow-sm"
           >
             <div>
               <div className="relative h-60 overflow-hidden">
                 <img src={spot.image} alt={spot.name} className="w-full h-full object-cover" />
-                <div className="absolute top-3 right-3 bg-[#0B1849] px-3 py-1 text-[10px] font-sans font-bold text-[#FFDE74] flex items-center gap-1 uppercase tracking-wider">
+                <div className="absolute top-3 right-3 bg-[#47614d] px-3 py-1 text-[10px] font-sans font-bold text-[#d9b57d] flex items-center gap-1 uppercase tracking-wider">
                   <MapPin size={11} /> {spot.distance}
                 </div>
               </div>
               <div className="p-7 space-y-3">
-                <span className="text-[9px] font-sans text-[#596277] font-bold uppercase tracking-widest">{spot.category}</span>
-                <h3 className="text-2xl font-serif text-[#0B1849]">{spot.name}</h3>
-                <p className="text-xs font-sans text-[#596277] leading-relaxed">{spot.description}</p>
+                <span className="text-[9px] font-sans text-[#666666] font-bold uppercase tracking-widest">{spot.category}</span>
+                <h3 className="text-2xl font-serif text-[#333333]">{spot.name}</h3>
+                <p className="text-xs font-sans text-[#666666] leading-relaxed">{spot.description}</p>
               </div>
             </div>
 
-            <div className="p-7 pt-0 border-t border-[#0B1849]/10 mt-4">
+            <div className="p-7 pt-0 border-t border-[#cbc0ad] mt-4">
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.name + ' Hassan')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 bg-[#0B1849] text-[#FFFCE1] hover:bg-[#0B1849]/90 text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+                className="w-full py-3 bg-[#47614d] text-[#f7f7f2] hover:bg-[#374c3c] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-sm"
               >
-                <Navigation size={13} className="text-[#FFDE74]" /> Open in Google Maps
+                <Navigation size={13} className="text-[#d9b57d]" /> Open in Google Maps
               </a>
             </div>
           </div>

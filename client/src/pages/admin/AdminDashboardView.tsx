@@ -17,8 +17,8 @@ export const AdminDashboardView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-[#0B1849]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0B1849]"></div>
+      <div className="flex items-center justify-center py-20 text-[#333333]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#cbc0ad]"></div>
       </div>
     );
   }
@@ -28,58 +28,58 @@ export const AdminDashboardView: React.FC = () => {
   const revenueChartData = metrics?.revenueChart || [];
 
   return (
-    <div className="space-y-8 text-[#0B1849]">
+    <div className="space-y-8 text-[#333333]">
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border border-[#FFFCE1]/15 space-y-3 shadow-md hover:border-[#FFDE74]/40 transition-all">
-          <div className="flex justify-between items-center text-[#FFFCE1]/70 text-xs font-sans font-bold uppercase tracking-wider">
+        <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 space-y-3 shadow-md hover:border-[#d9b57d]/40 transition-all">
+          <div className="flex justify-between items-center text-[#f7f7f2]/70 text-xs font-sans font-bold uppercase tracking-wider">
             <span>Occupancy Rate</span>
-            <BedDouble size={18} className="text-[#FFDE74]" />
+            <BedDouble size={18} className="text-[#d9b57d]" />
           </div>
-          <div className="text-3xl font-serif font-bold text-[#FFFCE1]">{metrics?.occupancyRate || 0}%</div>
-          <p className="text-[10px] font-sans text-[#FFFCE1]/60">
+          <div className="text-3xl font-serif font-bold text-[#f7f7f2]">{metrics?.occupancyRate || 0}%</div>
+          <p className="text-[10px] font-sans text-[#f7f7f2]/60">
             {metrics?.occupiedRooms || 0} of {metrics?.totalRooms || 0} Rooms Occupied
           </p>
         </div>
 
-        <div className="bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border border-[#FFFCE1]/15 space-y-3 shadow-md hover:border-[#FFDE74]/40 transition-all">
-          <div className="flex justify-between items-center text-[#FFFCE1]/70 text-xs font-sans font-bold uppercase tracking-wider">
+        <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 space-y-3 shadow-md hover:border-[#d9b57d]/40 transition-all">
+          <div className="flex justify-between items-center text-[#f7f7f2]/70 text-xs font-sans font-bold uppercase tracking-wider">
             <span>Live Kitchen Orders</span>
-            <UtensilsCrossed size={18} className="text-[#FFDE74]" />
+            <UtensilsCrossed size={18} className="text-[#d9b57d]" />
           </div>
-          <div className="text-3xl font-serif font-bold text-[#FFDE74]">{metrics?.pendingOrdersCount || 0}</div>
-          <p className="text-[10px] font-sans text-[#FFFCE1]/60">Active orders on kitchen board</p>
+          <div className="text-3xl font-serif font-bold text-[#d9b57d]">{metrics?.pendingOrdersCount || 0}</div>
+          <p className="text-[10px] font-sans text-[#f7f7f2]/60">Active orders on kitchen board</p>
         </div>
 
-        <div className="bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border border-[#FFFCE1]/15 space-y-3 shadow-md hover:border-[#FFDE74]/40 transition-all">
-          <div className="flex justify-between items-center text-[#FFFCE1]/70 text-xs font-sans font-bold uppercase tracking-wider">
+        <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 space-y-3 shadow-md hover:border-[#d9b57d]/40 transition-all">
+          <div className="flex justify-between items-center text-[#f7f7f2]/70 text-xs font-sans font-bold uppercase tracking-wider">
             <span>Confirmed Bookings</span>
-            <CalendarCheck size={18} className="text-[#FFDE74]" />
+            <CalendarCheck size={18} className="text-[#d9b57d]" />
           </div>
-          <div className="text-3xl font-serif font-bold text-[#FFFCE1]">{metrics?.totalConfirmedBookings || 0}</div>
-          <p className="text-[10px] font-sans text-[#FFFCE1]/60">Active room reservations</p>
+          <div className="text-3xl font-serif font-bold text-[#f7f7f2]">{metrics?.totalConfirmedBookings || 0}</div>
+          <p className="text-[10px] font-sans text-[#f7f7f2]/60">Active room reservations</p>
         </div>
 
-        <div className="bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border border-[#FFFCE1]/15 space-y-3 shadow-md hover:border-emerald-400/40 transition-all">
-          <div className="flex justify-between items-center text-[#FFFCE1]/70 text-xs font-sans font-bold uppercase tracking-wider">
+        <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 space-y-3 shadow-md hover:border-emerald-400/40 transition-all">
+          <div className="flex justify-between items-center text-[#f7f7f2]/70 text-xs font-sans font-bold uppercase tracking-wider">
             <span>Combined Revenue</span>
             <TrendingUp size={18} className="text-emerald-400" />
           </div>
           <div className="text-3xl font-serif font-bold text-emerald-400">
             ₹{(metrics?.totalCombinedRevenue || 0).toLocaleString()}
           </div>
-          <p className="text-[10px] font-sans text-[#FFFCE1]/60">Rooms + Food Service Payments</p>
+          <p className="text-[10px] font-sans text-[#f7f7f2]/60">Rooms + Food Service Payments</p>
         </div>
       </div>
 
       {/* Main Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Revenue Growth Trend Chart (Spans 2 columns) */}
-        <div className="lg:col-span-2 bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border border-[#FFFCE1]/15 space-y-4 shadow-md">
-          <div className="flex justify-between items-center border-b border-[#FFFCE1]/10 pb-4">
+        <div className="lg:col-span-2 bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 space-y-4 shadow-md">
+          <div className="flex justify-between items-center border-b border-[#f7f7f2]/10 pb-4">
             <div>
-              <h3 className="text-xl font-serif text-[#FFFCE1]">Revenue Analytics</h3>
-              <p className="text-xs font-sans text-[#FFFCE1]/60">Monthly room bookings & culinary dining performance</p>
+              <h3 className="text-xl font-serif text-[#f7f7f2]">Revenue Analytics</h3>
+              <p className="text-xs font-sans text-[#f7f7f2]/60">Monthly room bookings & culinary dining performance</p>
             </div>
           </div>
 
@@ -94,17 +94,17 @@ export const AdminDashboardView: React.FC = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,252,225,0.1)" />
-                  <XAxis dataKey="month" stroke="#FFFCE1" />
-                  <YAxis stroke="#FFFCE1" />
+                  <XAxis dataKey="month" stroke="#f7f7f2" />
+                  <YAxis stroke="#f7f7f2" />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0B1849', borderColor: '#FFDE74', borderRadius: '4px', color: '#FFFCE1' }}
+                    contentStyle={{ backgroundColor: '#0B1849', borderColor: '#FFDE74', borderRadius: '4px', color: '#f7f7f2' }}
                     formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Total Revenue']}
                   />
                   <Area type="monotone" dataKey="revenue" stroke="#FFDE74" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRev)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-[#FFFCE1]/50 text-xs font-sans">
+              <div className="h-full flex items-center justify-center text-[#f7f7f2]/50 text-xs font-sans">
                 No revenue recorded yet. Placed food orders & bookings will automatically populate real-time analytics.
               </div>
             )}
@@ -112,10 +112,10 @@ export const AdminDashboardView: React.FC = () => {
         </div>
 
         {/* Category Breakdown (1 column) */}
-        <div className="bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border border-[#FFFCE1]/15 space-y-4 shadow-md">
-          <div className="border-b border-[#FFFCE1]/10 pb-4">
-            <h3 className="text-xl font-serif text-[#FFFCE1]">Revenue Distribution</h3>
-            <p className="text-xs font-sans text-[#FFFCE1]/60">Sales breakdown by category</p>
+        <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 space-y-4 shadow-md">
+          <div className="border-b border-[#f7f7f2]/10 pb-4">
+            <h3 className="text-xl font-serif text-[#f7f7f2]">Revenue Distribution</h3>
+            <p className="text-xs font-sans text-[#f7f7f2]/60">Sales breakdown by category</p>
           </div>
 
           <div className="h-56 w-full pt-2">
@@ -123,10 +123,10 @@ export const AdminDashboardView: React.FC = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={categoryData} layout="vertical" margin={{ left: 10, right: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,252,225,0.1)" />
-                  <XAxis type="number" stroke="#FFFCE1" />
-                  <YAxis type="category" dataKey="name" stroke="#FFFCE1" hide />
+                  <XAxis type="number" stroke="#f7f7f2" />
+                  <YAxis type="category" dataKey="name" stroke="#f7f7f2" hide />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0B1849', borderColor: '#FFDE74', borderRadius: '4px', color: '#FFFCE1' }}
+                    contentStyle={{ backgroundColor: '#0B1849', borderColor: '#FFDE74', borderRadius: '4px', color: '#f7f7f2' }}
                     formatter={(val: any) => [`₹${val.toLocaleString()}`, 'Revenue']}
                   />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]}>
@@ -137,21 +137,21 @@ export const AdminDashboardView: React.FC = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-[#FFFCE1]/50 text-xs font-sans">
+              <div className="h-full flex items-center justify-center text-[#f7f7f2]/50 text-xs font-sans">
                 No category sales recorded yet.
               </div>
             )}
           </div>
 
           {categoryData.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-[#FFFCE1]/10">
+            <div className="space-y-2 pt-2 border-t border-[#f7f7f2]/10">
               {categoryData.map((cat: any, idx: number) => (
                 <div key={idx} className="flex justify-between items-center text-xs font-sans">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }}></span>
-                    <span className="text-[#FFFCE1]/80">{cat.name}</span>
+                    <span className="text-[#f7f7f2]/80">{cat.name}</span>
                   </div>
-                  <span className="font-bold text-[#FFFCE1]">₹{cat.value.toLocaleString()}</span>
+                  <span className="font-bold text-[#f7f7f2]">₹{cat.value.toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -160,13 +160,13 @@ export const AdminDashboardView: React.FC = () => {
       </div>
 
       {/* Top Performing Menu Items Section */}
-      <div className="bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border border-[#FFFCE1]/15 space-y-4 shadow-md font-sans">
-        <div className="flex justify-between items-center border-b border-[#FFFCE1]/10 pb-4">
+      <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 space-y-4 shadow-md font-sans">
+        <div className="flex justify-between items-center border-b border-[#f7f7f2]/10 pb-4">
           <div className="flex items-center gap-2">
-            <Award size={20} className="text-[#FFDE74]" />
+            <Award size={20} className="text-[#d9b57d]" />
             <div>
-              <h3 className="text-xl font-serif text-[#FFFCE1]">Top Ordered Menu Items</h3>
-              <p className="text-xs text-[#FFFCE1]/60">Most popular menu items ordered in Swaad & Liquid Lounge</p>
+              <h3 className="text-xl font-serif text-[#f7f7f2]">Top Ordered Menu Items</h3>
+              <p className="text-xs text-[#f7f7f2]/60">Most popular menu items ordered in Swaad & Liquid Lounge</p>
             </div>
           </div>
         </div>
@@ -175,23 +175,23 @@ export const AdminDashboardView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-[#FFFCE1]/10 text-[#FFDE74] uppercase tracking-wider text-[10px]">
+                <tr className="border-b border-[#f7f7f2]/10 text-[#d9b57d] uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4">Item Name</th>
                   <th className="py-3 px-4">Category</th>
                   <th className="py-3 px-4 text-center">Orders Count</th>
                   <th className="py-3 px-4 text-right">Total Revenue</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#FFFCE1]/5">
+              <tbody className="divide-y divide-[#f7f7f2]/5">
                 {topItems.map((item: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-[#FFFCE1]/5 transition-all">
+                  <tr key={idx} className="hover:bg-[#f7f7f2]/5 transition-all">
                     <td className="py-3 px-4 font-bold text-white">{item.name}</td>
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-sm bg-[#FFFCE1]/10 text-[#FFFCE1]/80 text-[10px]">
+                      <span className="px-2 py-0.5 rounded-sm bg-[#f7f7f2]/10 text-[#f7f7f2]/80 text-[10px]">
                         {item.category}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-[#FFDE74]">{item.ordersCount}</td>
+                    <td className="py-3 px-4 text-center font-bold text-[#d9b57d]">{item.ordersCount}</td>
                     <td className="py-3 px-4 text-right font-bold text-emerald-400">₹{item.revenue.toLocaleString()}</td>
                   </tr>
                 ))}
@@ -199,7 +199,7 @@ export const AdminDashboardView: React.FC = () => {
             </table>
           </div>
         ) : (
-          <div className="py-8 text-center text-[#FFFCE1]/50 text-xs font-sans">
+          <div className="py-8 text-center text-[#f7f7f2]/50 text-xs font-sans">
             No item sales data recorded yet.
           </div>
         )}

@@ -3,7 +3,7 @@ import { Schema, model, Document, Types } from 'mongoose';
 export interface IMenuItem extends Document {
   name: string;
   categoryId: Types.ObjectId;
-  section: 'SWAAD' | 'LIQUID_LOUNGE' | 'SAMBHRAMA';
+  section: 'SWAAD' | 'HOTEL_RAAMA' | 'LIQUID_LOUNGE' | 'SAMBHRAMA';
   description?: string;
   price: number; // Regular price or 30ml base price for bar items
   price60ml?: number; // Optional 60ml price for bar beverages
@@ -22,7 +22,7 @@ const MenuItemSchema = new Schema<IMenuItem>(
     categoryId: { type: Schema.Types.ObjectId, ref: 'MenuCategory', required: true },
     section: {
       type: String,
-      enum: ['SWAAD', 'LIQUID_LOUNGE', 'SAMBHRAMA'],
+      enum: ['SWAAD', 'HOTEL_RAAMA', 'LIQUID_LOUNGE', 'SAMBHRAMA'],
       required: true,
     },
     description: { type: String },

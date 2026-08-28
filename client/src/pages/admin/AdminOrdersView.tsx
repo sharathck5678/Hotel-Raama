@@ -122,32 +122,32 @@ export const AdminOrdersView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-[#0B1849]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0B1849]"></div>
+      <div className="flex items-center justify-center py-20 text-[#333333]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#cbc0ad]"></div>
       </div>
     );
   }
 
   const columns = [
-    { key: 'COOK_FOOD', title: '🍳 Cook Food (Kitchen Preparation)', color: 'border-[#FFDE74]' },
+    { key: 'COOK_FOOD', title: '🍳 Cook Food (Kitchen Preparation)', color: 'border-[#d9b57d]' },
     { key: 'SERVE_FOOD', title: '🍽️ Serve Food (Ready & Delivered)', color: 'border-emerald-500' },
   ];
 
   return (
-    <div className="space-y-6 text-[#0B1849]">
+    <div className="space-y-6 text-[#333333]">
       {/* Header */}
-      <div className="flex justify-between items-center border-b border-[#0B1849]/15 pb-4">
+      <div className="flex justify-between items-center border-b border-[#cbc0ad] pb-4">
         <div>
-          <h1 className="text-2xl font-serif text-[#0B1849]">Kitchen & Dining Orders</h1>
-          <p className="text-xs font-sans text-[#596277]">2-stage live kitchen workflow: Cook Food & Serve Food</p>
+          <h1 className="text-2xl font-serif text-[#333333]">Kitchen & Dining Orders</h1>
+          <p className="text-xs font-sans text-[#666666]">2-stage live kitchen workflow: Cook Food & Serve Food</p>
         </div>
 
         <button
           onClick={() => setSoundEnabled(!soundEnabled)}
           className={`px-3.5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all cursor-pointer ${
             soundEnabled
-              ? 'bg-[#0B1849] text-[#FFFCE1] border-[#0B1849]'
-              : 'bg-[#FFFCE1] text-[#596277] border-[#0B1849]/20'
+              ? 'bg-[#47614d] text-[#f7f7f2] border-[#cbc0ad]'
+              : 'bg-[#f7f7f2] text-[#666666] border-[#cbc0ad]'
           }`}
         >
           {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
@@ -167,34 +167,34 @@ export const AdminOrdersView: React.FC = () => {
           });
 
           return (
-            <div key={col.key} className={`bg-[#0B1849] text-[#FFFCE1] p-6 rounded-sm border-t-4 ${col.color} border border-[#FFFCE1]/15 space-y-4 shadow-xl`}>
-              <div className="flex justify-between items-center pb-3 border-b border-[#FFFCE1]/10">
-                <h3 className="font-serif font-bold text-lg text-[#FFFCE1]">{col.title}</h3>
-                <span className="px-3 py-1 rounded-sm bg-[#FFFCE1]/10 text-xs font-sans font-bold text-[#FFDE74] border border-[#FFFCE1]/15">
+            <div key={col.key} className={`bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border-t-4 ${col.color} border border-[#f7f7f2]/15 space-y-4 shadow-xl`}>
+              <div className="flex justify-between items-center pb-3 border-b border-[#f7f7f2]/10">
+                <h3 className="font-serif font-bold text-lg text-[#f7f7f2]">{col.title}</h3>
+                <span className="px-3 py-1 rounded-sm bg-[#f7f7f2]/10 text-xs font-sans font-bold text-[#d9b57d] border border-[#f7f7f2]/15">
                   {colOrders.length} {colOrders.length === 1 ? 'Order' : 'Orders'}
                 </span>
               </div>
 
               <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
                 {colOrders.length === 0 ? (
-                  <div className="text-center py-12 text-[#FFFCE1]/50 text-xs font-sans">
+                  <div className="text-center py-12 text-[#f7f7f2]/50 text-xs font-sans">
                     No active orders in this column.
                   </div>
                 ) : (
                   colOrders.map((ord) => (
                     <div
                       key={ord._id}
-                      className="p-5 rounded-sm bg-[#FFFCE1]/5 border border-[#FFFCE1]/15 space-y-3 shadow-md hover:border-[#FFDE74]/40 transition-all font-sans"
+                      className="p-5 rounded-sm bg-[#f7f7f2]/5 border border-[#f7f7f2]/15 space-y-3 shadow-md hover:border-[#d9b57d]/40 transition-all font-sans"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <span className="text-xs font-bold text-[#FFDE74] uppercase tracking-wider block">
+                          <span className="text-xs font-bold text-[#d9b57d] uppercase tracking-wider block">
                             {formatRoomNumber(ord.roomNumber)}
                           </span>
-                          <h4 className="text-base font-serif font-bold text-[#FFFCE1]">#{ord.orderId}</h4>
+                          <h4 className="text-base font-serif font-bold text-[#f7f7f2]">#{ord.orderId}</h4>
                           <div className="flex gap-1.5 mt-1">
                             {ord.deliveryOption && (
-                              <span className="text-[9px] px-2 py-0.5 rounded-sm bg-[#FFFCE1]/10 text-[#FFFCE1] font-bold uppercase tracking-wider">
+                              <span className="text-[9px] px-2 py-0.5 rounded-sm bg-[#f7f7f2]/10 text-[#f7f7f2] font-bold uppercase tracking-wider">
                                 {ord.deliveryOption === 'RECEPTION_PICKUP' ? 'PICKUP' : 'ROOM SERVICE'}
                               </span>
                             )}
@@ -207,31 +207,31 @@ export const AdminOrdersView: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                        <span className="text-[10px] text-[#FFFCE1]/50">
+                        <span className="text-[10px] text-[#f7f7f2]/50">
                           {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 
                       {/* Guest info */}
-                      <div className="text-xs text-[#FFFCE1]/80">
+                      <div className="text-xs text-[#f7f7f2]/80">
                         <span>Guest: <strong className="text-white">{ord.guestName}</strong></span> ({ord.guestPhone})
                       </div>
 
                       {/* Items */}
-                      <div className="space-y-1 py-2 border-y border-[#FFFCE1]/10 text-xs">
+                      <div className="space-y-1 py-2 border-y border-[#f7f7f2]/10 text-xs">
                         {ord.items.map((item: any, idx: number) => (
-                          <div key={idx} className="flex justify-between text-[#FFFCE1]/90">
+                          <div key={idx} className="flex justify-between text-[#f7f7f2]/90">
                             <span>
                               {item.quantity}x <strong>{item.name}</strong> {item.potionSize !== 'Standard' && `(${item.potionSize})`}
                             </span>
-                            <span className="text-[#FFFCE1]/60">₹{item.price * item.quantity}</span>
+                            <span className="text-[#f7f7f2]/60">₹{item.price * item.quantity}</span>
                           </div>
                         ))}
                       </div>
 
                       {/* Instructions */}
                       {ord.specialInstructions && (
-                        <div className="text-[11px] text-[#FFDE74] bg-[#FFDE74]/10 p-2 rounded-sm border border-[#FFDE74]/30">
+                        <div className="text-[11px] text-[#d9b57d] bg-[#d9b57d]/10 p-2 rounded-sm border border-[#d9b57d]/30">
                           Note: {ord.specialInstructions}
                         </div>
                       )}
@@ -239,7 +239,7 @@ export const AdminOrdersView: React.FC = () => {
                       {/* Status & Payment bar */}
                       <div className="pt-2 flex flex-col gap-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold font-serif text-[#FFDE74] text-sm">Total: ₹{ord.totalAmount}</span>
+                          <span className="font-bold font-serif text-[#d9b57d] text-sm">Total: ₹{ord.totalAmount}</span>
                           <span
                             className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider ${
                               ord.paymentStatus === 'PAID'
@@ -264,7 +264,7 @@ export const AdminOrdersView: React.FC = () => {
                           {ord.status === 'PREPARING' && (
                             <button
                               onClick={() => handleStatusChange(ord._id, 'READY')}
-                              className="w-full py-2 bg-[#FFFCE1] text-[#0B1849] hover:bg-[#FFDE74] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                              className="w-full py-2 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                             >
                               ✅ Food Cooked (Move to Serve)
                             </button>
@@ -296,7 +296,7 @@ export const AdminOrdersView: React.FC = () => {
                             href={getOrderInvoiceUrl(ord.trackingToken || ord._id)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full py-2 bg-[#FFFCE1]/10 hover:bg-[#FFFCE1]/20 text-[#FFFCE1] font-bold uppercase tracking-wider rounded-sm text-xs flex items-center justify-center gap-1.5 transition-all"
+                            className="w-full py-2 bg-[#f7f7f2]/10 hover:bg-[#f7f7f2]/20 text-[#f7f7f2] font-bold uppercase tracking-wider rounded-sm text-xs flex items-center justify-center gap-1.5 transition-all"
                           >
                             <Download size={13} /> PDF Receipt
                           </a>

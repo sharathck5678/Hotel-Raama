@@ -12,7 +12,7 @@ export const QrOrderPage: React.FC = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'SWAAD_VEG' | 'SWAAD_NON_VEG' | 'LIQUID_LOUNGE'>('SWAAD_VEG');
+  const [activeSection, setActiveSection] = useState<'SWAAD_VEG' | 'HOTEL_RAAMA' | 'LIQUID_LOUNGE'>('SWAAD_VEG');
 
   // Cart State: { [menuItemId_potionSize]: { menuItemId, name, price, quantity, potionSize } }
   const [cart, setCart] = useState<Record<string, any>>({});
@@ -196,7 +196,7 @@ export const QrOrderPage: React.FC = () => {
           contact: guestPhone,
         },
         theme: {
-          color: '#0B1849',
+          color: '#47614d',
         },
         modal: {
           ondismiss: function () {
@@ -238,17 +238,17 @@ export const QrOrderPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FFFCE1] text-[#0B1849] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0B1849]"></div>
+      <div className="min-h-screen bg-[#f7f7f2] text-[#333333] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#cbc0ad]"></div>
       </div>
     );
   }
 
   if (!roomInfo) {
     return (
-      <div className="min-h-screen bg-[#FFFCE1] text-[#0B1849] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#f7f7f2] text-[#333333] flex flex-col items-center justify-center p-6 text-center">
         <h2 className="text-2xl font-serif">Invalid QR Code</h2>
-        <p className="text-xs font-sans text-[#596277] mt-2">Please scan the valid QR code present in your room or party hall.</p>
+        <p className="text-xs font-sans text-[#666666] mt-2">Please scan the valid QR code present in your room or party hall.</p>
       </div>
     );
   }
@@ -257,9 +257,9 @@ export const QrOrderPage: React.FC = () => {
 
   const sectionItems = items.filter((i) => {
     if (activeSection === 'SWAAD_VEG') {
-      return i.section === 'SWAAD' && i.isVeg === true;
-    } else if (activeSection === 'SWAAD_NON_VEG') {
-      return i.section === 'SWAAD' && i.isVeg === false;
+      return i.section === 'SWAAD';
+    } else if (activeSection === 'HOTEL_RAAMA') {
+      return i.section === 'HOTEL_RAAMA';
     } else if (activeSection === 'LIQUID_LOUNGE') {
       return i.section === 'LIQUID_LOUNGE';
     }
@@ -272,16 +272,16 @@ export const QrOrderPage: React.FC = () => {
   const sectionCategories = categories.filter((c) => activeCategoryIds.has(c._id));
 
   return (
-    <div className="min-h-screen bg-[#FFFCE1] text-[#0B1849] py-12 px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-12 px-6 lg:px-8 relative">
       {/* Location Banner Header */}
-      <div className="max-w-4xl mx-auto text-center space-y-3 mb-12 border-b border-[#0B1849]/15 pb-8">
-        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#596277]">
+      <div className="max-w-4xl mx-auto text-center space-y-3 mb-12 border-b border-[#cbc0ad] pb-8">
+        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666]">
           Verified Location
         </span>
-        <h1 className="editorial-section-title text-[#0B1849]">
+        <h1 className="editorial-section-title text-[#333333]">
           {isPartyHall ? 'Sambhrama Party Hall' : `Room #${roomInfo.roomNumber}`}
         </h1>
-        <p className="text-xs font-sans text-[#596277]">
+        <p className="text-xs font-sans text-[#666666]">
           Floor {roomInfo.floor} · Contactless Ordering Portal
         </p>
 
@@ -291,30 +291,30 @@ export const QrOrderPage: React.FC = () => {
             onClick={() => setActiveSection('SWAAD_VEG')}
             className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
               activeSection === 'SWAAD_VEG'
-                ? 'bg-[#0B1849] text-[#FFFCE1]'
-                : 'bg-[#FFFCE1] text-[#0B1849] border border-[#0B1849]/20 hover:border-[#0B1849]'
+                ? 'bg-[#47614d] text-[#f7f7f2]'
+                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
             }`}
           >
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
             <Utensils size={14} /> Swaad Pure Veg
           </button>
           <button
-            onClick={() => setActiveSection('SWAAD_NON_VEG')}
+            onClick={() => setActiveSection('HOTEL_RAAMA')}
             className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-              activeSection === 'SWAAD_NON_VEG'
-                ? 'bg-[#0B1849] text-[#FFFCE1]'
-                : 'bg-[#FFFCE1] text-[#0B1849] border border-[#0B1849]/20 hover:border-[#0B1849]'
+              activeSection === 'HOTEL_RAAMA'
+                ? 'bg-[#47614d] text-[#f7f7f2]'
+                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
-            <Utensils size={14} /> Non-Veg Specialities
+            <span className="w-2.5 h-2.5 rounded-full bg-[#d9b57d] inline-block"></span>
+            <Utensils size={14} /> Hotel Raama
           </button>
           <button
             onClick={() => setActiveSection('LIQUID_LOUNGE')}
             className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
               activeSection === 'LIQUID_LOUNGE'
-                ? 'bg-[#0B1849] text-[#FFFCE1]'
-                : 'bg-[#FFFCE1] text-[#0B1849] border border-[#0B1849]/20 hover:border-[#0B1849]'
+                ? 'bg-[#47614d] text-[#f7f7f2]'
+                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
             }`}
           >
             <GlassWater size={14} /> Liquid Lounge Bar
@@ -330,7 +330,7 @@ export const QrOrderPage: React.FC = () => {
 
           return (
             <div key={cat._id} className="space-y-4">
-              <h2 className="text-2xl font-serif text-[#0B1849] border-b border-[#0B1849]/15 pb-2">
+              <h2 className="text-2xl font-serif text-[#333333] border-b border-[#cbc0ad] pb-2">
                 {cat.name}
               </h2>
 
@@ -338,11 +338,11 @@ export const QrOrderPage: React.FC = () => {
                 {catItems.map((item) => (
                   <div
                     key={item._id}
-                    className="bg-[#FFFCE1] rounded-sm p-6 border border-[#0B1849]/15 flex flex-col justify-between hover:border-[#0B1849]/40 transition-all shadow-sm"
+                    className="bg-[#f7f7f2] rounded-sm p-6 border border-[#cbc0ad] flex flex-col justify-between hover:border-[#cbc0ad] transition-all shadow-sm"
                   >
                     <div>
                       <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-serif font-bold text-[#0B1849]">{item.name}</h3>
+                        <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
                         <span
                           className={`text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
                             item.isVeg ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'
@@ -352,21 +352,21 @@ export const QrOrderPage: React.FC = () => {
                         </span>
                       </div>
                       {item.description && (
-                        <p className="text-xs font-sans text-[#596277] mt-2 line-clamp-2 leading-relaxed">
+                        <p className="text-xs font-sans text-[#666666] mt-2 line-clamp-2 leading-relaxed">
                           {item.description}
                         </p>
                       )}
                     </div>
 
-                    <div className="pt-4 border-t border-[#0B1849]/10 mt-4 flex items-center justify-between">
+                    <div className="pt-4 border-t border-[#cbc0ad] mt-4 flex items-center justify-between">
                       <div>
                         {item.price60ml ? (
-                          <div className="text-[10px] font-sans text-[#596277]">
-                            <span>30ML: <strong className="text-[#0B1849]">₹{item.price}</strong></span>
-                            <span className="ml-2">60ML: <strong className="text-[#0B1849]">₹{item.price60ml}</strong></span>
+                          <div className="text-[10px] font-sans text-[#666666]">
+                            <span>30ML: <strong className="text-[#333333]">₹{item.price}</strong></span>
+                            <span className="ml-2">60ML: <strong className="text-[#333333]">₹{item.price60ml}</strong></span>
                           </div>
                         ) : (
-                          <span className="text-lg font-serif font-bold text-[#0B1849]">₹{item.price}</span>
+                          <span className="text-lg font-serif font-bold text-[#333333]">₹{item.price}</span>
                         )}
                       </div>
 
@@ -374,13 +374,13 @@ export const QrOrderPage: React.FC = () => {
                         <div className="flex gap-1.5">
                           <button
                             onClick={() => addToCart(item, '30ML')}
-                            className="px-2.5 py-1 rounded-sm bg-[#0B1849] text-[#FFFCE1] text-[10px] font-sans font-semibold uppercase hover:bg-[#0B1849]/90 cursor-pointer"
+                            className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
                           >
                             + 30ML
                           </button>
                           <button
                             onClick={() => addToCart(item, '60ML')}
-                            className="px-2.5 py-1 rounded-sm bg-[#0B1849] text-[#FFFCE1] text-[10px] font-sans font-semibold uppercase hover:bg-[#0B1849]/90 cursor-pointer"
+                            className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
                           >
                             + 60ML
                           </button>
@@ -388,7 +388,7 @@ export const QrOrderPage: React.FC = () => {
                       ) : (
                         <button
                           onClick={() => addToCart(item, 'Standard')}
-                          className="px-4 py-2 rounded-sm bg-[#0B1849] text-[#FFFCE1] text-xs font-sans font-semibold uppercase hover:bg-[#0B1849]/90 cursor-pointer flex items-center gap-1"
+                          className="px-4 py-2 rounded-sm bg-[#47614d] text-[#f7f7f2] text-xs font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer flex items-center gap-1"
                         >
                           <Plus size={13} /> Add
                         </button>
@@ -407,7 +407,7 @@ export const QrOrderPage: React.FC = () => {
         <div className="fixed bottom-6 right-6 z-40">
           <button
             onClick={() => setCartOpen(true)}
-            className="px-6 py-3.5 rounded-sm bg-[#0B1849] text-[#FFFCE1] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#0B1849]/90 transition-all cursor-pointer border border-[#FFFCE1]/20"
+            className="px-6 py-3.5 rounded-sm bg-[#47614d] text-[#f7f7f2] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#374c3c] transition-all cursor-pointer border border-[#f7f7f2]/20"
           >
             <ShoppingBag size={16} /> Cart ({totalCartCount}) · ₹{totalCartPrice}
           </button>
@@ -417,19 +417,19 @@ export const QrOrderPage: React.FC = () => {
       {/* Cart & Checkout Modal */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#0B1849] text-[#FFFCE1] border border-[#FFFCE1]/20 rounded-sm max-w-lg w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl space-y-6">
+          <div className="bg-[#47614d] text-[#f7f7f2] border border-[#f7f7f2]/20 rounded-sm max-w-lg w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl space-y-6">
             <button
               onClick={() => setCartOpen(false)}
-              className="absolute top-6 right-6 p-2 rounded-full bg-[#FFFCE1]/10 text-[#FFFCE1]/70 hover:text-[#FFFCE1]"
+              className="absolute top-6 right-6 p-2 rounded-full bg-[#f7f7f2]/10 text-[#f7f7f2]/70 hover:text-[#f7f7f2]"
             >
               <X size={18} />
             </button>
 
-            <div className="border-b border-[#FFFCE1]/10 pb-4">
-              <span className="text-[#FFDE74] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
+            <div className="border-b border-[#f7f7f2]/10 pb-4">
+              <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
                 {isPartyHall ? 'Party Hall Order' : `Room #${roomInfo.roomNumber} Service`}
               </span>
-              <h2 className="text-2xl font-serif text-[#FFFCE1]">Confirm Order</h2>
+              <h2 className="text-2xl font-serif text-[#f7f7f2]">Confirm Order</h2>
             </div>
 
             {/* Items */}
@@ -437,42 +437,42 @@ export const QrOrderPage: React.FC = () => {
               {cartList.map((item: any) => {
                 const key = `${item.menuItemId}_${item.potionSize}`;
                 return (
-                  <div key={key} className="flex items-center justify-between bg-[#FFFCE1]/5 p-3 rounded-sm border border-[#FFFCE1]/10 text-xs font-sans">
+                  <div key={key} className="flex items-center justify-between bg-[#f7f7f2]/5 p-3 rounded-sm border border-[#f7f7f2]/10 text-xs font-sans">
                     <div>
-                      <span className="font-bold text-[#FFFCE1] block">{item.name}</span>
-                      <span className="text-[10px] text-[#FFFCE1]/60">Size: {item.potionSize} · ₹{item.price}</span>
+                      <span className="font-bold text-[#f7f7f2] block">{item.name}</span>
+                      <span className="text-[10px] text-[#f7f7f2]/60">Size: {item.potionSize} · ₹{item.price}</span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-2 py-1">
-                        <button onClick={() => updateQuantity(key, -1)} className="text-[#FFFCE1]/70 hover:text-[#FFFCE1]">
+                      <div className="flex items-center gap-2 bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-2 py-1">
+                        <button onClick={() => updateQuantity(key, -1)} className="text-[#f7f7f2]/70 hover:text-[#f7f7f2]">
                           <Minus size={12} />
                         </button>
                         <span className="font-bold text-xs">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(key, 1)} className="text-[#FFFCE1]/70 hover:text-[#FFFCE1]">
+                        <button onClick={() => updateQuantity(key, 1)} className="text-[#f7f7f2]/70 hover:text-[#f7f7f2]">
                           <Plus size={12} />
                         </button>
                       </div>
-                      <span className="font-bold text-sm text-[#FFDE74] min-w-14 text-right">₹{item.price * item.quantity}</span>
+                      <span className="font-bold text-sm text-[#d9b57d] min-w-14 text-right">₹{item.price * item.quantity}</span>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="flex justify-between items-center pt-3 border-t border-[#FFFCE1]/10 text-sm font-sans font-bold">
+            <div className="flex justify-between items-center pt-3 border-t border-[#f7f7f2]/10 text-sm font-sans font-bold">
               <span>Total Amount:</span>
-              <span className="text-xl font-serif text-[#FFDE74]">₹{totalCartPrice}</span>
+              <span className="text-xl font-serif text-[#d9b57d]">₹{totalCartPrice}</span>
             </div>
 
             <form onSubmit={handleOrderSubmit} className="space-y-4 pt-2">
               {/* Auto-Fetched Verified Room Location */}
-              <div className="p-3 bg-[#FFFCE1]/10 rounded-sm border border-[#FFDE74]/30 flex items-center justify-between">
+              <div className="p-3 bg-[#f7f7f2]/10 rounded-sm border border-[#d9b57d]/30 flex items-center justify-between">
                 <div>
-                  <span className="text-[9px] font-sans uppercase font-bold text-[#FFDE74] tracking-wider block">
+                  <span className="text-[9px] font-sans uppercase font-bold text-[#d9b57d] tracking-wider block">
                     Verified Order Location
                   </span>
-                  <span className="text-sm font-serif font-bold text-[#FFFCE1]">
+                  <span className="text-sm font-serif font-bold text-[#f7f7f2]">
                     {isPartyHall ? 'Sambhrama Party Hall' : `Room #${roomInfo?.roomNumber || 'Unknown'} ${roomInfo?.floor ? `(Floor ${roomInfo.floor})` : ''}`}
                   </span>
                 </div>
@@ -482,49 +482,49 @@ export const QrOrderPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans uppercase text-[#FFFCE1]/80 font-bold mb-1">Your Name *</label>
+                <label className="block text-[10px] font-sans uppercase text-[#f7f7f2]/80 font-bold mb-1">Your Name *</label>
                 <input
                   type="text"
                   placeholder="Guest Name"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  className="w-full bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                  className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans uppercase text-[#FFFCE1]/80 font-bold mb-1">Phone Number *</label>
+                <label className="block text-[10px] font-sans uppercase text-[#f7f7f2]/80 font-bold mb-1">Phone Number *</label>
                 <input
                   type="tel"
                   placeholder="Contact Mobile Number"
                   value={guestPhone}
                   onChange={(e) => setGuestPhone(e.target.value)}
-                  className="w-full bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                  className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans uppercase text-[#FFFCE1]/80 font-bold mb-1">Special Notes / Spice Level</label>
+                <label className="block text-[10px] font-sans uppercase text-[#f7f7f2]/80 font-bold mb-1">Special Notes / Spice Level</label>
                 <input
                   type="text"
                   placeholder="e.g. Mild spice, no onions"
                   value={specialInstructions}
                   onChange={(e) => setSpecialInstructions(e.target.value)}
-                  className="w-full bg-[#0B1849] border border-[#FFFCE1]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#FFFCE1]"
+                  className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
                 />
               </div>
 
               {/* Payment Mode Selection */}
               <div className="space-y-2 pt-2">
-                <span className="text-[10px] font-sans uppercase tracking-wider text-[#FFDE74] font-bold block">Payment Method *</span>
+                <span className="text-[10px] font-sans uppercase tracking-wider text-[#d9b57d] font-bold block">Payment Method *</span>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMode('RAZORPAY')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'RAZORPAY' ? 'bg-[#FFFCE1] text-[#0B1849] font-bold border-[#FFFCE1]' : 'bg-transparent text-[#FFFCE1]/70 border-[#FFFCE1]/20'
+                      paymentMode === 'RAZORPAY' ? 'bg-[#f7f7f2] text-[#333333] font-bold border-[#f7f7f2]' : 'bg-transparent text-[#f7f7f2]/70 border-[#f7f7f2]/20'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💳 Online (Razorpay)</span>
@@ -535,7 +535,7 @@ export const QrOrderPage: React.FC = () => {
                     type="button"
                     onClick={() => setPaymentMode('CASH')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'CASH' ? 'bg-[#FFFCE1] text-[#0B1849] font-bold border-[#FFFCE1]' : 'bg-transparent text-[#FFFCE1]/70 border-[#FFFCE1]/20'
+                      paymentMode === 'CASH' ? 'bg-[#f7f7f2] text-[#333333] font-bold border-[#f7f7f2]' : 'bg-transparent text-[#f7f7f2]/70 border-[#f7f7f2]/20'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💵 Pay at Reception</span>
@@ -547,7 +547,7 @@ export const QrOrderPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={placingOrder}
-                className="w-full py-4 rounded-sm bg-[#FFFCE1] text-[#0B1849] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#FFDE74] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
+                className="w-full py-4 rounded-sm bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#d9b57d] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
               >
                 <Send size={15} /> {paymentMode === 'RAZORPAY' ? 'Pay Online & Send Order' : 'Send Order to Kitchen'}
               </button>

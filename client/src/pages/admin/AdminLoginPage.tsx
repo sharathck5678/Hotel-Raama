@@ -35,55 +35,55 @@ export const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFCE1] text-[#0B1849] flex items-center justify-center p-6">
-      <div className="bg-[#0B1849] text-[#FFFCE1] border border-[#FFFCE1]/20 rounded-sm p-8 sm:p-10 max-w-md w-full space-y-8 shadow-2xl">
+    <div className="min-h-screen bg-[#f7f7f2] text-[#333333] flex items-center justify-center p-6">
+      <div className="bg-[#ffffff] text-[#333333] border border-[#cbc0ad] rounded-[20px] p-8 sm:p-10 max-w-md w-full space-y-7 shadow-xl">
         
         {/* Header Badge */}
-        <div className="text-center space-y-3">
-          <div className="w-14 h-14 rounded-full bg-[#FFFCE1]/10 border border-[#FFFCE1]/20 text-[#FFDE74] flex items-center justify-center mx-auto shadow-md">
+        <div className="text-center space-y-2.5">
+          <div className="w-14 h-14 rounded-full bg-[#47614d]/10 border border-[#47614d]/30 text-[#47614d] flex items-center justify-center mx-auto shadow-sm">
             <ShieldCheck size={28} />
           </div>
-          <span className="text-[10px] font-sans font-bold text-[#FFDE74] uppercase tracking-[0.2em] block">
+          <span className="text-[10px] font-bold text-[#47614d] uppercase tracking-[1.6px] block">
             Hotel Raama Control Panel
           </span>
-          <h1 className="text-3xl font-serif text-[#FFFCE1]">Admin Login</h1>
-          <p className="text-xs font-sans text-[#FFFCE1]/70">
+          <h1 className="text-3xl font-bold text-[#333333]">Admin Login</h1>
+          <p className="text-xs text-[#666666]">
             Enter authorized management credentials to access live operations
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 font-sans text-xs">
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block font-bold text-[#FFFCE1]/80 uppercase tracking-wider mb-2">
+            <label className="block font-bold text-[#666666] uppercase tracking-[1.6px] mb-1.5 text-[10px]">
               Admin Email
             </label>
             <div className="relative">
-              <Mail size={16} className="absolute left-3.5 top-3 text-[#FFFCE1]/40" />
+              <Mail size={16} className="absolute left-3.5 top-3 text-[#666666]" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#FFFCE1]/5 border border-[#FFFCE1]/20 rounded-sm pl-10 pr-4 py-2.5 text-xs text-[#FFFCE1] focus:border-[#FFDE74] focus:outline-none transition-colors"
+                className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-full pl-10 pr-4 py-2.5 text-xs text-[#333333] focus-design transition-colors"
                 required
-                placeholder="Enter registered admin email..."
+                placeholder="admin@hotelraama.com"
                 autoComplete="email"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-bold text-[#FFFCE1]/80 uppercase tracking-wider mb-2">
+            <label className="block font-bold text-[#666666] uppercase tracking-[1.6px] mb-1.5 text-[10px]">
               Password
             </label>
             <div className="relative">
-              <Lock size={16} className="absolute left-3.5 top-3 text-[#FFFCE1]/40" />
+              <Lock size={16} className="absolute left-3.5 top-3 text-[#666666]" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#FFFCE1]/5 border border-[#FFFCE1]/20 rounded-sm pl-10 pr-4 py-2.5 text-xs text-[#FFFCE1] focus:border-[#FFDE74] focus:outline-none transition-colors"
+                className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-full pl-10 pr-4 py-2.5 text-xs text-[#333333] focus-design transition-colors"
                 required
-                placeholder="Enter password..."
+                placeholder="••••••••••••"
                 autoComplete="current-password"
               />
             </div>
@@ -92,13 +92,13 @@ export const AdminLoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-sm bg-[#FFFCE1] text-[#0B1849] hover:bg-[#FFDE74] font-sans font-bold text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+            className="w-full py-3.5 rounded-full bg-[#47614d] text-[#f7f7f2] hover:bg-[#374c3c] font-semibold text-xs uppercase tracking-[1.6px] shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 focus-design mt-2"
           >
             {loading ? 'Authenticating...' : 'Authenticate & Sign In'} <ArrowRight size={15} />
           </button>
         </form>
 
-        <div className="text-center pt-3 border-t border-[#FFFCE1]/10 text-[10px] font-sans text-[#FFFCE1]/50">
+        <div className="text-center pt-2 border-t border-[#cbc0ad]/40 text-[10px] text-[#666666]">
           Protected JWT HTTP-Only Cookie Session
         </div>
       </div>
