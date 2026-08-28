@@ -10,7 +10,10 @@ const getSocketUrl = () => {
     return envUrl.replace(/\/api\/?$/, '');
   }
   const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  return `http://${hostname}:5000`;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `http://${hostname}:5000`;
+  }
+  return null;
 };
 
 const formatRoomNumber = (room?: string) => {
@@ -46,7 +49,9 @@ export const AdminOrdersView: React.FC = () => {
   const loadOrders = () => {
     fetchAdminOrders()
       .then((res) => {
-        if (res.success) setOrders(res.data);
+        if (res.success && Array.isArray(res.data)) {
+          setOrders(res.data);
+        }
       })
       .finally(() => setLoading(false));
   };
@@ -54,22 +59,43 @@ export const AdminOrdersView: React.FC = () => {
   useEffect(() => {
     loadOrders();
 
-    const socket = io(getSocketUrl(), { withCredentials: true, transports: ['websocket', 'polling'] });
+    const socketUrl = getSocketUrl();
+    let socket: any = null;
 
-    socket.on('connect', () => {
-      socket.emit('join_admin_room');
-    });
+    if (socketUrl) {
+      try {
+        socket = io(socketUrl, {
+          withCredentials: true,
+          transports: ['websocket', 'polling'],
+          timeout: 4000,
+          reconnectionAttempts: 2,
+        });
 
-    socket.on('new_order', (newOrder: any) => {
-      const labelText = formatRoomNumber(newOrder.roomNumber);
-      toast.success(`NEW ORDER! ${labelText} - Order #${newOrder.orderId}`);
-      if (soundEnabled) playNotificationSound();
-      setOrders((prev) => [newOrder, ...prev.filter((o) => o._id !== newOrder._id)]);
-    });
+        socket.on('connect', () => {
+          socket.emit('join_admin_room');
+        });
 
-    socket.on('order_updated', (updatedOrder: any) => {
-      setOrders((prev) => prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o)));
-    });
+        socket.on('new_order', (newOrder: any) => {
+          const labelText = formatRoomNumber(newOrder.roomNumber);
+          toast.success(`NEW ORDER! ${labelText} - Order #${newOrder.orderId}`);
+          if (soundEnabled) playNotificationSound();
+          setOrders((prev) => [newOrder, ...prev.filter((o) => o._id !== newOrder._id)]);
+        });
+
+        socket.on('order_updated', (updatedOrder: any) => {
+          setOrders((prev) => prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o)));
+        });
+      } catch (err) {
+        console.warn('Socket initialization skipped:', err);
+      }
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'raama_local_orders') {
+        loadOrders();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
 
     // Background Polling Fallback (syncs every 5s for cross-network / mobile orders)
     const pollInterval = setInterval(() => {
@@ -77,8 +103,9 @@ export const AdminOrdersView: React.FC = () => {
     }, 5000);
 
     return () => {
-      socket.disconnect();
+      if (socket) socket.disconnect();
       clearInterval(pollInterval);
+      window.removeEventListener('storage', handleStorage);
     };
   }, [soundEnabled]);
 
