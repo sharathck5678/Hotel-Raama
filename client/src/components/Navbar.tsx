@@ -38,13 +38,13 @@ export const Navbar: React.FC = () => {
   ];
 
   // Header dynamic classes based on route & scroll position
-  const isTransparent = isHomePage && !isScrolled;
+  const isTransparent = isHomePage && !isScrolled && !mobileMenuOpen;
 
   const headerClass = isHomePage
     ? `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isTransparent
           ? 'bg-gradient-to-b from-black/80 via-black/40 to-transparent border-b border-white/10'
-          : 'bg-[#47614d]/95 backdrop-blur-md border-b border-[#354c3c] shadow-lg'
+          : 'bg-[#47614d] backdrop-blur-md border-b border-[#354c3c] shadow-lg'
       }`
     : 'sticky top-0 z-50 bg-[#47614d] border-b border-[#354c3c] shadow-md transition-all duration-300';
 
@@ -118,11 +118,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Navigation Drawer - Unified Brand Green Theme */}
       {mobileMenuOpen && (
-        <div className={`lg:hidden border-b px-6 pt-3 pb-8 space-y-2 ${
-          isTransparent ? 'bg-black/90 backdrop-blur-md border-white/20' : 'bg-[#3f5744] border-black/20'
-        }`}>
+        <div className="lg:hidden bg-[#47614d] border-b border-[#354c3c] px-6 pt-3 pb-8 space-y-2 shadow-2xl">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
@@ -132,8 +130,8 @@ export const Navbar: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-2.5 rounded-full text-xs uppercase tracking-[1.6px] font-medium transition-colors ${
                   isActive 
-                    ? 'bg-[#d9b57d] text-[#1c2e22] font-bold' 
-                    : 'text-white/90 hover:bg-white/10'
+                    ? 'bg-[#d9b57d] text-[#1c2e22] font-bold shadow-xs' 
+                    : 'text-[#f7f7f2]/90 hover:text-white hover:bg-white/10'
                 }`}
               >
                 {link.name}
@@ -144,14 +142,14 @@ export const Navbar: React.FC = () => {
             <Link
               to="/rooms"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-3 rounded-full bg-[#d9b57d] text-[#1c2e22] font-bold text-xs uppercase tracking-[1.6px]"
+              className="w-full text-center py-3 rounded-full bg-[#d9b57d] text-[#1c2e22] font-bold text-xs uppercase tracking-[1.6px] shadow-sm"
             >
               Book Room Now
             </Link>
             <Link
               to="/admin/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2 text-xs text-white/80 hover:text-white uppercase tracking-[1.6px]"
+              className="w-full text-center py-2 text-xs text-[#f7f7f2]/80 hover:text-white uppercase tracking-[1.6px]"
             >
               Admin Staff Portal
             </Link>
