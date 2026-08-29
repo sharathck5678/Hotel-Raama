@@ -7,7 +7,7 @@ class SocketService {
     static init(httpServer, clientUrl) {
         io = new socket_io_1.Server(httpServer, {
             cors: {
-                origin: [clientUrl, 'http://localhost:5173', 'http://localhost:3000'],
+                origin: true,
                 methods: ['GET', 'POST'],
                 credentials: true,
             },

@@ -24,7 +24,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 1,
     isAc: false,
     amenities: ['Free Wi-Fi', 'TV', 'Hot Water', 'Work Desk'],
-    images: ['https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80'],
+    images: ['/single-occupancy-room.png'],
   },
   {
     _id: 'rt_2',
@@ -36,7 +36,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 2,
     isAc: false,
     amenities: ['Free Wi-Fi', 'LED TV', '24/7 Hot Water', 'Daily Housekeeping'],
-    images: ['https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'],
+    images: ['/double-occupancy-room.png'],
   },
   {
     _id: 'rt_3',
@@ -48,7 +48,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 1,
     isAc: true,
     amenities: ['Air Conditioning', 'High Speed Wi-Fi', 'Smart TV', 'Room Service'],
-    images: ['https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80'],
+    images: ['/single-occupancy-room.png'],
   },
   {
     _id: 'rt_4',
@@ -60,7 +60,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 2,
     isAc: true,
     amenities: ['Air Conditioning', 'King Bed', 'Tea/Coffee Maker', 'Minibar', 'Smart TV'],
-    images: ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80'],
+    images: ['/double-occupancy-room.png'],
   },
   {
     _id: 'rt_5',
@@ -72,7 +72,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 3,
     isAc: false,
     amenities: ['3 Single Beds', 'Free Wi-Fi', 'Spacious Wardrobe', 'Bottled Water'],
-    images: ['https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80'],
+    images: ['/triple-occupancy-ac.png'],
   },
   {
     _id: 'rt_6',
@@ -81,10 +81,11 @@ export const FALLBACK_ROOM_TYPES = [
     description: 'Air-conditioned family room featuring premium bedding, extra seating, and deluxe amenities.',
     basePrice: 2800,
     cpPrice: 3200,
+
     maxOccupancy: 3,
     isAc: true,
     amenities: ['Air Conditioning', '3 Beds', 'Smart TV', 'Tea/Coffee Station'],
-    images: ['https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=800&q=80'],
+    images: ['/triple-occupancy-ac.png'],
   },
   {
     _id: 'rt_7',
@@ -96,12 +97,13 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 4,
     isAc: true,
     amenities: ['Living Room Lounge', 'Jacuzzi / Bathtub', 'Fruit Basket', 'Express Check-in', 'Premium A/C'],
-    images: ['https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80'],
+    images: ['/suite-room.png'],
   },
 ];
 
-// Generate Rooms 1 to 40 + Sambhrama Party Hall
+// Generate Rooms 1 to 40 + Sambhrama Party Hall + Board Room
 export const FALLBACK_ROOMS = (() => {
+
   const rooms: any[] = [];
   const typeMapping = [
     FALLBACK_ROOM_TYPES[0],
@@ -137,6 +139,18 @@ export const FALLBACK_ROOMS = (() => {
     roomTypeId: {
       _id: 'rt_7',
       name: 'Grand Sambhrama Party Hall',
+    },
+  });
+
+  rooms.push({
+    _id: 'room_board_room',
+    roomNumber: 'Board Room',
+    floor: 1,
+    status: 'AVAILABLE',
+    qrToken: 'qr_token_board_room',
+    roomTypeId: {
+      _id: 'rt_4',
+      name: 'Executive Board Room',
     },
   });
 
@@ -5468,7 +5482,7 @@ export const FALLBACK_ATTRACTIONS = [
     name: 'Chennakeshava Temple, Belur',
     category: 'Hoysala Heritage',
     distance: '38 km',
-    image: 'https://images.unsplash.com/photo-1600100397608-f010e423b971?auto=format&fit=crop&w=800&q=80',
+    image: '/chennakeshava-temple-belur.png',
     description: 'Famous 12th-century Hoysala temple renowned for intricate stone carvings and architecture.',
     sortOrder: 1,
   },
@@ -5477,7 +5491,7 @@ export const FALLBACK_ATTRACTIONS = [
     name: 'Hoysaleswara Temple, Halebidu',
     category: 'Hoysala Heritage',
     distance: '31 km',
-    image: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=800&q=80',
+    image: '/hoysaleswara-temple-halebidu.png',
     description: 'Twin-temple complex dedicated to Shiva, showcasing breathtaking stone sculptures.',
     sortOrder: 2,
   },
@@ -5486,7 +5500,7 @@ export const FALLBACK_ATTRACTIONS = [
     name: 'Shravanabelagola (Gommateshwara)',
     category: 'Pilgrimage',
     distance: '52 km',
-    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80',
+    image: '/shravanabelagola.png',
     description: 'Home to the magnificent 57-foot monolithic statue of Lord Bahubali atop Vindhyagiri Hill.',
     sortOrder: 3,
   },
@@ -5495,7 +5509,7 @@ export const FALLBACK_ATTRACTIONS = [
     name: 'Manjarabad Fort, Sakleshpur',
     category: 'History & Forts',
     distance: '40 km',
-    image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80',
+    image: '/manjarabad-fort.jpg',
     description: 'Star-shaped fort built by Tipu Sultan offering panoramic views of the Western Ghats.',
     sortOrder: 4,
   },
@@ -5504,7 +5518,7 @@ export const FALLBACK_ATTRACTIONS = [
     name: 'Shettihalli Rosary Church',
     category: 'Historic Ruins',
     distance: '22 km',
-    image: 'https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=800&q=80',
+    image: '/shettihalli-church.png',
     description: 'Submerged Gothic church ruins built in 1860, famous for its surreal monsoon landscape.',
     sortOrder: 5,
   },
@@ -5513,7 +5527,7 @@ export const FALLBACK_ATTRACTIONS = [
     name: 'Bisle Ghat Viewpoint',
     category: 'Nature & Trekking',
     distance: '85 km',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+    image: '/bisle-ghat.png',
     description: 'Spectacular mountain outlook providing sweeping vistas of three mountain ranges.',
     sortOrder: 6,
   },
@@ -5521,23 +5535,31 @@ export const FALLBACK_ATTRACTIONS = [
 
 export const mockCalculateAvailability = (payload: any) => {
   const room = FALLBACK_ROOM_TYPES.find((r) => r._id === payload.roomTypeId) || FALLBACK_ROOM_TYPES[0];
-  const numNights = 1;
-  const baseRate = payload.planType === 'CP' ? (room.cpPrice || room.basePrice + 150) : room.basePrice;
-  const roomTotal = baseRate * numNights;
-  
-  let mealPlanTotal = 0;
-  if (payload.mealSelection?.breakfast) mealPlanTotal += 150 * (payload.numGuests || 1) * numNights;
-  if (payload.mealSelection?.lunch) mealPlanTotal += 250 * (payload.numGuests || 1) * numNights;
-  if (payload.mealSelection?.dinner) mealPlanTotal += 300 * (payload.numGuests || 1) * numNights;
-
-  let discountAmount = 0;
-  if (payload.couponCode === 'WELCOME10') {
-    discountAmount = Math.min(Math.round((roomTotal + mealPlanTotal) * 0.1), 500);
-  } else if (payload.couponCode === 'RAAMA100') {
-    discountAmount = 100;
+  let numNights = 1;
+  if (payload.checkIn && payload.checkOut) {
+    const d1 = new Date(payload.checkIn).getTime();
+    const d2 = new Date(payload.checkOut).getTime();
+    const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+    if (diff > 0) numNights = diff;
   }
 
-  const taxableAmount = Math.max(0, roomTotal + mealPlanTotal - discountAmount);
+  const baseRate = payload.planType === 'CP' ? (room.cpPrice || room.basePrice + 150) : room.basePrice;
+  const roomTotal = baseRate * numNights;
+  const extraPersonChargePerNight = payload.extraPerson ? 600 : 0;
+  const extraPersonTotal = extraPersonChargePerNight * numNights;
+  
+  let mealPlanTotal = 0;
+  const totalGuests = (payload.numGuests || 1) + (payload.extraPerson ? 1 : 0);
+  if (payload.mealSelection?.breakfast) mealPlanTotal += 150 * totalGuests * numNights;
+  if (payload.mealSelection?.lunch) mealPlanTotal += 250 * totalGuests * numNights;
+  if (payload.mealSelection?.dinner) mealPlanTotal += 300 * totalGuests * numNights;
+
+  let discountAmount = 0;
+  if (payload.couponCode === 'RAAMA5') {
+    discountAmount = Math.round((roomTotal + extraPersonTotal + mealPlanTotal) * 0.05);
+  }
+
+  const taxableAmount = Math.max(0, roomTotal + extraPersonTotal + mealPlanTotal - discountAmount);
   const taxAmount = Math.round(taxableAmount * 0.12);
   const totalAmount = taxableAmount + taxAmount;
 
@@ -5547,8 +5569,11 @@ export const mockCalculateAvailability = (payload: any) => {
       numNights,
       roomPricePerNight: baseRate,
       roomTotal,
+      extraPerson: !!payload.extraPerson,
+      extraPersonChargePerNight,
+      extraPersonTotal,
       mealPlanTotal,
-      couponCode: payload.couponCode || '',
+      couponCode: discountAmount > 0 ? (payload.couponCode || '') : '',
       discountAmount,
       taxAmount,
       totalAmount,

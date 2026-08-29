@@ -33,8 +33,11 @@ export interface IBooking extends Document {
   // Historical Snapshots (Locked at booking creation)
   roomPricePerNightSnapshot: number;
   mealPlanSelection?: IBookingMealSelection;
+  extraPerson?: boolean;
+  extraPersonChargeSnapshot?: number;
   couponCodeSnapshot?: string;
   discountAmountSnapshot: number;
+
   taxAmountSnapshot: number;
   totalAmount: number;
 
@@ -73,7 +76,10 @@ const BookingSchema = new Schema<IBooking>(
       dinner: { type: Boolean, default: false },
       pricePerNight: { type: Number, default: 0 },
     },
+    extraPerson: { type: Boolean, default: false },
+    extraPersonChargeSnapshot: { type: Number, default: 0 },
     couponCodeSnapshot: { type: String },
+
     discountAmountSnapshot: { type: Number, default: 0 },
     taxAmountSnapshot: { type: Number, default: 0 },
     totalAmount: { type: Number, required: true },

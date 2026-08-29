@@ -28,7 +28,10 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 // 1. Security & Body Middlewares
 app.use((0, helmet_1.default)({ contentSecurityPolicy: false }));
 app.use((0, cors_1.default)({
-    origin: [CLIENT_URL, 'http://localhost:5173', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+        // Allow requests from any origin (mobile phones, local IP, domain)
+        callback(null, true);
+    },
     credentials: true,
 }));
 app.use(express_1.default.json());
@@ -46,11 +49,37 @@ app.get('/health', (req, res) => {
 // 3. Initialize Socket.IO Server & Cron Job
 SocketService_1.SocketService.init(httpServer, CLIENT_URL);
 (0, CleanupHoldJob_1.initCleanupHoldJob)();
+const Room_1 = require("./models/Room");
+const RoomType_1 = require("./models/RoomType");
+// Helper to ensure special venue QR codes always exist in active database
+const ensureSpecialVenues = async () => {
+    try {
+        const existingBoardRoom = await Room_1.Room.findOne({ roomNumber: 'Board Room' });
+        if (!existingBoardRoom) {
+            const roomType = (await RoomType_1.RoomType.findOne({ code: 'EXEC_DBL_AC' })) || (await RoomType_1.RoomType.findOne());
+            if (roomType) {
+                await Room_1.Room.create({
+                    roomNumber: 'Board Room',
+                    roomTypeId: roomType._id,
+                    floor: 1,
+                    status: 'AVAILABLE',
+                    qrToken: 'qr_token_board_room',
+                    isActive: true,
+                });
+                console.log('[Setup] Created Board Room QR code entry.');
+            }
+        }
+    }
+    catch (err) {
+        console.warn('[Setup] Special venue check warning:', err);
+    }
+};
 // 4. Connect MongoDB & Start HTTP Server
 mongoose_1.default
     .connect(MONGODB_URI)
-    .then(() => {
+    .then(async () => {
     console.log('[MongoDB] Connected successfully to hotel_raama database.');
+    await ensureSpecialVenues();
     httpServer.listen(PORT, () => {
         console.log(`[Server] Hotel Raama Backend API running at http://localhost:${PORT}`);
     });

@@ -31,7 +31,7 @@ export class PublicController {
    */
   static async checkAvailabilityAndPrice(req: Request, res: Response) {
     try {
-      const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType } = req.body;
+      const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType, extraPerson } = req.body;
 
       if (!roomTypeId || !checkIn || !checkOut) {
         return res.status(400).json({ success: false, message: 'roomTypeId, checkIn, and checkOut are required.' });
@@ -59,7 +59,8 @@ export class PublicController {
         numGuests || 1,
         mealSelection,
         couponCode,
-        planType || 'NON_CP'
+        planType || 'NON_CP',
+        !!extraPerson
       );
 
       return res.json({
@@ -91,6 +92,7 @@ export class PublicController {
         couponCode,
         specialRequests,
         planType,
+        extraPerson,
       } = req.body;
 
       if (!guestName || !guestEmail || !guestPhone || !roomTypeId || !checkIn || !checkOut) {
@@ -114,7 +116,8 @@ export class PublicController {
         numGuests || 1,
         mealSelection,
         couponCode,
-        planType || 'NON_CP'
+        planType || 'NON_CP',
+        !!extraPerson
       );
 
       // Generate IDs
@@ -145,6 +148,8 @@ export class PublicController {
           dinner: !!mealSelection?.dinner,
           pricePerNight: pricing.mealPlanPricePerNight,
         },
+        extraPerson: !!extraPerson,
+        extraPersonChargeSnapshot: pricing.extraPersonTotal,
         couponCodeSnapshot: pricing.couponCode,
         discountAmountSnapshot: pricing.discountAmount,
         taxAmountSnapshot: pricing.taxAmount,
@@ -155,6 +160,7 @@ export class PublicController {
         trackingToken,
         expiresAt,
       });
+
 
       return res.status(201).json({
         success: true,

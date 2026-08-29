@@ -111,21 +111,66 @@ class AdminController {
             const occupancyRate = totalRooms > 0 ? Math.round(((occupiedRooms + reservedRooms) / totalRooms) * 100) : 0;
             const pendingOrdersCount = await Order_1.Order.countDocuments({ status: { $in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'] } });
             const totalConfirmedBookings = await Booking_1.Booking.countDocuments({ bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } });
-            // Calculate Total Revenue
+            // Calculate Real Revenue from Database
             const paidBookings = await Booking_1.Booking.find({ paymentStatus: 'PAID' });
-            const totalBookingRevenue = paidBookings.reduce((sum, b) => sum + b.totalAmount, 0);
-            const paidOrders = await Order_1.Order.find({ paymentStatus: 'PAID' });
-            const totalOrderRevenue = paidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-            // Monthly Revenue Chart Data
+            const totalBookingRevenue = paidBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+            const allOrders = await Order_1.Order.find();
+            const totalOrderRevenue = allOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+            const totalCombinedRevenue = totalBookingRevenue + totalOrderRevenue;
+            // Group Real Transactions by Month
             const monthlyRevenueMap = {};
-            paidBookings.forEach(b => {
-                const monthKey = new Date(b.createdAt).toLocaleString('default', { month: 'short' });
-                monthlyRevenueMap[monthKey] = (monthlyRevenueMap[monthKey] || 0) + b.totalAmount;
+            paidBookings.forEach((b) => {
+                const monthKey = new Date(b.createdAt).toLocaleString('default', { month: 'short', year: '2-digit' });
+                monthlyRevenueMap[monthKey] = (monthlyRevenueMap[monthKey] || 0) + (b.totalAmount || 0);
             });
-            const revenueChart = Object.keys(monthlyRevenueMap).map(m => ({
-                month: m,
-                revenue: monthlyRevenueMap[m],
+            allOrders.forEach((o) => {
+                const monthKey = new Date(o.createdAt).toLocaleString('default', { month: 'short', year: '2-digit' });
+                monthlyRevenueMap[monthKey] = (monthlyRevenueMap[monthKey] || 0) + (o.totalAmount || 0);
+            });
+            const revenueChart = Object.keys(monthlyRevenueMap).map((month) => ({
+                month,
+                revenue: monthlyRevenueMap[month],
             }));
+            // Aggregate Category Sales from Real Orders
+            let vegRev = 0;
+            let nonVegRev = 0;
+            let drinksRev = 0;
+            const itemSalesMap = {};
+            allOrders.forEach((order) => {
+                if (Array.isArray(order.items)) {
+                    order.items.forEach((item) => {
+                        const qty = item.quantity || 1;
+                        const itemPrice = item.price || 0;
+                        const lineTotal = itemPrice * qty;
+                        const name = item.name || 'Menu Item';
+                        if (!itemSalesMap[name]) {
+                            itemSalesMap[name] = { name, category: 'Dining', ordersCount: 0, revenue: 0 };
+                        }
+                        itemSalesMap[name].ordersCount += qty;
+                        itemSalesMap[name].revenue += lineTotal;
+                        // Simple heuristic for category breakdown
+                        const lowerName = name.toLowerCase();
+                        if (lowerName.includes('veg') || lowerName.includes('paneer') || lowerName.includes('idli') || lowerName.includes('dosa') || lowerName.includes('roti') || lowerName.includes('naan')) {
+                            vegRev += lineTotal;
+                        }
+                        else if (lowerName.includes('chicken') || lowerName.includes('mutton') || lowerName.includes('fish') || lowerName.includes('biryani') || lowerName.includes('egg')) {
+                            nonVegRev += lineTotal;
+                        }
+                        else {
+                            drinksRev += lineTotal;
+                        }
+                    });
+                }
+            });
+            const categoryBreakdown = [
+                { name: 'Swaad Pure Veg', value: vegRev, color: '#FFDE74' },
+                { name: 'Swaad Non-Veg', value: nonVegRev, color: '#F59E0B' },
+                { name: 'Liquid Lounge (LLB)', value: drinksRev, color: '#3B82F6' },
+                { name: 'Room Stays & Suites', value: totalBookingRevenue, color: '#10B981' },
+            ].filter((cat) => cat.value > 0);
+            const topSellingItems = Object.values(itemSalesMap)
+                .sort((a, b) => b.ordersCount - a.ordersCount)
+                .slice(0, 5);
             return res.json({
                 success: true,
                 data: {
@@ -138,8 +183,10 @@ class AdminController {
                     totalConfirmedBookings,
                     totalBookingRevenue,
                     totalOrderRevenue,
-                    totalCombinedRevenue: totalBookingRevenue + totalOrderRevenue,
+                    totalCombinedRevenue,
                     revenueChart,
+                    categoryBreakdown,
+                    topSellingItems,
                 },
             });
         }

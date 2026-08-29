@@ -7,7 +7,7 @@ const MenuItemSchema = new mongoose_1.Schema({
     categoryId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'MenuCategory', required: true },
     section: {
         type: String,
-        enum: ['SWAAD', 'LIQUID_LOUNGE', 'SAMBHRAMA'],
+        enum: ['SWAAD', 'HOTEL_RAAMA', 'LIQUID_LOUNGE', 'SAMBHRAMA'],
         required: true,
     },
     description: { type: String },

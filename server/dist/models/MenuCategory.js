@@ -6,7 +6,7 @@ const MenuCategorySchema = new mongoose_1.Schema({
     name: { type: String, required: true, trim: true },
     section: {
         type: String,
-        enum: ['SWAAD', 'LIQUID_LOUNGE', 'SAMBHRAMA'],
+        enum: ['SWAAD', 'HOTEL_RAAMA', 'LIQUID_LOUNGE', 'SAMBHRAMA'],
         required: true,
     },
     description: { type: String },

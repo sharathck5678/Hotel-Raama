@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Users, ArrowRight, Utensils, GlassWater, PartyPopper, Star, ArrowUpRight } from 'lucide-react';
+import { Calendar, Users, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { fetchRoomTypes, fetchAttractions } from '../services/api';
+
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,14 +42,20 @@ export const HomePage: React.FC = () => {
       
       {/* 1. HERO SECTION - Editorial Luxury */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-12 pb-20">
-        {/* Background Image & Architectural Overlay */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1920&q=80"
-            alt="Hotel Raama Luxury Suite"
-            className="w-full h-full object-cover brightness-[0.35]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B1849] via-[#0B1849]/50 to-transparent" />
+        {/* Background Video & Architectural Overlay */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover brightness-[0.70] contrast-[1.05]"
+            poster="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1920&q=80"
+          >
+            <source src="/hero-video.mp4" type="video/mp4" />
+            <source src="/hero-video.webm" type="video/webm" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
         </div>
 
         {/* Hero Content */}
@@ -60,7 +67,7 @@ export const HomePage: React.FC = () => {
             className="space-y-4"
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f7f7f2]/10 border border-[#f7f7f2]/20 text-[#d9b57d] text-[10px] font-sans font-semibold uppercase tracking-[0.2em]">
-              <Star size={12} className="fill-[#FFDE74] text-[#d9b57d]" /> Hotel Raama · Hassan
+              Hotel Raama · Hassan
             </span>
             
             <h1 className="editorial-hero-title text-[#f7f7f2] uppercase tracking-tight">
@@ -202,53 +209,67 @@ export const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-20">
             <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Culinary Artistry</span>
-            <h2 className="editorial-section-title text-[#f7f7f2] mt-2">Swaad & Liquid Lounge</h2>
+            <h2 className="editorial-section-title text-[#f7f7f2] mt-2">Swaad, Hotel Raama & Liquid Lounge</h2>
             <p className="font-sans text-[#f7f7f2]/75 mt-4 text-xs sm:text-sm leading-relaxed">
-              Authentic South Indian vegetarian dining or executive whiskies & handcrafted cocktails. Served in ambience or directly to your room.
+              Authentic South Indian vegetarian dining, signature non-veg delicacies, and executive whiskies & handcrafted cocktails. Served in ambience or directly to your room.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Swaad Card */}
-            <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* 1. Swaad Card */}
+            <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group flex flex-col justify-end min-h-[380px]">
               <img
-                src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=1000&q=80"
+                src="/swaad-restaurant.png"
                 alt="Swaad Restaurant"
-                className="w-full h-88 object-cover group-hover:scale-105 transition-transform duration-700"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1849] via-[#0B1849]/60 to-transparent p-8 flex flex-col justify-end">
-                <div className="flex items-center gap-2 text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-wider mb-2">
-                  <Utensils size={14} /> Pure Vegetarian Delicacies
-                </div>
-                <h3 className="text-3xl font-serif text-[#f7f7f2]">Swaad Pure Veg Restaurant</h3>
-                <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed max-w-md">
+              <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
+                <h3 className="text-2xl font-serif text-[#f7f7f2]">Swaad Pure Veg</h3>
+                <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed">
                   Crispy Masala Dosas, North Indian Curries, Tandoori Baskets, and traditional South & North Indian Thalis.
                 </p>
                 <div className="mt-5">
-                  <Link to="/dining" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
+                  <Link to="/dining?tab=SWAAD_VEG" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
                     Explore Pure Veg Menu <ArrowUpRight size={14} />
                   </Link>
                 </div>
               </div>
             </div>
 
-            {/* Liquid Lounge Card */}
-            <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group">
+            {/* 2. Hotel Raama Non-Veg Card */}
+            <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group flex flex-col justify-end min-h-[380px]">
               <img
-                src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1000&q=80"
-                alt="Liquid Lounge Bar"
-                className="w-full h-88 object-cover group-hover:scale-105 transition-transform duration-700"
+                src="/hotel-raama-dining.jpg"
+                alt="Hotel Raama Non-Veg Dining"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1849] via-[#0B1849]/60 to-transparent p-8 flex flex-col justify-end">
-                <div className="flex items-center gap-2 text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-wider mb-2">
-                  <GlassWater size={14} /> Executive Lounge Bar
+              <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
+                <h3 className="text-2xl font-serif text-[#f7f7f2]">Hotel Raama (Non-Veg)</h3>
+                <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed">
+                  Signature Mutton Chops, Nati Koli Biriyani, Coastal Seafood fry, Chicken Sukka, and aromatic Tandoori kebabs.
+                </p>
+                <div className="mt-5">
+                  <Link to="/dining?tab=HOTEL_RAAMA" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
+                    Explore Non-Veg Menu <ArrowUpRight size={14} />
+                  </Link>
                 </div>
-                <h3 className="text-3xl font-serif text-[#f7f7f2]">Liquid Lounge Bar (LLB)</h3>
-                <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed max-w-md">
+              </div>
+            </div>
+
+            {/* 3. Liquid Lounge Card */}
+            <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group flex flex-col justify-end min-h-[380px] md:col-span-2 lg:col-span-1">
+              <img
+                src="/liquid-lounge-bar.png"
+                alt="Liquid Lounge Bar"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
+                <h3 className="text-2xl font-serif text-[#f7f7f2]">Liquid Lounge Bar (LLB)</h3>
+                <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed">
                   Curated whiskies, single malts, draught beers, and handcrafted cocktails in an executive setting.
                 </p>
                 <div className="mt-5">
-                  <Link to="/dining" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
+                  <Link to="/dining?tab=LIQUID_LOUNGE" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
                     Explore Bar Menu <ArrowUpRight size={14} />
                   </Link>
                 </div>
@@ -258,28 +279,60 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 3.5 QR ORDERING SPOTLIGHT BANNER */}
-      <section className="py-20 max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="bg-[#f7f7f2] p-10 sm:p-14 rounded-sm border border-[#cbc0ad] shadow-md flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="space-y-4 max-w-2xl">
-            <span className="px-3.5 py-1 rounded-full bg-[#0B1849]/10 border border-[#cbc0ad] text-[#333333] text-[10px] font-sans font-bold uppercase tracking-widest">
-              📲 Contactless Room & Table Service
-            </span>
+
+      {/* 3.5 TRIPADVISOR REVIEWS SPOTLIGHT */}
+      <section className="py-16 max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="bg-[#f7f7f2] p-8 sm:p-12 rounded-sm border border-[#cbc0ad] shadow-md flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+          
+          {/* Left: Ratings Badge matching TripAdvisor widget */}
+          <div className="flex items-center gap-6 shrink-0 w-full lg:w-auto justify-center">
+            <div className="bg-white px-8 py-6 rounded-2xl border border-[#cbc0ad]/40 shadow-sm flex flex-col items-center justify-center text-center min-w-[210px]">
+              <div className="flex items-center gap-2 mb-1.5">
+                <svg viewBox="0 0 24 24" className="w-6 h-6" fill="#00aa6c">
+                  <path d="M12.006 4.295c-2.67 0-5.338.784-7.645 2.353H0l1.963 2.135a5.997 5.997 0 0 0 4.04 10.43 5.976 5.976 0 0 0 4.075-1.6L12 19.705l1.922-2.09a5.972 5.972 0 0 0 4.072 1.598 6 6 0 0 0 6-5.998 5.982 5.982 0 0 0-1.957-4.432L24 6.648h-4.35a13.573 13.573 0 0 0-7.644-2.353zM12 6.255c1.545 0 3.03.35 4.37.99a5.992 5.992 0 0 0-3.666 4.542 5.988 5.988 0 0 0-1.408-.167c-.49 0-.964.06-1.418.17A5.99 5.99 0 0 0 6.21 7.247c1.34-.64 2.827-.992 4.372-.992h1.424zm-6.004 5.34a3.84 3.84 0 1 1 0 7.68 3.84 3.84 0 0 1 0-7.68zm12.008 0a3.84 3.84 0 1 1 0 7.68 3.84 3.84 0 0 1 0-7.68zM5.996 13.78a1.69 1.69 0 1 0 0 3.38 1.69 1.69 0 0 0 0-3.38zm12.008 0a1.69 1.69 0 1 0 0 3.38 1.69 1.69 0 0 0 0-3.38z" />
+                </svg>
+                <span className="text-sm font-sans font-bold tracking-tight text-[#004f32]">Tripadvisor</span>
+              </div>
+              <div className="text-4xl sm:text-5xl font-sans font-extrabold text-[#004f32] tracking-tight">
+                4.3
+              </div>
+              <div className="text-base font-sans font-bold text-[#004f32] mt-0.5">
+                Very Good
+              </div>
+              <div className="flex items-center gap-1 mt-2">
+                <span className="w-3.5 h-3.5 rounded-full bg-[#00aa6c] inline-block shrink-0" />
+                <span className="w-3.5 h-3.5 rounded-full bg-[#00aa6c] inline-block shrink-0" />
+                <span className="w-3.5 h-3.5 rounded-full bg-[#00aa6c] inline-block shrink-0" />
+                <span className="w-3.5 h-3.5 rounded-full bg-[#00aa6c] inline-block shrink-0" />
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-[#00aa6c] relative overflow-hidden inline-block shrink-0">
+                  <span className="absolute top-0 left-0 bottom-0 w-1/2 bg-[#00aa6c]" />
+                </span>
+                <span className="text-xs font-sans font-semibold text-[#004f32] ml-1">(171)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle: Content */}
+          <div className="space-y-3 max-w-2xl flex-grow text-center lg:text-left">
             <h2 className="editorial-section-title text-[#333333]">
-              Instant Ordering via QR Code
+              Reviews
             </h2>
             <p className="font-sans text-xs sm:text-sm text-[#666666] leading-relaxed">
-              We feature <strong className="text-[#333333]">40 unique static QR codes for Rooms 1 through 40</strong> plus <strong className="text-[#333333]">1 dedicated QR code for Sambhrama Party Hall</strong>. Scan or open your room's QR code to order Swaad Pure Veg meals, Non-Veg delicacies, and Liquid Lounge drinks straight to your room!
+              Consistently rated <strong className="text-[#333333]">Very Good (4.3 / 5)</strong> across 170+ verified guest reviews on TripAdvisor. Discover why travelers choose Hotel Raama for premium hospitality, spotless rooms, and central convenience in Hassan.
             </p>
           </div>
 
-          <div className="shrink-0 w-full md:w-auto">
-            <Link
-              to="/dining"
-              className="px-8 py-4 rounded-sm bg-[#47614d] text-[#f7f7f2] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#374c3c] transition-all text-center flex items-center justify-center gap-2 shadow-sm"
+          {/* Right: Redirect CTA Button */}
+          <div className="shrink-0 w-full lg:w-auto text-center">
+            <a
+              href="https://www.tripadvisor.in/Hotel_Review-g503696-d8507683-Reviews-Hotel_Raama-Hassan_Hassan_District_Karnataka.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3.5 rounded-sm bg-[#47614d] hover:bg-[#374c3c] text-[#f7f7f2] font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
-              Explore Dining & Bar Menu <ArrowRight size={15} />
-            </Link>
+              <span>View Reviews on TripAdvisor</span>
+              <ArrowUpRight size={15} />
+            </a>
           </div>
         </div>
       </section>
@@ -289,23 +342,28 @@ export const HomePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
           
           {/* Left Column: Sambhrama */}
-          <div className="lg:col-span-1 bg-[#47614d] p-8 rounded-sm text-[#f7f7f2] space-y-6">
-            <div className="w-10 h-10 rounded-full bg-[#d9b57d] flex items-center justify-center text-[#333333]">
-              <PartyPopper size={20} />
+          <div className="lg:col-span-1 relative rounded-sm overflow-hidden p-8 text-[#f7f7f2] space-y-6 border border-[#cbc0ad] shadow-md group">
+            <img
+              src="/sambhrama-party-hall.png"
+              alt="Sambhrama Party Hall"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-[0.65]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30 pointer-events-none" />
+            <div className="relative z-10 space-y-6">
+              <div>
+                <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-sm">Banquets & Events</span>
+                <h3 className="text-3xl font-serif text-[#f7f7f2] mt-1 drop-shadow-md">Sambhrama Party Hall</h3>
+              </div>
+              <p className="text-xs font-sans text-[#f7f7f2]/95 leading-relaxed drop-shadow-sm">
+                Host grand weddings, corporate banquets, and celebrations. Custom vegetarian & non-veg catering packages starting at ₹450 / pax + GST.
+              </p>
+              <Link
+                to="/party-hall"
+                className="inline-flex items-center gap-2 w-full justify-center py-3.5 rounded-sm bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#d9b57d] transition-all cursor-pointer shadow-lg"
+              >
+                View Party Packages
+              </Link>
             </div>
-            <div>
-              <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-widest">Banquets & Events</span>
-              <h3 className="text-3xl font-serif text-[#f7f7f2] mt-1">Sambhrama Party Hall</h3>
-            </div>
-            <p className="text-xs font-sans text-[#f7f7f2]/80 leading-relaxed">
-              Host grand weddings, corporate banquets, and celebrations. Custom vegetarian & non-veg catering packages starting at ₹450 / pax + GST.
-            </p>
-            <Link
-              to="/party-hall"
-              className="inline-flex items-center gap-2 w-full justify-center py-3.5 rounded-sm bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#d9b57d] transition-all"
-            >
-              View Party Packages
-            </Link>
           </div>
 
           {/* Right Column: Hassan Sightseeing */}

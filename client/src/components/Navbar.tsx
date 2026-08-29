@@ -17,6 +17,7 @@ export const Navbar: React.FC = () => {
     { name: 'Dining & Bar', path: '/dining' },
     { name: 'Sambhrama Party Hall', path: '/party-hall' },
     { name: 'Local Sightseeing', path: '/attractions' },
+    { name: 'Location & Directions', path: '/location' },
     { name: 'My Bookings & Orders', path: '/my-bookings-orders' },
   ];
 
@@ -26,29 +27,23 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           
           {/* Logo & Hotel Brand */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-[#47614d] text-[#f7f7f2] font-semibold flex items-center justify-center text-sm shadow-sm group-hover:bg-[#d9b57d] group-hover:text-[#333333] transition-all duration-300">
-              HR
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-[#333333] group-hover:text-[#47614d] transition-colors block leading-none">
-                HOTEL RAAMA
-              </span>
-              <span className="block text-[9px] font-semibold text-[#666666] tracking-[1.6px] uppercase mt-1">
-                Hassan · Luxury Boutique
-              </span>
-            </div>
+          <Link to="/" className="flex items-center group py-1">
+            <img
+              src="/hotel-raama-logo.png"
+              alt="Hotel Raama - Hassan"
+              className="h-12 sm:h-14 w-auto object-contain rounded-lg shadow-xs group-hover:opacity-90 transition-all duration-300"
+            />
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-2 xl:gap-3">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-[11px] font-medium uppercase tracking-[1.6px] px-3.5 py-2 rounded-full transition-all duration-300 ${
+                  className={`text-[10px] xl:text-[11px] font-medium uppercase tracking-[1.2px] xl:tracking-[1.6px] px-2.5 xl:px-3 py-2 rounded-full transition-all duration-300 whitespace-nowrap ${
                     isActive
                       ? 'bg-[#47614d] text-[#f7f7f2] shadow-sm font-semibold'
                       : 'text-[#333333] hover:text-[#47614d] hover:bg-[#cbc0ad]/20'

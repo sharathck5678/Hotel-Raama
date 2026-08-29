@@ -253,7 +253,8 @@ export const QrOrderPage: React.FC = () => {
     );
   }
 
-  const isPartyHall = roomInfo.roomNumber.toLowerCase().includes('hall');
+  const isVenue = isNaN(Number(roomInfo.roomNumber));
+  const locationTitle = isVenue ? roomInfo.roomNumber : `Room #${roomInfo.roomNumber}`;
 
   const sectionItems = items.filter((i) => {
     if (activeSection === 'SWAAD_VEG') {
@@ -279,11 +280,12 @@ export const QrOrderPage: React.FC = () => {
           Verified Location
         </span>
         <h1 className="editorial-section-title text-[#333333]">
-          {isPartyHall ? 'Sambhrama Party Hall' : `Room #${roomInfo.roomNumber}`}
+          {locationTitle}
         </h1>
         <p className="text-xs font-sans text-[#666666]">
           Floor {roomInfo.floor} · Contactless Ordering Portal
         </p>
+
 
         {/* Section Tabs */}
         <div className="flex flex-wrap justify-center gap-3 pt-6">
@@ -343,14 +345,17 @@ export const QrOrderPage: React.FC = () => {
                     <div>
                       <div className="flex justify-between items-start">
                         <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
-                        <span
-                          className={`text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
-                            item.isVeg ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'
-                          }`}
-                        >
-                          {item.isVeg ? 'Veg' : 'Non-Veg'}
-                        </span>
+                        {item.section !== 'LIQUID_LOUNGE' && activeSection !== 'LIQUID_LOUNGE' && (
+                          <span
+                            className={`text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
+                              item.isVeg ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'
+                            }`}
+                          >
+                            {item.isVeg ? 'Veg' : 'Non-Veg'}
+                          </span>
+                        )}
                       </div>
+
                       {item.description && (
                         <p className="text-xs font-sans text-[#666666] mt-2 line-clamp-2 leading-relaxed">
                           {item.description}
@@ -427,7 +432,7 @@ export const QrOrderPage: React.FC = () => {
 
             <div className="border-b border-[#f7f7f2]/10 pb-4">
               <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
-                {isPartyHall ? 'Party Hall Order' : `Room #${roomInfo.roomNumber} Service`}
+                {locationTitle} Order Service
               </span>
               <h2 className="text-2xl font-serif text-[#f7f7f2]">Confirm Order</h2>
             </div>
@@ -473,13 +478,14 @@ export const QrOrderPage: React.FC = () => {
                     Verified Order Location
                   </span>
                   <span className="text-sm font-serif font-bold text-[#f7f7f2]">
-                    {isPartyHall ? 'Sambhrama Party Hall' : `Room #${roomInfo?.roomNumber || 'Unknown'} ${roomInfo?.floor ? `(Floor ${roomInfo.floor})` : ''}`}
+                    {locationTitle} {roomInfo?.floor ? `(Floor ${roomInfo.floor})` : ''}
                   </span>
                 </div>
                 <span className="px-2 py-1 rounded-sm bg-emerald-500/20 text-emerald-300 text-[9px] font-sans font-bold uppercase tracking-wider border border-emerald-500/30">
                   ✓ Scanned from QR
                 </span>
               </div>
+
 
               <div>
                 <label className="block text-[10px] font-sans uppercase text-[#f7f7f2]/80 font-bold mb-1">Your Name *</label>

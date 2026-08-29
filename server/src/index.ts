@@ -51,11 +51,66 @@ app.get('/health', (req, res) => {
 SocketService.init(httpServer, CLIENT_URL);
 initCleanupHoldJob();
 
+import { Room } from './models/Room';
+import { RoomType } from './models/RoomType';
+import { Coupon } from './models/Coupon';
+
+// Helper to ensure coupons in active database
+const ensureCoupons = async () => {
+  try {
+    await Coupon.deleteMany({ code: { $ne: 'RAAMA5' } });
+    const existing = await Coupon.findOne({ code: 'RAAMA5' });
+    if (!existing) {
+      const now = new Date();
+      const nextYear = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
+      await Coupon.create({
+        code: 'RAAMA5',
+        discountType: 'PERCENTAGE',
+        discountValue: 5,
+        minBookingAmount: 0,
+        startDate: new Date(2020, 0, 1),
+        endDate: nextYear,
+        maxUsage: 10000,
+        usedCount: 0,
+        isActive: true,
+      });
+      console.log('[Setup] Created RAAMA5 5% coupon entry.');
+    }
+  } catch (err) {
+    console.warn('[Setup] Coupon sync warning:', err);
+  }
+};
+
+// Helper to ensure special venue QR codes always exist in active database
+const ensureSpecialVenues = async () => {
+  try {
+    const existingBoardRoom = await Room.findOne({ roomNumber: 'Board Room' });
+    if (!existingBoardRoom) {
+      const roomType = (await RoomType.findOne({ code: 'EXEC_DBL_AC' })) || (await RoomType.findOne());
+      if (roomType) {
+        await Room.create({
+          roomNumber: 'Board Room',
+          roomTypeId: roomType._id,
+          floor: 1,
+          status: 'AVAILABLE',
+          qrToken: 'qr_token_board_room',
+          isActive: true,
+        });
+        console.log('[Setup] Created Board Room QR code entry.');
+      }
+    }
+  } catch (err) {
+    console.warn('[Setup] Special venue check warning:', err);
+  }
+};
+
 // 4. Connect MongoDB & Start HTTP Server
 mongoose
   .connect(MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log('[MongoDB] Connected successfully to hotel_raama database.');
+    await ensureSpecialVenues();
+    await ensureCoupons();
     httpServer.listen(PORT, () => {
       console.log(`[Server] Hotel Raama Backend API running at http://localhost:${PORT}`);
     });
@@ -66,3 +121,4 @@ mongoose
   });
 
 export { app, httpServer };
+

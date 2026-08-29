@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { QrCode, Search, Building2, Sparkles, Utensils, Download, ChevronDown } from 'lucide-react';
+import { QrCode, Search, Building2, Sparkles, Utensils, Download, ChevronDown, Presentation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { fetchAllQrCodes } from '../services/api';
@@ -9,7 +9,7 @@ export const QrOrderingSectionPage: React.FC = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'ROOMS' | 'PARTY_HALL'>('ALL');
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'ROOMS' | 'VENUES'>('ALL');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -17,7 +17,7 @@ export const QrOrderingSectionPage: React.FC = () => {
   useEffect(() => {
     fetchAllQrCodes()
       .then((res) => {
-        if (res.success) {
+        if (res.success && Array.isArray(res.data)) {
           setRooms(res.data);
         }
       })
@@ -39,11 +39,16 @@ export const QrOrderingSectionPage: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const isVenueRoom = (roomNum: string) => {
+    const lower = String(roomNum || '').toLowerCase();
+    return lower.includes('party') || lower.includes('hall') || lower.includes('board') || isNaN(Number(roomNum));
+  };
+
   const filteredRooms = rooms.filter((room) => {
-    const isPartyHall = room.roomNumber.toLowerCase().includes('party') || room.roomNumber.toLowerCase().includes('hall');
+    const isVenue = isVenueRoom(room.roomNumber);
     
-    if (activeFilter === 'ROOMS' && isPartyHall) return false;
-    if (activeFilter === 'PARTY_HALL' && !isPartyHall) return false;
+    if (activeFilter === 'ROOMS' && isVenue) return false;
+    if (activeFilter === 'VENUES' && !isVenue) return false;
 
     if (!searchTerm) return true;
     const matchTerm = searchTerm.toLowerCase();
@@ -55,11 +60,14 @@ export const QrOrderingSectionPage: React.FC = () => {
 
   /**
    * Generates clean, production-grade filenames matching specification:
-   * e.g., hotel-raama-room-1-qr.png, hotel-raama-party-hall-qr.png
+   * e.g., hotel-raama-room-1-qr.png, hotel-raama-board-room-qr.png, hotel-raama-party-hall-qr.png
    */
   const getQrFileName = (room: any): string => {
     const rawNumber = String(room.roomNumber || '').toLowerCase().trim();
-    if (rawNumber.includes('party') || rawNumber.includes('hall')) {
+    if (rawNumber.includes('board')) {
+      return 'hotel-raama-board-room-qr.png';
+    }
+    if (rawNumber.includes('party') || rawNumber.includes('hall') || rawNumber.includes('sambhrama')) {
       return 'hotel-raama-party-hall-qr.png';
     }
     // Remove "room", "#", spaces, and non-alphanumeric chars
@@ -139,51 +147,61 @@ export const QrOrderingSectionPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 text-[#333333]">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <div className="space-y-6 sm:space-y-8 text-[#333333]">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-12">
         
         {/* Title & Banner Header */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto border-b border-[#cbc0ad] pb-8">
+        <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto border-b border-[#cbc0ad] pb-6 sm:pb-8">
           <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#0B1849]/10 border border-[#cbc0ad] text-[#333333] text-[10px] font-sans font-bold uppercase tracking-widest">
-            <QrCode size={13} /> Admin Console · Room & Hall QR Cards
+            <QrCode size={13} /> Admin Console · Room & Venue QR Cards
           </div>
           <h1 className="editorial-section-title text-[#333333]">
             QR Ordering Directory & Room Cards
           </h1>
           <p className="font-sans text-xs sm:text-sm text-[#666666] leading-relaxed">
-            Manage static QR codes for Rooms 1 through 40 and Sambhrama Party Hall. Click or scan any card to launch guest ordering for <strong className="text-[#333333]">Swaad Pure Veg</strong>, <strong className="text-[#333333]">Non-Veg Specialities</strong>, and <strong className="text-[#333333]">Liquid Lounge Bar</strong>.
+            Manage static QR codes for Rooms 1 through 40, Sambhrama Party Hall, and Board Room. Click or scan any card to launch guest ordering for <strong className="text-[#333333]">Swaad Pure Veg</strong>, <strong className="text-[#333333]">Non-Veg Specialities</strong>, and <strong className="text-[#333333]">Liquid Lounge Bar</strong>.
           </p>
         </div>
 
         {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 flex items-start gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="bg-[#47614d] text-[#f7f7f2] p-4 sm:p-6 rounded-sm border border-[#f7f7f2]/15 flex items-start gap-3 sm:gap-4">
             <div className="p-3 rounded-sm bg-[#f7f7f2]/10 text-[#d9b57d] shrink-0">
               <Building2 size={20} />
             </div>
             <div>
-              <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#f7f7f2] mb-1">40 Unique Room QRs</h3>
+              <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#f7f7f2] mb-1">40 Room QRs</h3>
               <p className="text-xs font-sans text-[#f7f7f2]/70 leading-relaxed">Rooms 1 through 40 each have an assigned static QR token for room service.</p>
             </div>
           </div>
 
-          <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 flex items-start gap-4">
+          <div className="bg-[#47614d] text-[#f7f7f2] p-4 sm:p-6 rounded-sm border border-[#f7f7f2]/15 flex items-start gap-3 sm:gap-4">
             <div className="p-3 rounded-sm bg-[#f7f7f2]/10 text-[#d9b57d] shrink-0">
               <Sparkles size={20} />
             </div>
             <div>
-              <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#f7f7f2] mb-1">1 Sambhrama Party Hall QR</h3>
-              <p className="text-xs font-sans text-[#f7f7f2]/70 leading-relaxed">Dedicated banquet QR code for grand celebrations and party events.</p>
+              <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#f7f7f2] mb-1">Party Hall QR</h3>
+              <p className="text-xs font-sans text-[#f7f7f2]/70 leading-relaxed">Dedicated Sambhrama Banquet QR code for grand celebrations and party events.</p>
             </div>
           </div>
 
-          <div className="bg-[#47614d] text-[#f7f7f2] p-6 rounded-sm border border-[#f7f7f2]/15 flex items-start gap-4">
+          <div className="bg-[#47614d] text-[#f7f7f2] p-4 sm:p-6 rounded-sm border border-[#f7f7f2]/15 flex items-start gap-3 sm:gap-4">
+            <div className="p-3 rounded-sm bg-[#f7f7f2]/10 text-[#d9b57d] shrink-0">
+              <Presentation size={20} />
+            </div>
+            <div>
+              <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#f7f7f2] mb-1">Board Room QR</h3>
+              <p className="text-xs font-sans text-[#f7f7f2]/70 leading-relaxed">Executive conference & meeting room QR for corporate food and beverage orders.</p>
+            </div>
+          </div>
+
+          <div className="bg-[#47614d] text-[#f7f7f2] p-4 sm:p-6 rounded-sm border border-[#f7f7f2]/15 flex items-start gap-3 sm:gap-4">
             <div className="p-3 rounded-sm bg-[#f7f7f2]/10 text-[#d9b57d] shrink-0">
               <Utensils size={20} />
             </div>
             <div>
-              <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#f7f7f2] mb-1">Direct Menu Ingestion</h3>
-              <p className="text-xs font-sans text-[#f7f7f2]/70 leading-relaxed">Instant access to Swaad dining & LLB Bar with real-time kitchen status tracking.</p>
+              <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#f7f7f2] mb-1">Instant Kitchen Board</h3>
+              <p className="text-xs font-sans text-[#f7f7f2]/70 leading-relaxed">Orders instantly dispatch to the 2-stage kitchen prep board with audio alerts.</p>
             </div>
           </div>
         </div>
@@ -210,17 +228,17 @@ export const QrOrderingSectionPage: React.FC = () => {
                   : 'text-[#666666] hover:text-[#333333]'
               }`}
             >
-              Rooms 1-40 ({rooms.filter(r => !r.roomNumber.toLowerCase().includes('hall')).length})
+              Rooms 1-40 ({rooms.filter(r => !isVenueRoom(r.roomNumber)).length})
             </button>
             <button
-              onClick={() => setActiveFilter('PARTY_HALL')}
+              onClick={() => setActiveFilter('VENUES')}
               className={`flex-1 lg:flex-initial px-4 py-2 rounded-sm text-xs font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-                activeFilter === 'PARTY_HALL'
+                activeFilter === 'VENUES'
                   ? 'bg-[#47614d] text-[#f7f7f2]'
                   : 'text-[#666666] hover:text-[#333333]'
               }`}
             >
-              Party Hall (1)
+              Halls & Board Room ({rooms.filter(r => isVenueRoom(r.roomNumber)).length})
             </button>
           </div>
 
@@ -231,7 +249,7 @@ export const QrOrderingSectionPage: React.FC = () => {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#666666]" size={15} />
               <input
                 type="text"
-                placeholder="Search Room Number..."
+                placeholder="Search Room / Board Room..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm pl-10 pr-4 py-2 text-xs font-sans text-[#333333] placeholder-[#596277] focus:outline-none focus:border-[#47614d] transition-colors"
@@ -335,38 +353,48 @@ export const QrOrderingSectionPage: React.FC = () => {
           </div>
         ) : (
           /* QR Code Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {filteredRooms.map((room) => {
-              const isPartyHall = room.roomNumber.toLowerCase().includes('hall');
+              const isVenue = isVenueRoom(room.roomNumber);
+              const isBoardRoom = room.roomNumber.toLowerCase().includes('board');
               const targetUrl = `${window.location.origin}/order/${room.qrToken}`;
               const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(targetUrl)}`;
 
               return (
                 <div
                   key={room._id}
-                  className={`bg-[#47614d] text-[#f7f7f2] rounded-sm border p-6 flex flex-col justify-between hover:border-[#d9b57d] transition-all duration-300 shadow-md ${
-                    isPartyHall ? 'border-[#d9b57d]' : 'border-[#f7f7f2]/15'
+                  className={`bg-[#47614d] text-[#f7f7f2] rounded-sm border p-4 sm:p-6 flex flex-col justify-between hover:border-[#d9b57d] transition-all duration-300 shadow-md ${
+                    isVenue ? 'border-[#d9b57d]' : 'border-[#f7f7f2]/15'
                   }`}
                 >
                   <div>
                     {/* Header */}
-                    <div className="flex justify-between items-start mb-4">
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
                       <div>
                         <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-[#f7f7f2]/10 text-[#d9b57d]">
-                          {isPartyHall ? 'Special Event Venue' : `Floor ${room.floor}`}
+                          {isBoardRoom
+                            ? 'Executive Meeting Venue'
+                            : isVenue
+                            ? 'Special Event Venue'
+                            : `Floor ${room.floor}`}
                         </span>
-                        <h3 className="text-2xl font-serif text-[#f7f7f2] mt-1.5">
-                          {isPartyHall ? room.roomNumber : `Room #${room.roomNumber}`}
+                        <h3 className="text-xl sm:text-2xl font-serif text-[#f7f7f2] mt-1.5 truncate">
+                          {isVenue ? room.roomNumber : `Room #${room.roomNumber}`}
                         </h3>
                       </div>
 
-                      <span className="text-[9px] font-sans text-[#d9b57d] bg-[#f7f7f2]/10 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-[#f7f7f2]/15">
+                      <span className="text-[9px] font-sans text-[#d9b57d] bg-[#f7f7f2]/10 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-[#f7f7f2]/15 shrink-0 ml-2">
                         QR Active
                       </span>
                     </div>
 
                     <p className="text-xs font-sans text-[#f7f7f2]/70 mb-5 line-clamp-1">
-                      {room.roomTypeId?.name || (isPartyHall ? 'Grand Sambhrama Party Hall' : 'Standard Room')}
+                      {room.roomTypeId?.name ||
+                        (isBoardRoom
+                          ? 'Executive Board Room'
+                          : isVenue
+                          ? 'Grand Sambhrama Party Hall'
+                          : 'Standard Room')}
                     </p>
 
                     {/* QR Code Visual Container */}
@@ -392,7 +420,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                           downloadSingleQr(room);
                         }}
                         className="mt-4 w-full py-3 px-4 rounded-sm bg-[#47614d] text-[#f7f7f2] hover:bg-[#d9b57d] hover:text-[#0B1849] active:bg-[#c49f67] text-xs font-sans font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer border border-[#3d5442] hover:border-[#d9b57d]"
-                        title={`Download high-quality PNG for ${isPartyHall ? room.roomNumber : `Room #${room.roomNumber}`}`}
+                        title={`Download high-quality PNG for ${isVenue ? room.roomNumber : `Room #${room.roomNumber}`}`}
                       >
                         <Download size={16} />
                         <span>Download PNG</span>
@@ -408,3 +436,4 @@ export const QrOrderingSectionPage: React.FC = () => {
     </div>
   );
 };
+

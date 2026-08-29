@@ -1,24 +1,116 @@
-import React, { useState, useEffect } from 'react';
-import { Utensils, GlassWater, Search, ShoppingBag, Plus, Minus, X, Send, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Search,
+  ShoppingBag,
+  Plus,
+  Minus,
+  X,
+  Send,
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal,
+  Check,
+  RotateCcw,
+  Filter,
+  ShieldCheck,
+  FileText,
+  ArrowRight,
+  Leaf,
+  Martini,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchMenuCatalog, createFoodOrder, verifyOrderPayment } from '../services/api';
+
+type CourseType = 'ALL' | 'BREAKFAST' | 'STARTERS' | 'MAIN_COURSE' | 'BEVERAGES' | 'ICE_CREAM';
+
+const COURSE_OPTIONS: { id: CourseType; label: string; icon?: string }[] = [
+  { id: 'ALL', label: 'All Courses' },
+  { id: 'BREAKFAST', label: 'Breakfast & Snacks' },
+  { id: 'STARTERS', label: 'Starters & Soups' },
+  { id: 'MAIN_COURSE', label: 'Main Course & Breads' },
+  { id: 'BEVERAGES', label: 'Beverages & Drinks' },
+  { id: 'ICE_CREAM', label: 'Ice Cream & Desserts' },
+];
+
+const getCourseForCategory = (catName: string): CourseType => {
+  const lower = catName.toLowerCase();
+  if (
+    lower.includes('breakfast') ||
+    lower.includes('south indian') ||
+    lower.includes('dosa') ||
+    lower.includes('sandwich') ||
+    lower.includes('tandoor bread') ||
+    lower.includes('little bite')
+  ) {
+    return 'BREAKFAST';
+  }
+  if (
+    lower.includes('starter') ||
+    lower.includes('soup') ||
+    lower.includes('salad') ||
+    lower.includes('tandoori') ||
+    lower.includes('bites') ||
+    lower.includes('sizzler')
+  ) {
+    return 'STARTERS';
+  }
+  if (
+    lower.includes('juice') ||
+    lower.includes('milkshake') ||
+    lower.includes('lassi') ||
+    lower.includes('beverage') ||
+    lower.includes('whisky') ||
+    lower.includes('brandy') ||
+    lower.includes('rum') ||
+    lower.includes('vodka') ||
+    lower.includes('scotch') ||
+    lower.includes('wine') ||
+    lower.includes('tequila') ||
+    lower.includes('beer') ||
+    lower.includes('breezer') ||
+    lower.includes('mocktail') ||
+    lower.includes('cocktail') ||
+    lower.includes('drink') ||
+    lower.includes('water')
+  ) {
+    return 'BEVERAGES';
+  }
+  if (
+    lower.includes('ice cream') ||
+    lower.includes('sweet') ||
+    lower.includes('fruit salad') ||
+    lower.includes('dessert')
+  ) {
+    return 'ICE_CREAM';
+  }
+  return 'MAIN_COURSE';
+};
 
 export const DiningPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlRoom = searchParams.get('room') || searchParams.get('roomNumber');
   const urlToken = searchParams.get('token');
+  const urlTab = searchParams.get('tab');
   const storedRoom = localStorage.getItem('scanned_room_number');
   const storedToken = localStorage.getItem('scanned_qr_token');
 
   const isQrScanned = Boolean(urlRoom || urlToken || storedRoom || storedToken);
   const activeRoomNumber = urlRoom || storedRoom || '';
 
-  const [activeTab, setActiveTab] = useState<'SWAAD_VEG' | 'HOTEL_RAAMA' | 'LIQUID_LOUNGE'>('SWAAD_VEG');
+  const [activeTab, setActiveTab] = useState<'SWAAD_VEG' | 'HOTEL_RAAMA' | 'LIQUID_LOUNGE'>(
+    urlTab === 'HOTEL_RAAMA' || urlTab === 'LIQUID_LOUNGE' || urlTab === 'SWAAD_VEG'
+      ? urlTab
+      : 'SWAAD_VEG'
+  );
+
   const [categories, setCategories] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState<CourseType>('ALL');
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Cart State: { [menuItemId_potionSize]: { menuItemId, name, price, quantity, potionSize } }
@@ -64,6 +156,55 @@ export const DiningPage: React.FC = () => {
     document.body.appendChild(script);
   }, [urlRoom, urlToken]);
 
+  useEffect(() => {
+    if (urlTab === 'HOTEL_RAAMA' || urlTab === 'LIQUID_LOUNGE' || urlTab === 'SWAAD_VEG') {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
+
+  const handleTabChange = (tab: 'SWAAD_VEG' | 'HOTEL_RAAMA' | 'LIQUID_LOUNGE') => {
+    setActiveTab(tab);
+    setSearchTerm('');
+    setSelectedCategoryIds([]);
+    setSelectedCourse('ALL');
+  };
+
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, any>();
+    categories.forEach((cat) => map.set(cat._id, cat));
+    return map;
+  }, [categories]);
+
+  // Section categories available for the active tab
+  const availableSectionCategories = useMemo(() => {
+    return categories.filter((c) => {
+      if (activeTab === 'SWAAD_VEG') return c.section === 'SWAAD';
+      if (activeTab === 'HOTEL_RAAMA') return c.section === 'HOTEL_RAAMA';
+      if (activeTab === 'LIQUID_LOUNGE') return c.section === 'LIQUID_LOUNGE';
+      return true;
+    });
+  }, [categories, activeTab]);
+
+  const toggleCategory = (catId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]
+    );
+  };
+
+  const selectAllCategories = () => {
+    setSelectedCategoryIds(availableSectionCategories.map((c) => c._id));
+  };
+
+  const clearAllCategories = () => {
+    setSelectedCategoryIds([]);
+  };
+
+  const resetAllFilters = () => {
+    setSelectedCategoryIds([]);
+    setSelectedCourse('ALL');
+    setSearchTerm('');
+  };
+
   const currentItems = items.filter((i) => {
     if (activeTab === 'SWAAD_VEG') {
       if (i.section !== 'SWAAD') return false;
@@ -72,8 +213,28 @@ export const DiningPage: React.FC = () => {
     } else if (activeTab === 'LIQUID_LOUNGE') {
       if (i.section !== 'LIQUID_LOUNGE') return false;
     }
+
+    const catId = typeof i.categoryId === 'object' ? i.categoryId?._id : i.categoryId;
+    const cat = categoryMap.get(catId);
+    const catName = cat?.name || '';
+
+    // Course filter
+    if (selectedCourse !== 'ALL') {
+      const course = getCourseForCategory(catName);
+      if (course !== selectedCourse) return false;
+    }
+
+    // Category checkboxes filter
+    if (selectedCategoryIds.length > 0) {
+      if (!selectedCategoryIds.includes(catId)) return false;
+    }
+
     if (searchTerm) {
-      return i.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const searchLower = searchTerm.toLowerCase();
+      const matchName = i.name.toLowerCase().includes(searchLower);
+      const matchDesc = i.description && i.description.toLowerCase().includes(searchLower);
+      const matchCat = catName.toLowerCase().includes(searchLower);
+      return matchName || matchDesc || matchCat;
     }
     return true;
   });
@@ -287,102 +448,364 @@ export const DiningPage: React.FC = () => {
           Delights from Swaad Pure Veg Restaurant, Non-Veg Specialities, or executive spirits from Liquid Lounge Bar (LLB). Order straight to your room or collect at reception.
         </p>
 
-        {!isQrScanned ? (
-          <div className="bg-[#47614d] text-[#f7f7f2] p-3.5 rounded-sm border border-[#d9b57d]/40 shadow-md text-xs font-sans flex items-center justify-center gap-2.5 max-w-xl mx-auto my-4">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+        {/* Verified QR Session Banner */}
+        {isQrScanned ? (
+          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-lg bg-[#2e4233] text-white shadow-md mx-auto my-3 text-xs sm:text-sm font-sans">
+            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0">
+              <ShieldCheck size={15} />
+            </div>
             <span>
-              <strong className="text-[#d9b57d] uppercase tracking-wider">QR Code Scan Required:</strong> Please scan the QR code in your room or dining table to authorize food & beverage ordering.
+              <strong className="text-emerald-400 font-bold uppercase tracking-wider">VERIFIED QR SESSION:</strong>{' '}
+              <span className="text-white/95">Authorized for Room #{activeRoomNumber || '1'}</span>
             </span>
           </div>
         ) : (
-          <div className="bg-[#47614d] text-[#f7f7f2] p-3 rounded-sm border border-emerald-500/40 shadow-md text-xs font-sans flex items-center justify-center gap-2.5 max-w-xl mx-auto my-4">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-lg bg-[#2e4233] text-white shadow-md mx-auto my-3 text-xs sm:text-sm font-sans">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0" />
             <span>
-              <strong className="text-emerald-300 uppercase tracking-wider">Verified QR Session:</strong> Authorized for Room #{activeRoomNumber || 'Verified Scan'}
+              <strong className="text-amber-300 font-bold uppercase tracking-wider">QR CODE SCAN REQUIRED:</strong>{' '}
+              <span className="text-white/95">Please scan your room QR code to enable ordering</span>
             </span>
           </div>
         )}
 
         {/* Action Buttons: View Scanned Menu & Cart */}
-        <div className="flex flex-wrap justify-center gap-4 pt-4">
+        <div className="flex flex-wrap justify-center items-center gap-4 pt-3">
           <button
             onClick={() => {
               setViewerPageIndex(0);
               setViewerOpen(true);
             }}
-            className="px-5 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 border border-[#cbc0ad] bg-[#f7f7f2] text-[#333333] hover:bg-[#0B1849]/5 transition-all cursor-pointer"
+            className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 border border-[#ded5c8] bg-[#fbf9f5] text-[#2c2c2c] hover:bg-white hover:border-[#c59a58] transition-all cursor-pointer shadow-sm"
           >
-            <BookOpen size={15} /> View Scanned Menu Cards
+            <FileText size={18} className="text-[#333333]" />
+            <span>VIEW SCANNED MENU CARDS</span>
+            <ArrowRight size={15} className="text-[#333333]" />
           </button>
 
           {totalCartCount > 0 && (
             <button
               onClick={() => setCartOpen(true)}
-              className="px-5 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 bg-[#47614d] text-[#f7f7f2] shadow-sm hover:bg-[#374c3c] transition-all cursor-pointer"
+              className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 bg-[#2e4233] text-[#f7f7f2] shadow-md hover:bg-[#243428] transition-all cursor-pointer"
             >
-              <ShoppingBag size={15} /> View Cart ({totalCartCount}) — ₹{totalCartPrice}
+              <ShoppingBag size={16} /> View Cart ({totalCartCount}) — ₹{totalCartPrice}
             </button>
           )}
         </div>
 
-        {/* Tab Selector */}
-        <div className="flex flex-wrap justify-center gap-3 mt-8">
+        {/* Tab Cards Row (Swaad Pure Veg, Hotel Raama, Liquid Lounge Bar) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-3xl mx-auto mt-6">
+          {/* SWAAD PURE VEG */}
           <button
-            onClick={() => {
-              setActiveTab('SWAAD_VEG');
-              setSearchTerm('');
-            }}
-            className={`px-5 py-3 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+            onClick={() => handleTabChange('SWAAD_VEG')}
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
               activeTab === 'SWAAD_VEG'
-                ? 'bg-[#47614d] text-[#f7f7f2] shadow-md'
-                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
+                ? 'bg-[#2e4233] text-white border-[#2e4233] shadow-md ring-1 ring-[#2e4233]'
+                : 'bg-[#fbf9f5] text-[#2c2c2c] border-[#ded5c8] hover:border-[#cbc0ad]'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-            <Utensils size={15} /> Swaad Pure Veg
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
+                activeTab === 'SWAAD_VEG'
+                  ? 'bg-[#3b5341] border-emerald-500/30 text-emerald-400'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+              }`}
+            >
+              <Leaf size={20} />
+            </div>
+            <div className="h-7 w-[1px] bg-current opacity-20 shrink-0" />
+            <span className="font-sans font-bold text-xs uppercase tracking-wider">
+              SWAAD PURE VEG
+            </span>
           </button>
 
+          {/* HOTEL RAAMA */}
           <button
-            onClick={() => {
-              setActiveTab('HOTEL_RAAMA');
-              setSearchTerm('');
-            }}
-            className={`px-5 py-3 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+            onClick={() => handleTabChange('HOTEL_RAAMA')}
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
               activeTab === 'HOTEL_RAAMA'
-                ? 'bg-[#47614d] text-[#f7f7f2] shadow-md'
-                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
+                ? 'bg-[#2e4233] text-white border-[#2e4233] shadow-md ring-1 ring-[#2e4233]'
+                : 'bg-[#fbf9f5] text-[#2c2c2c] border-[#ded5c8] hover:border-[#cbc0ad]'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-[#d9b57d] inline-block"></span>
-            <Utensils size={15} /> Hotel Raama
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
+                activeTab === 'HOTEL_RAAMA'
+                  ? 'bg-[#b88c4b] border-[#d9b57d]/50 text-white'
+                  : 'bg-[#b88c4b] border-[#a07739] text-white'
+              }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M4 18h16" />
+                <path d="M12 5v1" />
+                <path d="M19 18a7 7 0 0 0-14 0" />
+                <circle cx="12" cy="5" r="1.2" fill="currentColor" />
+              </svg>
+            </div>
+            <div className="h-7 w-[1px] bg-current opacity-20 shrink-0" />
+            <span className="font-sans font-bold text-xs uppercase tracking-wider">
+              HOTEL RAAMA
+            </span>
           </button>
+
+          {/* LIQUID LOUNGE BAR */}
+          <button
+            onClick={() => handleTabChange('LIQUID_LOUNGE')}
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
+              activeTab === 'LIQUID_LOUNGE'
+                ? 'bg-[#2e4233] text-white border-[#2e4233] shadow-md ring-1 ring-[#2e4233]'
+                : 'bg-[#fbf9f5] text-[#2c2c2c] border-[#ded5c8] hover:border-[#cbc0ad]'
+            }`}
+          >
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
+                activeTab === 'LIQUID_LOUNGE'
+                  ? 'bg-[#1b2b20] border-emerald-500/30 text-emerald-400'
+                  : 'bg-[#2e4233] border-[#203024] text-white'
+              }`}
+            >
+              <Martini size={19} />
+            </div>
+            <div className="h-7 w-[1px] bg-current opacity-20 shrink-0" />
+            <span className="font-sans font-bold text-xs uppercase tracking-wider">
+              LIQUID LOUNGE BAR
+            </span>
+          </button>
+        </div>
+
+        {/* Search & Filter Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 max-w-xl mx-auto mt-6">
+          <div className="relative w-full sm:flex-grow">
+            <Search size={16} className="absolute left-3.5 top-3 text-[#666666]" />
+            <input
+              type="text"
+              placeholder={`Search ${activeTab === 'LIQUID_LOUNGE' ? 'drinks...' : 'dishes...'}`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm pl-10 pr-9 py-2.5 text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none shadow-sm"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-2.5 text-[#666666] hover:text-[#333333] cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
 
           <button
-            onClick={() => {
-              setActiveTab('LIQUID_LOUNGE');
-              setSearchTerm('');
-            }}
-            className={`px-5 py-3 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === 'LIQUID_LOUNGE'
-                ? 'bg-[#47614d] text-[#f7f7f2] shadow-md'
-                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={`w-full sm:w-auto px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border transition-all cursor-pointer shadow-sm shrink-0 ${
+              filterOpen || selectedCategoryIds.length > 0 || selectedCourse !== 'ALL'
+                ? 'bg-[#47614d] text-[#f7f7f2] border-[#47614d]'
+                : 'bg-[#f7f7f2] text-[#333333] border-[#cbc0ad] hover:bg-[#47614d]/10'
             }`}
           >
-            <GlassWater size={15} /> Liquid Lounge Bar
+            <SlidersHorizontal size={14} />
+            <span>Filter</span>
+            {(selectedCategoryIds.length > 0 || selectedCourse !== 'ALL') && (
+              <span className="w-5 h-5 rounded-full bg-[#d9b57d] text-[#333333] text-[10px] font-bold flex items-center justify-center">
+                {selectedCategoryIds.length + (selectedCourse !== 'ALL' ? 1 : 0)}
+              </span>
+            )}
           </button>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md mx-auto mt-6">
-          <Search size={16} className="absolute left-3.5 top-3 text-[#666666]" />
-          <input
-            type="text"
-            placeholder={`Search ${activeTab === 'LIQUID_LOUNGE' ? 'drinks...' : 'dishes...'}`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm pl-10 pr-4 py-2 text-xs font-sans text-[#333333] focus:border-[#cbc0ad] focus:outline-none"
-          />
-        </div>
+        {/* Quick Filter Tag Chips (when filters are active) */}
+        {(selectedCourse !== 'ALL' || selectedCategoryIds.length > 0 || searchTerm) && (
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto mt-3">
+            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#666666]">
+              Active Filters:
+            </span>
+
+            {selectedCourse !== 'ALL' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#47614d]/10 border border-[#47614d]/30 text-[#47614d] text-xs font-sans font-semibold">
+                Course: {COURSE_OPTIONS.find((c) => c.id === selectedCourse)?.label}
+                <button onClick={() => setSelectedCourse('ALL')} className="hover:text-red-600 cursor-pointer">
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+
+            {selectedCategoryIds.map((catId) => {
+              const cat = categoryMap.get(catId);
+              if (!cat) return null;
+              return (
+                <span
+                  key={catId}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#d9b57d]/20 border border-[#d9b57d]/60 text-[#333333] text-xs font-sans font-semibold"
+                >
+                  {cat.name.split('(')[0].trim()}
+                  <button onClick={() => toggleCategory(catId)} className="hover:text-red-600 cursor-pointer">
+                    <X size={12} />
+                  </button>
+                </span>
+              );
+            })}
+
+            {searchTerm && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-stone-200 border border-stone-300 text-[#333333] text-xs font-sans font-semibold">
+                "{searchTerm}"
+                <button onClick={() => setSearchTerm('')} className="hover:text-red-600 cursor-pointer">
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+
+            <button
+              onClick={resetAllFilters}
+              className="text-[11px] font-sans font-bold text-red-700 hover:text-red-800 underline ml-2 cursor-pointer flex items-center gap-1"
+            >
+              <RotateCcw size={11} /> Clear all
+            </button>
+          </div>
+        )}
+
+        {/* Collapsible Filter Panel */}
+        {filterOpen && (
+          <div className="max-w-4xl mx-auto mt-6 bg-white border border-[#cbc0ad] rounded-sm p-6 shadow-xl text-left space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex justify-between items-center border-b border-[#cbc0ad] pb-3">
+              <div className="flex items-center gap-2">
+                <Filter size={16} className="text-[#47614d]" />
+                <h3 className="font-serif font-bold text-base sm:text-lg text-[#333333]">
+                  Filter Menu Items
+                </h3>
+              </div>
+              <button
+                onClick={() => setFilterOpen(false)}
+                className="p-1 rounded-sm hover:bg-stone-100 text-[#666666] hover:text-[#333333] cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* 1. Course / Meal Type Filters */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#666666]">
+                  1. Filter by Course / Meal Type
+                </span>
+                {selectedCourse !== 'ALL' && (
+                  <button
+                    onClick={() => setSelectedCourse('ALL')}
+                    className="text-[11px] font-sans text-stone-500 hover:text-stone-800 underline cursor-pointer"
+                  >
+                    Reset Course
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {COURSE_OPTIONS.map((opt) => {
+                  const isSelected = selectedCourse === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => setSelectedCourse(opt.id)}
+                      className={`px-3.5 py-2 rounded-sm text-xs font-sans font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-[#47614d] text-white shadow-sm ring-1 ring-[#47614d]'
+                          : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#47614d]'
+                      }`}
+                    >
+                      {isSelected && <Check size={13} />}
+                      <span>{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Multi-Select Category Checkboxes */}
+            <div className="space-y-3 pt-2 border-t border-[#cbc0ad]/60">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#666666]">
+                  2. Select Categories ({selectedCategoryIds.length > 0 ? `${selectedCategoryIds.length} Selected` : 'All Categories'})
+                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={selectAllCategories}
+                    className="text-xs font-sans font-bold text-[#47614d] hover:underline cursor-pointer"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-stone-300">|</span>
+                  <button
+                    onClick={clearAllCategories}
+                    className="text-xs font-sans font-bold text-stone-500 hover:text-stone-800 hover:underline cursor-pointer"
+                  >
+                    Clear Categories
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1 border border-[#cbc0ad]/40 rounded-sm bg-[#f7f7f2]/50">
+                {availableSectionCategories.map((cat) => {
+                  const isChecked = selectedCategoryIds.includes(cat._id);
+                  const itemCount = items.filter(
+                    (i) => (typeof i.categoryId === 'object' ? i.categoryId?._id : i.categoryId) === cat._id
+                  ).length;
+
+                  return (
+                    <label
+                      key={cat._id}
+                      onClick={() => toggleCategory(cat._id)}
+                      className={`flex items-start gap-2.5 p-2.5 rounded-sm border transition-all cursor-pointer select-none text-xs font-sans ${
+                        isChecked
+                          ? 'bg-[#47614d]/10 border-[#47614d] text-[#333333]'
+                          : 'bg-white border-[#cbc0ad]/60 text-[#666666] hover:border-[#cbc0ad]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}} // Handled by label onClick
+                        className="mt-0.5 rounded text-[#47614d] focus:ring-[#47614d] cursor-pointer"
+                      />
+                      <div className="flex-grow min-w-0">
+                        <p className={`font-semibold leading-tight line-clamp-1 ${isChecked ? 'text-[#333333]' : 'text-stone-700'}`}>
+                          {cat.name.split('(')[0].trim()}
+                        </p>
+                        {cat.name.includes('(') && (
+                          <p className="text-[10px] text-stone-400 truncate">
+                            {cat.name.substring(cat.name.indexOf('('))}
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-[10px] font-bold text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">
+                        {itemCount}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Filter Drawer Footer */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#cbc0ad]">
+              <span className="text-xs font-sans text-[#666666]">
+                Showing <strong className="text-[#333333]">{currentItems.length}</strong> matching items across{' '}
+                <strong className="text-[#333333]">{currentCategories.length}</strong> categories
+              </span>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  onClick={resetAllFilters}
+                  className="px-4 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider text-[#666666] hover:text-[#333333] border border-[#cbc0ad] bg-[#f7f7f2] hover:bg-stone-200 transition-all cursor-pointer"
+                >
+                  Reset All
+                </button>
+                <button
+                  onClick={() => setFilterOpen(false)}
+                  className="px-5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider bg-[#47614d] text-white hover:bg-[#374c3c] transition-all cursor-pointer shadow-sm"
+                >
+                  Apply & View ({currentItems.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Menu Catalog */}
@@ -412,16 +835,19 @@ export const DiningPage: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between items-start gap-2">
                           <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
-                          <span
-                            className={`shrink-0 text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
-                              item.isVeg
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : 'bg-red-50 text-red-800 border-red-300'
-                            }`}
-                          >
-                            {item.isVeg ? 'Veg' : 'Non-Veg'}
-                          </span>
+                          {item.section !== 'LIQUID_LOUNGE' && activeTab !== 'LIQUID_LOUNGE' && (
+                            <span
+                              className={`shrink-0 text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
+                                item.isVeg
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                  : 'bg-red-50 text-red-800 border-red-300'
+                              }`}
+                            >
+                              {item.isVeg ? 'Veg' : 'Non-Veg'}
+                            </span>
+                          )}
                         </div>
+
                         {item.description && (
                           <p className="text-xs font-sans text-[#666666] leading-relaxed line-clamp-2">
                             {item.description}

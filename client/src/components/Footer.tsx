@@ -1,8 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { MapPin, Clock, MessageSquare, ArrowUpRight } from 'lucide-react';
 
 export const Footer: React.FC = () => {
+  const location = useLocation();
+
+  // Hide public footer on admin screens
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="bg-[#181e19] text-[#f7f7f2] border-t border-[#cbc0ad]/20 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
@@ -10,10 +17,11 @@ export const Footer: React.FC = () => {
         {/* Col 1: Brand & Editorial Statement */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#47614d] text-[#f7f7f2] flex items-center justify-center font-bold text-sm">
-              HR
-            </div>
-            <span className="text-xl font-bold tracking-tight text-[#f7f7f2]">HOTEL RAAMA</span>
+            <img
+              src="/hotel-raama-logo.png"
+              alt="Hotel Raama"
+              className="h-12 w-auto object-contain rounded-lg bg-white/95 p-1 shadow-xs"
+            />
           </div>
           <p className="text-xs text-[#f7f7f2]/70 leading-relaxed max-w-sm">
             A sanctuary of quiet luxury, refined South Indian dining at Swaad, executive spirits at Liquid Lounge, and grand celebrations at Sambhrama Banquet in Hassan, Karnataka.

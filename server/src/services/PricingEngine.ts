@@ -13,6 +13,9 @@ export interface IPricingCalculationResult {
   numNights: number;
   roomPricePerNight: number;
   roomTotal: number;
+  extraPerson: boolean;
+  extraPersonChargePerNight: number;
+  extraPersonTotal: number;
   mealPlanPricePerNight: number;
   mealPlanTotal: number;
   subtotal: number;
@@ -31,7 +34,8 @@ export class PricingEngine {
     numGuests: number,
     mealSelection?: IMealSelectionInput,
     couponCode?: string,
-    planType: 'NON_CP' | 'CP' = 'NON_CP'
+    planType: 'NON_CP' | 'CP' = 'NON_CP',
+    extraPerson: boolean = false
   ): Promise<IPricingCalculationResult> {
     // 1. Calculate number of nights
     const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
@@ -45,27 +49,32 @@ export class PricingEngine {
     const roomPricePerNight = planType === 'CP' ? (roomType.cpPrice || roomType.basePrice) : roomType.basePrice;
     const roomTotal = roomPricePerNight * numNights;
 
-    // 3. Fetch Meal Plans and calculate total
+    // 3. Extra Person Charge (₹600 per night)
+    const extraPersonChargePerNight = extraPerson ? 600 : 0;
+    const extraPersonTotal = extraPersonChargePerNight * numNights;
+
+    // 4. Fetch Meal Plans and calculate total
     let mealPlanPricePerNight = 0;
+    const totalDiningGuests = numGuests + (extraPerson ? 1 : 0);
     if (mealSelection) {
       const mealPlans = await MealPlan.find({ isActive: true });
       const mealMap = new Map(mealPlans.map(m => [m.type, m.pricePerPersonPerNight]));
 
       if (mealSelection.breakfast && mealMap.has('BREAKFAST')) {
-        mealPlanPricePerNight += mealMap.get('BREAKFAST')! * numGuests;
+        mealPlanPricePerNight += mealMap.get('BREAKFAST')! * totalDiningGuests;
       }
       if (mealSelection.lunch && mealMap.has('LUNCH')) {
-        mealPlanPricePerNight += mealMap.get('LUNCH')! * numGuests;
+        mealPlanPricePerNight += mealMap.get('LUNCH')! * totalDiningGuests;
       }
       if (mealSelection.dinner && mealMap.has('DINNER')) {
-        mealPlanPricePerNight += mealMap.get('DINNER')! * numGuests;
+        mealPlanPricePerNight += mealMap.get('DINNER')! * totalDiningGuests;
       }
     }
     const mealPlanTotal = mealPlanPricePerNight * numNights;
 
-    const subtotal = roomTotal + mealPlanTotal;
+    const subtotal = roomTotal + extraPersonTotal + mealPlanTotal;
 
-    // 4. Validate and apply Coupon
+    // 5. Validate and apply Coupon
     let discountAmount = 0;
     let validCouponCode: string | undefined;
 
@@ -94,7 +103,7 @@ export class PricingEngine {
 
     const netAmountBeforeTax = Math.max(0, subtotal - discountAmount);
 
-    // 5. Calculate GST Tax
+    // 6. Calculate GST Tax
     const settings = await HotelSetting.findOne() || { taxPercentage: 12 };
     const taxPercentage = settings.taxPercentage || 12;
     const taxAmount = Math.round((netAmountBeforeTax * taxPercentage) / 100);
@@ -105,6 +114,9 @@ export class PricingEngine {
       numNights,
       roomPricePerNight,
       roomTotal,
+      extraPerson: !!extraPerson,
+      extraPersonChargePerNight,
+      extraPersonTotal,
       mealPlanPricePerNight,
       mealPlanTotal,
       subtotal,
@@ -116,3 +128,4 @@ export class PricingEngine {
     };
   }
 }
+
