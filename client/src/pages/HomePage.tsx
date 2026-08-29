@@ -40,8 +40,8 @@ export const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f7f7f2] text-[#333333]">
       
-      {/* 1. HERO SECTION - Editorial Luxury */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-12 pb-20">
+      {/* 1. HERO SECTION - Editorial Luxury Full Bleed */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-20">
         {/* Background Video & Architectural Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <video
@@ -55,11 +55,11 @@ export const HomePage: React.FC = () => {
             <source src="/hero-video.mp4" type="video/mp4" />
             <source src="/hero-video.webm" type="video/webm" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/15" />
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center text-[#f7f7f2] space-y-8 pt-16">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center text-[#f7f7f2] space-y-8 pt-6">
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
@@ -80,48 +80,48 @@ export const HomePage: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* FLOATING AVAILABILITY SEARCH BAR */}
+          {/* FLOATING AVAILABILITY SEARCH BAR - Reduced Blur Transparent Card */}
           <motion.div
             initial={{ opacity: 0, y: 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-[#f7f7f2] text-[#333333] p-6 sm:p-8 rounded-sm border border-[#cbc0ad] shadow-2xl max-w-4xl mx-auto text-left"
+            className="bg-black/20 backdrop-blur-xs text-[#f7f7f2] p-6 sm:p-8 rounded-xl border border-white/15 shadow-xl max-w-4xl mx-auto text-left"
           >
             <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#0B1849]/80 mb-2 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#333333]" /> Check-In
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#d9b57d] mb-2 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#d9b57d]" /> Check-In
                 </label>
                 <input
                   type="date"
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-sm px-3.5 py-2.5 text-xs font-sans font-medium focus:border-[#cbc0ad] focus:outline-none"
+                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#d9b57d] focus:outline-none shadow-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#0B1849]/80 mb-2 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#333333]" /> Check-Out
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#d9b57d] mb-2 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#d9b57d]" /> Check-Out
                 </label>
                 <input
                   type="date"
                   value={checkOut}
                   onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-sm px-3.5 py-2.5 text-xs font-sans font-medium focus:border-[#cbc0ad] focus:outline-none"
+                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#d9b57d] focus:outline-none shadow-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#0B1849]/80 mb-2 flex items-center gap-1.5">
-                  <Users size={13} className="text-[#333333]" /> Guests
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#d9b57d] mb-2 flex items-center gap-1.5">
+                  <Users size={13} className="text-[#d9b57d]" /> Guests
                 </label>
                 <select
                   value={numGuests}
                   onChange={(e) => setNumGuests(parseInt(e.target.value))}
-                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-sm px-3.5 py-2.5 text-xs font-sans font-medium focus:border-[#cbc0ad] focus:outline-none"
+                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#d9b57d] focus:outline-none shadow-xs"
                 >
                   <option value={1}>1 Guest</option>
                   <option value={2}>2 Guests</option>
@@ -133,7 +133,7 @@ export const HomePage: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-sm bg-[#47614d] text-[#f7f7f2] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#374c3c] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3 rounded-lg bg-[#47614d] text-[#f7f7f2] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#374c3c] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg"
                 >
                   Check Availability <ArrowRight size={14} />
                 </button>
