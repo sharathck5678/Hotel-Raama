@@ -183,27 +183,39 @@ export const validateQrToken = (token: string) =>
       if (res.data?.success && res.data?.data) {
         return res.data;
       }
+      const clean = (token || '').toLowerCase().trim();
       const rooms = getLocalRooms();
+      const isHall = /party|hall|sambhrama/i.test(clean);
+      const isBoard = /board/i.test(clean);
+
       const room =
-        rooms.find(
-          (r) =>
-            r.qrToken === token ||
-            r.roomNumber === token ||
-            token.toLowerCase().includes(`room_${r.roomNumber}`) ||
-            token.toLowerCase().includes(`room${r.roomNumber}`)
-        ) || rooms[0] || FALLBACK_ROOMS[0];
+        rooms.find((r) => {
+          const rClean = (r.roomNumber || '').toLowerCase().trim();
+          const rToken = (r.qrToken || '').toLowerCase().trim();
+          if (rToken === clean || rClean === clean) return true;
+          if (isHall && (rClean.includes('party') || rClean.includes('hall') || rClean.includes('sambhrama'))) return true;
+          if (isBoard && rClean.includes('board')) return true;
+          if (clean.includes(`room_${rClean}`) || clean.includes(`room${rClean}`) || clean === rClean) return true;
+          return false;
+        }) || (isHall ? rooms.find((r) => String(r.roomNumber).toLowerCase().includes('party')) : null) || rooms[0] || FALLBACK_ROOMS[0];
       return { success: true, data: room };
     })
     .catch(() => {
+      const clean = (token || '').toLowerCase().trim();
       const rooms = getLocalRooms();
+      const isHall = /party|hall|sambhrama/i.test(clean);
+      const isBoard = /board/i.test(clean);
+
       const room =
-        rooms.find(
-          (r) =>
-            r.qrToken === token ||
-            r.roomNumber === token ||
-            token.toLowerCase().includes(`room_${r.roomNumber}`) ||
-            token.toLowerCase().includes(`room${r.roomNumber}`)
-        ) || rooms[0] || FALLBACK_ROOMS[0];
+        rooms.find((r) => {
+          const rClean = (r.roomNumber || '').toLowerCase().trim();
+          const rToken = (r.qrToken || '').toLowerCase().trim();
+          if (rToken === clean || rClean === clean) return true;
+          if (isHall && (rClean.includes('party') || rClean.includes('hall') || rClean.includes('sambhrama'))) return true;
+          if (isBoard && rClean.includes('board')) return true;
+          if (clean.includes(`room_${rClean}`) || clean.includes(`room${rClean}`) || clean === rClean) return true;
+          return false;
+        }) || (isHall ? rooms.find((r) => String(r.roomNumber).toLowerCase().includes('party')) : null) || rooms[0] || FALLBACK_ROOMS[0];
       return { success: true, data: room };
     });
 

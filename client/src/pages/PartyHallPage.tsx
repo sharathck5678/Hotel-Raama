@@ -61,15 +61,15 @@ export const PartyHallPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-20 relative">
       {/* Hero Header */}
-      <div className="relative rounded-sm overflow-hidden h-[50vh] sm:h-[55vh] flex items-center justify-center text-center p-6 sm:p-8 border border-[#cbc0ad] shadow-md">
+      <div className="relative rounded-sm overflow-hidden min-h-[440px] sm:min-h-[500px] py-14 sm:py-20 px-6 sm:px-10 flex flex-col items-center justify-center text-center border border-[#cbc0ad] shadow-md">
         <img
           src="/sambhrama-party-hall.png"
           alt="Sambhrama Party Hall"
           className="absolute inset-0 w-full h-full object-cover brightness-[0.70]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/40 pointer-events-none" />
-        <div className="relative z-10 max-w-3xl space-y-5 sm:space-y-6 text-[#f7f7f2]">
-          <span className="inline-flex items-center px-3.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-[#f7f7f2]/20 text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em] shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/45 pointer-events-none" />
+        <div className="relative z-10 max-w-3xl flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-[#f7f7f2]">
+          <span className="inline-flex items-center px-4 py-1 rounded-full bg-black/40 backdrop-blur-md border border-[#f7f7f2]/20 text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em] shadow-sm">
             Grand Celebrations & Banquets
           </span>
           <h1 className="editorial-hero-title text-[#f7f7f2] uppercase drop-shadow-md">Sambhrama Party Hall</h1>
@@ -77,15 +77,15 @@ export const PartyHallPage: React.FC = () => {
             Accommodating up to 300 guests with central climate control, audio-visual setups, and custom traditional catering.
           </p>
 
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center pt-4 sm:pt-6">
             <button
               onClick={() => {
                 setViewerPageIndex(0);
                 setViewerOpen(true);
               }}
-              className="px-5 sm:px-6 py-3 sm:py-3.5 bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-2 hover:bg-[#d9b57d] transition-all cursor-pointer shadow-md"
+              className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-2 hover:bg-[#d9b57d] transition-all cursor-pointer shadow-lg active:scale-98"
             >
-              <BookOpen size={15} /> Browse Layout & Catering Catalog
+              <BookOpen size={16} /> Browse Layout & Catering Catalog
             </button>
           </div>
         </div>

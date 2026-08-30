@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { ScrollToTop } from './components/ScrollToTop';
 
 // Guest Pages
 import { HomePage } from './pages/HomePage';
@@ -33,6 +34,7 @@ import { AdminCustomerHistoryView } from './pages/admin/AdminCustomerHistoryView
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
+      <ScrollToTop />
       <Toaster position="top-right" theme="dark" richColors />
       <div className="flex flex-col min-h-screen">
         <Navbar />

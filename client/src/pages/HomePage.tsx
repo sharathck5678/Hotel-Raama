@@ -359,15 +359,14 @@ export const HomePage: React.FC = () => {
               <img
                 src="/sambhrama-party-hall.png"
                 alt="Sambhrama Party Hall"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-[0.65]"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30 pointer-events-none" />
               <div className="relative z-10 space-y-6">
                 <div>
-                  <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-sm">Banquets & Events</span>
-                  <h3 className="text-3xl font-serif text-[#f7f7f2] mt-1 drop-shadow-md">Sambhrama Party Hall</h3>
+                  <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Banquets & Events</span>
+                  <h3 className="text-3xl font-serif text-[#f7f7f2] mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">Sambhrama Party Hall</h3>
                 </div>
-                <p className="text-xs font-sans text-[#f7f7f2]/95 leading-relaxed drop-shadow-sm">
+                <p className="text-xs font-sans text-[#f7f7f2] leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                   Host grand weddings, corporate banquets, and celebrations. Custom vegetarian & non-veg catering packages starting at ₹450 / pax + GST.
                 </p>
                 <Link

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { Types } from 'mongoose';
 import { Room } from '../models/Room';
+import { RoomType } from '../models/RoomType';
 import { MenuItem } from '../models/MenuItem';
 import { Order, IOrderItem } from '../models/Order';
 import { SocketService } from '../services/SocketService';
@@ -10,13 +11,57 @@ import { RazorpayService } from '../services/RazorpayService';
 export class QrController {
   /**
    * GET /api/qr/all-codes
-   * Fetches all 40 room QRs + Sambhrama Party Hall QR token for public ordering portal
+   * Fetches all 40 room QRs + Sambhrama Party Hall & Board Room QR tokens for public ordering portal
    */
   static async getAllQrCodes(req: Request, res: Response) {
     try {
+      // 1. Auto-ensure Sambhrama Party Hall exists
+      const existingPartyHall = await Room.findOne({
+        $or: [
+          { roomNumber: 'Sambhrama Party Hall' },
+          { roomNumber: { $regex: /party|hall|sambhrama/i } },
+          { qrToken: 'qr_token_party_hall' },
+        ],
+      });
+      if (!existingPartyHall) {
+        const roomType = (await RoomType.findOne({ code: 'SUITE_ROOM' })) || (await RoomType.findOne());
+        if (roomType) {
+          await Room.create({
+            roomNumber: 'Sambhrama Party Hall',
+            roomTypeId: roomType._id,
+            floor: 1,
+            status: 'AVAILABLE',
+            qrToken: 'qr_token_party_hall',
+            isActive: true,
+          });
+        }
+      }
+
+      // 2. Auto-ensure Board Room exists
+      const existingBoardRoom = await Room.findOne({
+        $or: [
+          { roomNumber: 'Board Room' },
+          { roomNumber: { $regex: /board/i } },
+          { qrToken: 'qr_token_board_room' },
+        ],
+      });
+      if (!existingBoardRoom) {
+        const roomType = (await RoomType.findOne({ code: 'EXEC_DBL_AC' })) || (await RoomType.findOne());
+        if (roomType) {
+          await Room.create({
+            roomNumber: 'Board Room',
+            roomTypeId: roomType._id,
+            floor: 1,
+            status: 'AVAILABLE',
+            qrToken: 'qr_token_board_room',
+            isActive: true,
+          });
+        }
+      }
+
       const rooms = await Room.find({ isActive: true }).populate('roomTypeId').lean();
       
-      // Sort numerically by roomNumber if numeric, or put Party Hall at end
+      // Sort numerically by roomNumber if numeric, or put Party Hall & Board Room at end
       rooms.sort((a, b) => {
         const numA = parseInt(a.roomNumber, 10);
         const numB = parseInt(b.roomNumber, 10);
@@ -44,7 +89,48 @@ export class QrController {
         return res.status(400).json({ success: false, message: 'QR token is required.' });
       }
 
-      const room = await Room.findOne({ qrToken: token, isActive: true }).populate('roomTypeId');
+      const cleanToken = token.trim();
+      const isPartyHallToken = /party|hall|sambhrama/i.test(cleanToken);
+      const isBoardRoomToken = /board/i.test(cleanToken);
+
+      let room = await Room.findOne({
+        $or: [
+          { qrToken: cleanToken },
+          { qrToken: { $regex: new RegExp(`^${cleanToken}$`, 'i') } },
+          { roomNumber: { $regex: new RegExp(`^${cleanToken.replace(/[-_]/g, ' ')}$`, 'i') } },
+          ...(isPartyHallToken ? [{ roomNumber: { $regex: /party|hall|sambhrama/i } }] : []),
+          ...(isBoardRoomToken ? [{ roomNumber: { $regex: /board/i } }] : []),
+        ],
+        isActive: true,
+      }).populate('roomTypeId');
+
+      // Auto-fallback: If special venue was requested but not in DB, auto-create it
+      if (!room && isPartyHallToken) {
+        const roomType = (await RoomType.findOne({ code: 'SUITE_ROOM' })) || (await RoomType.findOne());
+        if (roomType) {
+          room = await Room.create({
+            roomNumber: 'Sambhrama Party Hall',
+            roomTypeId: roomType._id,
+            floor: 1,
+            status: 'AVAILABLE',
+            qrToken: cleanToken || 'qr_token_party_hall',
+            isActive: true,
+          });
+        }
+      } else if (!room && isBoardRoomToken) {
+        const roomType = (await RoomType.findOne({ code: 'EXEC_DBL_AC' })) || (await RoomType.findOne());
+        if (roomType) {
+          room = await Room.create({
+            roomNumber: 'Board Room',
+            roomTypeId: roomType._id,
+            floor: 1,
+            status: 'AVAILABLE',
+            qrToken: cleanToken || 'qr_token_board_room',
+            isActive: true,
+          });
+        }
+      }
+
       if (!room) {
         return res.status(404).json({ success: false, message: 'Invalid or inactive QR code.' });
       }

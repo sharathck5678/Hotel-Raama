@@ -84,7 +84,35 @@ const ensureCoupons = async () => {
 // Helper to ensure special venue QR codes always exist in active database
 const ensureSpecialVenues = async () => {
   try {
-    const existingBoardRoom = await Room.findOne({ roomNumber: 'Board Room' });
+    const existingPartyHall = await Room.findOne({
+      $or: [
+        { roomNumber: 'Sambhrama Party Hall' },
+        { roomNumber: { $regex: /party|hall|sambhrama/i } },
+        { qrToken: 'qr_token_party_hall' },
+      ],
+    });
+    if (!existingPartyHall) {
+      const roomType = (await RoomType.findOne({ code: 'SUITE_ROOM' })) || (await RoomType.findOne());
+      if (roomType) {
+        await Room.create({
+          roomNumber: 'Sambhrama Party Hall',
+          roomTypeId: roomType._id,
+          floor: 1,
+          status: 'AVAILABLE',
+          qrToken: 'qr_token_party_hall',
+          isActive: true,
+        });
+        console.log('[Setup] Created Sambhrama Party Hall QR code entry.');
+      }
+    }
+
+    const existingBoardRoom = await Room.findOne({
+      $or: [
+        { roomNumber: 'Board Room' },
+        { roomNumber: { $regex: /board/i } },
+        { qrToken: 'qr_token_board_room' },
+      ],
+    });
     if (!existingBoardRoom) {
       const roomType = (await RoomType.findOne({ code: 'EXEC_DBL_AC' })) || (await RoomType.findOne());
       if (roomType) {
