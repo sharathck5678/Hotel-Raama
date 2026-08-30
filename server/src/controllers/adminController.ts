@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { AuthRequest } from '../middleware/authMiddleware';
@@ -404,9 +405,16 @@ export class AdminController {
   static async downloadInvoicePdf(req: AuthRequest, res: Response) {
     try {
       const { type, id } = req.params;
+      const isObjectId = mongoose.isValidObjectId(id);
 
       if (type === 'booking') {
-        const booking = await Booking.findById(id).populate('roomTypeId');
+        const booking = await Booking.findOne({
+          $or: [
+            { bookingId: id },
+            { trackingToken: id },
+            ...(isObjectId ? [{ _id: id }] : []),
+          ],
+        }).populate('roomTypeId');
         if (!booking) return res.status(404).send('Booking not found');
 
         const roomTypeName = (booking.roomTypeId as any)?.name || 'Executive Room';
@@ -415,7 +423,13 @@ export class AdminController {
         res.setHeader('Content-Disposition', `attachment; filename=Invoice-${booking.bookingId}.pdf`);
         return res.send(pdfBuffer);
       } else if (type === 'order') {
-        const order = await Order.findById(id);
+        const order = await Order.findOne({
+          $or: [
+            { orderId: id },
+            { trackingToken: id },
+            ...(isObjectId ? [{ _id: id }] : []),
+          ],
+        });
         if (!order) return res.status(404).send('Order not found');
 
         const pdfBuffer = await InvoicePdfService.generateOrderInvoicePdf(order);
@@ -426,6 +440,7 @@ export class AdminController {
         return res.status(400).send('Invalid invoice type');
       }
     } catch (error) {
+      console.error('Error generating admin PDF invoice:', error);
       return res.status(500).send('Failed to generate PDF');
     }
   }

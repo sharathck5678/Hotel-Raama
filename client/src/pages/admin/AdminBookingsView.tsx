@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchAdminBookings, updateBookingStatus, getBookingInvoiceUrl } from '../../services/api';
+import { fetchAdminBookings, updateBookingStatus } from '../../services/api';
+import { downloadBookingInvoicePdf } from '../../services/clientPdfService';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 export const AdminBookingsView: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -45,12 +47,15 @@ export const AdminBookingsView: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 text-[#333333]">
-      <div className="border-b border-[#cbc0ad] pb-4">
-        <h1 className="text-xl sm:text-2xl font-serif text-[#333333]">Room Reservations Desk</h1>
-        <p className="text-xs font-sans text-[#666666]">Manage guest check-ins, check-outs, and tax invoices</p>
-      </div>
+      <ScrollReveal direction="up" duration={0.8}>
+        <div className="border-b border-[#cbc0ad] pb-4">
+          <h1 className="text-xl sm:text-2xl font-serif text-[#333333]">Room Reservations Desk</h1>
+          <p className="text-xs font-sans text-[#666666]">Manage guest check-ins, check-outs, and tax invoices</p>
+        </div>
+      </ScrollReveal>
 
-      <div className="bg-[#47614d] text-[#f7f7f2] rounded-sm border border-[#f7f7f2]/15 shadow-xl font-sans text-xs overflow-hidden">
+      <ScrollReveal direction="up" duration={0.85}>
+        <div className="bg-[#47614d] text-[#f7f7f2] rounded-sm border border-[#f7f7f2]/15 shadow-xl font-sans text-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[780px]">
             <thead className="bg-[#f7f7f2]/10 text-[#d9b57d] uppercase font-bold border-b border-[#f7f7f2]/15 text-[10px] tracking-wider">
@@ -118,14 +123,13 @@ export const AdminBookingsView: React.FC = () => {
                           Check Out
                         </button>
                       )}
-                      <a
-                        href={getBookingInvoiceUrl(b.token || b._id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#f7f7f2]/10 hover:bg-[#f7f7f2]/20 active:bg-[#f7f7f2]/30 text-[#f7f7f2] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all"
+                      <button
+                        type="button"
+                        onClick={() => downloadBookingInvoicePdf(b)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#f7f7f2]/10 hover:bg-[#f7f7f2]/20 active:bg-[#f7f7f2]/30 text-[#f7f7f2] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
                       >
                         <Download size={11} /> Invoice
-                      </a>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -134,6 +138,7 @@ export const AdminBookingsView: React.FC = () => {
           </table>
         </div>
       </div>
+      </ScrollReveal>
     </div>
   );
 };

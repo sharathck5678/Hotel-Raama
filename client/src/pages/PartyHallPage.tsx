@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, BookOpen, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchPartyPackages } from '../services/api';
+import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 
 export const PartyHallPage: React.FC = () => {
   const [packages, setPackages] = useState<any[]>([]);
@@ -92,50 +93,53 @@ export const PartyHallPage: React.FC = () => {
 
       {/* Package Cards */}
       <div>
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 border-b border-[#cbc0ad] pb-8">
-          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666] block mb-1">
-            Bespoke Catering & Events
-          </span>
-          <h2 className="editorial-section-title text-[#333333]">Pure Veg Catering Packages</h2>
-          <p className="font-sans text-xs sm:text-sm text-[#666666] mt-2">
-            Tailor-made menus from Swaad Restaurant for weddings, engagements, birthdays, and corporate galas.
-          </p>
-        </div>
+        <ScrollReveal direction="up" duration={0.8}>
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 border-b border-[#cbc0ad] pb-8">
+            <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666] block mb-1">
+              Bespoke Catering & Events
+            </span>
+            <h2 className="editorial-section-title text-[#333333]">Pure Veg Catering Packages</h2>
+            <p className="font-sans text-xs sm:text-sm text-[#666666] mt-2">
+              Tailor-made menus from Swaad Restaurant for weddings, engagements, birthdays, and corporate galas.
+            </p>
+          </div>
+        </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+        <ScrollRevealGroup staggerDelay={0.15} className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {packages.map((pkg) => (
-            <div
-              key={pkg._id}
-              className="bg-[#47614d] text-[#f7f7f2] p-6 sm:p-8 rounded-sm border border-[#f7f7f2]/15 hover:border-[#d9b57d] transition-all duration-300 flex flex-col justify-between space-y-6 shadow-md"
-            >
-              <div className="space-y-3">
-                <h3 className="text-2xl font-serif text-[#f7f7f2]">{pkg.name}</h3>
-                <p className="text-xs font-sans text-[#f7f7f2]/80 leading-relaxed">{pkg.description}</p>
-              </div>
-
-              <div className="pt-6 border-t border-[#f7f7f2]/10 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-sans text-[#f7f7f2]/60 uppercase block tracking-wider">Rate Per Pax</span>
-                  <span className="text-2xl font-serif font-bold text-[#d9b57d]">₹{pkg.price}</span>
-                  <span className="text-[10px] font-sans text-[#f7f7f2]/60"> + GST</span>
+            <ScrollRevealItem key={pkg._id}>
+              <div
+                className="bg-[#47614d] text-[#f7f7f2] p-6 sm:p-8 rounded-sm border border-[#f7f7f2]/15 hover:border-[#d9b57d] transition-all duration-300 flex flex-col justify-between space-y-6 shadow-md h-full"
+              >
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-serif text-[#f7f7f2]">{pkg.name}</h3>
+                  <p className="text-xs font-sans text-[#f7f7f2]/80 leading-relaxed">{pkg.description}</p>
                 </div>
 
-                <a
-                  href={`https://wa.me/918172257001?text=Hi%20Hotel%20Raama,%20I%20am%20interested%20in%20the%20Sambhrama%20Party%20Hall%20${pkg.name}%20Package.`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-[#f7f7f2] hover:bg-[#d9b57d] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm"
-                >
-                  <MessageSquare size={13} /> Enquiry
-                </a>
+                <div className="pt-6 border-t border-[#f7f7f2]/10 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-sans text-[#f7f7f2]/60 uppercase block tracking-wider">Rate Per Pax</span>
+                    <span className="text-2xl font-serif font-bold text-[#d9b57d]">₹{pkg.price}</span>
+                    <span className="text-[10px] font-sans text-[#f7f7f2]/60"> + GST</span>
+                  </div>
+
+                  <a
+                    href={`https://wa.me/918172257001?text=Hi%20Hotel%20Raama,%20I%20am%20interested%20in%20the%20Sambhrama%20Party%20Hall%20${pkg.name}%20Package.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 bg-[#f7f7f2] hover:bg-[#d9b57d] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    <MessageSquare size={13} /> Enquiry
+                  </a>
+                </div>
               </div>
-            </div>
+            </ScrollRevealItem>
           ))}
-        </div>
+        </ScrollRevealGroup>
       </div>
 
       {/* Pure Image Slideshow Section */}
-      <div className="space-y-6">
+      <ScrollReveal direction="up" duration={0.85} className="space-y-6">
         <div className="text-center max-w-2xl mx-auto border-b border-[#cbc0ad] pb-6">
           <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666] block mb-1">
             Venue Showcase
@@ -199,7 +203,7 @@ export const PartyHallPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Sambhrama Brochure Viewer Modal */}
       {viewerOpen && (

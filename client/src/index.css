@@ -37,6 +37,10 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--color-bg-primary, #f7f7f2);
   color: var(--color-text-primary, #333333);

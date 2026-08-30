@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu as MenuIcon, X, Calendar, ShieldCheck } from 'lucide-react';
+import { Menu as MenuIcon, X, Calendar } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -94,14 +94,6 @@ export const Navbar: React.FC = () => {
             >
               <Calendar size={13} /> Book Room
             </Link>
-
-            <Link
-              to="/admin/login"
-              className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors focus-design"
-              title="Admin Staff Portal"
-            >
-              <ShieldCheck size={18} />
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -145,13 +137,6 @@ export const Navbar: React.FC = () => {
               className="w-full text-center py-3 rounded-full bg-[#d9b57d] text-[#1c2e22] font-bold text-xs uppercase tracking-[1.6px] shadow-sm"
             >
               Book Room Now
-            </Link>
-            <Link
-              to="/admin/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2 text-xs text-[#f7f7f2]/80 hover:text-white uppercase tracking-[1.6px]"
-            >
-              Admin Staff Portal
             </Link>
           </div>
         </div>

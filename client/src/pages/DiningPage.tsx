@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchMenuCatalog, createFoodOrder, verifyOrderPayment } from '../services/api';
+import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 
 type CourseType = 'ALL' | 'BREAKFAST' | 'STARTERS' | 'MAIN_COURSE' | 'BEVERAGES' | 'ICE_CREAM';
 
@@ -818,7 +819,7 @@ export const DiningPage: React.FC = () => {
             if (catItems.length === 0) return null;
 
             return (
-              <div key={cat._id} className="space-y-6">
+              <ScrollReveal key={cat._id} direction="up" duration={0.8} className="space-y-6">
                 <div className="flex items-center gap-3 border-b border-[#cbc0ad] pb-3">
                   <h2 className="text-2xl font-serif text-[#333333]">{cat.name}</h2>
                   <span className="text-[10px] font-sans text-[#666666] font-semibold uppercase bg-[#0B1849]/5 px-2.5 py-0.5 rounded-sm border border-[#cbc0ad]">
@@ -826,75 +827,76 @@ export const DiningPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <ScrollRevealGroup staggerDelay={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {catItems.map((item) => (
-                    <div
-                      key={item._id}
-                      className="bg-[#f7f7f2] rounded-sm p-6 border border-[#cbc0ad] flex flex-col justify-between hover:border-[#cbc0ad] transition-all duration-300 shadow-sm"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start gap-2">
-                          <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
-                          {item.section !== 'LIQUID_LOUNGE' && activeTab !== 'LIQUID_LOUNGE' && (
-                            <span
-                              className={`shrink-0 text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
-                                item.isVeg
-                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                  : 'bg-red-50 text-red-800 border-red-300'
-                              }`}
-                            >
-                              {item.isVeg ? 'Veg' : 'Non-Veg'}
-                            </span>
+                    <ScrollRevealItem key={item._id}>
+                      <div
+                        className="bg-[#f7f7f2] rounded-sm p-6 border border-[#cbc0ad] flex flex-col justify-between hover:border-[#cbc0ad] transition-all duration-300 shadow-sm h-full"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
+                            {item.section !== 'LIQUID_LOUNGE' && activeTab !== 'LIQUID_LOUNGE' && (
+                              <span
+                                className={`shrink-0 text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
+                                  item.isVeg
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                    : 'bg-red-50 text-red-800 border-red-300'
+                                }`}
+                              >
+                                {item.isVeg ? 'Veg' : 'Non-Veg'}
+                              </span>
+                            )}
+                          </div>
+
+                          {item.description && (
+                            <p className="text-xs font-sans text-[#666666] leading-relaxed line-clamp-2">
+                              {item.description}
+                            </p>
                           )}
                         </div>
 
-                        {item.description && (
-                          <p className="text-xs font-sans text-[#666666] leading-relaxed line-clamp-2">
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
+                        <div className="pt-4 border-t border-[#cbc0ad] mt-4 flex items-center justify-between">
+                          <div>
+                            {item.price60ml ? (
+                              <div className="text-[11px] font-sans text-[#666666]">
+                                <span>30ML: <strong className="text-[#333333]">₹{item.price}</strong></span>
+                                <span className="ml-2">60ML: <strong className="text-[#333333]">₹{item.price60ml}</strong></span>
+                              </div>
+                            ) : (
+                              <span className="text-lg font-serif font-bold text-[#333333]">₹{item.price}</span>
+                            )}
+                          </div>
 
-                      <div className="pt-4 border-t border-[#cbc0ad] mt-4 flex items-center justify-between">
-                        <div>
                           {item.price60ml ? (
-                            <div className="text-[11px] font-sans text-[#666666]">
-                              <span>30ML: <strong className="text-[#333333]">₹{item.price}</strong></span>
-                              <span className="ml-2">60ML: <strong className="text-[#333333]">₹{item.price60ml}</strong></span>
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => addToCart(item, '30ML')}
+                                className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
+                              >
+                                + 30ML
+                              </button>
+                              <button
+                                onClick={() => addToCart(item, '60ML')}
+                                className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
+                              >
+                                + 60ML
+                              </button>
                             </div>
                           ) : (
-                            <span className="text-lg font-serif font-bold text-[#333333]">₹{item.price}</span>
+                            <button
+                              onClick={() => addToCart(item, 'Standard')}
+                              className="px-4 py-2 rounded-sm bg-[#47614d] text-[#f7f7f2] text-xs font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer flex items-center gap-1"
+                            >
+                              <Plus size={13} /> Add
+                            </button>
                           )}
                         </div>
-
-                        {item.price60ml ? (
-                          <div className="flex gap-1.5">
-                            <button
-                              onClick={() => addToCart(item, '30ML')}
-                              className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
-                            >
-                              + 30ML
-                            </button>
-                            <button
-                              onClick={() => addToCart(item, '60ML')}
-                              className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
-                            >
-                              + 60ML
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => addToCart(item, 'Standard')}
-                            className="px-4 py-2 rounded-sm bg-[#47614d] text-[#f7f7f2] text-xs font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer flex items-center gap-1"
-                          >
-                            <Plus size={13} /> Add
-                          </button>
-                        )}
                       </div>
-                    </div>
+                    </ScrollRevealItem>
                   ))}
-                </div>
-              </div>
+                </ScrollRevealGroup>
+              </ScrollReveal>
             );
           })}
         </div>

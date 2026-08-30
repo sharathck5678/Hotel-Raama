@@ -51,6 +51,33 @@ SocketService_1.SocketService.init(httpServer, CLIENT_URL);
 (0, CleanupHoldJob_1.initCleanupHoldJob)();
 const Room_1 = require("./models/Room");
 const RoomType_1 = require("./models/RoomType");
+const Coupon_1 = require("./models/Coupon");
+// Helper to ensure coupons in active database
+const ensureCoupons = async () => {
+    try {
+        await Coupon_1.Coupon.deleteMany({ code: { $ne: 'RAAMA5' } });
+        const existing = await Coupon_1.Coupon.findOne({ code: 'RAAMA5' });
+        if (!existing) {
+            const now = new Date();
+            const nextYear = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
+            await Coupon_1.Coupon.create({
+                code: 'RAAMA5',
+                discountType: 'PERCENTAGE',
+                discountValue: 5,
+                minBookingAmount: 0,
+                startDate: new Date(2020, 0, 1),
+                endDate: nextYear,
+                maxUsage: 10000,
+                usedCount: 0,
+                isActive: true,
+            });
+            console.log('[Setup] Created RAAMA5 5% coupon entry.');
+        }
+    }
+    catch (err) {
+        console.warn('[Setup] Coupon sync warning:', err);
+    }
+};
 // Helper to ensure special venue QR codes always exist in active database
 const ensureSpecialVenues = async () => {
     try {
@@ -80,6 +107,7 @@ mongoose_1.default
     .then(async () => {
     console.log('[MongoDB] Connected successfully to hotel_raama database.');
     await ensureSpecialVenues();
+    await ensureCoupons();
     httpServer.listen(PORT, () => {
         console.log(`[Server] Hotel Raama Backend API running at http://localhost:${PORT}`);
     });

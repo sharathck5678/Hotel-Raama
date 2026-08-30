@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Volume2, VolumeX, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchAdminOrders, updateOrderStatus, updateOrderPayment, getOrderInvoiceUrl } from '../../services/api';
+import { fetchAdminOrders, updateOrderStatus, updateOrderPayment } from '../../services/api';
+import { downloadOrderReceiptPdf } from '../../services/clientPdfService';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -189,26 +191,28 @@ export const AdminOrdersView: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6 text-[#333333]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#cbc0ad] pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-serif text-[#333333]">Kitchen & Dining Orders</h1>
-          <p className="text-xs font-sans text-[#666666]">2-stage live kitchen workflow: Cook Food & Serve Food</p>
-        </div>
+      <ScrollReveal direction="up" duration={0.8}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#cbc0ad] pb-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-serif text-[#333333]">Kitchen & Dining Orders</h1>
+            <p className="text-xs font-sans text-[#666666]">2-stage live kitchen workflow: Cook Food & Serve Food</p>
+          </div>
 
-        <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end">
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`px-3.5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border transition-all cursor-pointer w-full sm:w-auto ${
-              soundEnabled
-                ? 'bg-[#47614d] text-[#f7f7f2] border-[#cbc0ad]'
-                : 'bg-[#f7f7f2] text-[#666666] border-[#cbc0ad]'
-            }`}
-          >
-            {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
-            Sound Alerts {soundEnabled ? 'ON' : 'OFF'}
-          </button>
+          <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end">
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className={`px-3.5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border transition-all cursor-pointer w-full sm:w-auto ${
+                soundEnabled
+                  ? 'bg-[#47614d] text-[#f7f7f2] border-[#cbc0ad]'
+                  : 'bg-[#f7f7f2] text-[#666666] border-[#cbc0ad]'
+              }`}
+            >
+              {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+              Sound Alerts {soundEnabled ? 'ON' : 'OFF'}
+            </button>
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Mobile Stage Selector Tabs (Shown only on small screens) */}
       <div className="md:hidden flex bg-[#0B1849]/5 p-1 rounded-sm border border-[#cbc0ad] gap-1">
@@ -246,47 +250,48 @@ export const AdminOrdersView: React.FC = () => {
 
       {/* 2-Column Simplified Board */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
-        {displayedColumns.map((col) => {
+        {displayedColumns.map((col, idx) => {
           const colOrders = col.orders;
 
           return (
-            <div
-              key={col.key}
-              className={`bg-[#47614d] text-[#f7f7f2] p-4 sm:p-6 rounded-sm border-t-4 ${col.color} border border-[#f7f7f2]/15 space-y-4 shadow-xl`}
-            >
-              <div className="flex justify-between items-center pb-3 border-b border-[#f7f7f2]/10">
-                <h3 className="font-serif font-bold text-base sm:text-lg text-[#f7f7f2] truncate mr-2">
-                  <span className="hidden sm:inline">{col.title}</span>
-                  <span className="sm:hidden">{col.shortTitle}</span>
-                </h3>
-                <span className="px-2.5 py-1 rounded-sm bg-[#f7f7f2]/10 text-xs font-sans font-bold text-[#d9b57d] border border-[#f7f7f2]/15 shrink-0">
-                  {colOrders.length} {colOrders.length === 1 ? 'Order' : 'Orders'}
-                </span>
-              </div>
+            <ScrollReveal key={col.key} direction={idx === 0 ? 'left' : 'right'} duration={0.85} className="h-full">
+              <div
+                className={`bg-[#47614d] text-[#f7f7f2] p-4 sm:p-6 rounded-sm border-t-4 ${col.color} border border-[#f7f7f2]/15 space-y-4 shadow-xl h-full`}
+              >
+                <div className="flex justify-between items-center pb-3 border-b border-[#f7f7f2]/10">
+                  <h3 className="font-serif font-bold text-base sm:text-lg text-[#f7f7f2] truncate mr-2">
+                    <span className="hidden sm:inline">{col.title}</span>
+                    <span className="sm:hidden">{col.shortTitle}</span>
+                  </h3>
+                  <span className="px-2.5 py-1 rounded-sm bg-[#f7f7f2]/10 text-xs font-sans font-bold text-[#d9b57d] border border-[#f7f7f2]/15 shrink-0">
+                    {colOrders.length} {colOrders.length === 1 ? 'Order' : 'Orders'}
+                  </span>
+                </div>
 
-              <div className="space-y-4 md:max-h-[75vh] md:overflow-y-auto pr-0 md:pr-1">
-                {colOrders.length === 0 ? (
-                  <div className="text-center py-10 text-[#f7f7f2]/50 text-xs font-sans">
-                    No active orders in this column.
-                  </div>
-                ) : (
-                  colOrders.map((ord) => (
-                    <div
-                      key={ord._id}
-                      className="p-4 sm:p-5 rounded-sm bg-[#f7f7f2]/5 border border-[#f7f7f2]/15 space-y-3 shadow-md hover:border-[#d9b57d]/40 transition-all font-sans"
-                    >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="min-w-0">
-                          <span className="text-xs font-bold text-[#d9b57d] uppercase tracking-wider block truncate">
-                            {formatRoomNumber(ord.roomNumber)}
-                          </span>
-                          <h4 className="text-base font-serif font-bold text-[#f7f7f2]">#{ord.orderId}</h4>
-                          <div className="flex flex-wrap gap-1.5 mt-1.5">
-                            {ord.deliveryOption && (
-                              <span className="text-[9px] px-2 py-0.5 rounded-sm bg-[#f7f7f2]/10 text-[#f7f7f2] font-bold uppercase tracking-wider">
-                                {ord.deliveryOption === 'RECEPTION_PICKUP' ? 'PICKUP' : 'ROOM SERVICE'}
-                              </span>
-                            )}
+                <div className="space-y-4 md:max-h-[75vh] md:overflow-y-auto pr-0 md:pr-1">
+                  {colOrders.length === 0 ? (
+                    <div className="py-12 text-center text-[#f7f7f2]/40 text-xs font-sans">
+                      No orders in this stage.
+                    </div>
+                  ) : (
+                    colOrders.map((ord) => (
+                      <div
+                        key={ord._id}
+                        className="p-4 bg-[#f7f7f2]/5 rounded-sm border border-[#f7f7f2]/10 space-y-3 shadow-inner hover:border-[#d9b57d]/50 transition-all font-sans text-xs"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#d9b57d] block uppercase tracking-wider">
+                              {formatRoomNumber(ord.roomNumber)}
+                            </span>
+                            <span className="text-base font-serif font-bold text-white">
+                              Order #{ord.orderId}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-bold text-[#d9b57d] block font-serif">
+                              ₹{ord.totalAmount}
+                            </span>
                             <span
                               className={`text-[9px] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider ${
                                 ord.paymentMethod === 'CASH'
@@ -298,113 +303,114 @@ export const AdminOrdersView: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                        <span className="text-[10px] text-[#f7f7f2]/60 shrink-0 whitespace-nowrap">
-                          {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
 
-                      {/* Guest info */}
-                      <div className="text-xs text-[#f7f7f2]/80 flex flex-wrap items-center gap-1">
-                        <span>Guest: <strong className="text-white">{ord.guestName}</strong></span>
-                        <span className="text-[#f7f7f2]/60">({ord.guestPhone})</span>
-                      </div>
-
-                      {/* Items */}
-                      <div className="space-y-1.5 py-2.5 border-y border-[#f7f7f2]/10 text-xs">
-                        {ord.items.map((item: any, idx: number) => (
-                          <div key={idx} className="flex justify-between items-start gap-2 text-[#f7f7f2]/90">
-                            <span className="break-words min-w-0">
-                              <span className="font-bold text-amber-300 mr-1">{item.quantity}x</span>
-                              <strong>{item.name}</strong>{' '}
-                              {item.potionSize && item.potionSize !== 'Standard' && (
-                                <span className="text-[#f7f7f2]/70 text-[11px]">({item.potionSize})</span>
-                              )}
-                            </span>
-                            <span className="text-[#f7f7f2]/70 shrink-0 font-medium">₹{item.price * item.quantity}</span>
+                        {/* Guest info */}
+                        <div className="text-xs text-[#f7f7f2]/80 flex flex-wrap items-center justify-between gap-1">
+                          <div>
+                            <span>Guest: <strong className="text-white">{ord.guestName}</strong></span>
+                            <span className="text-[#f7f7f2]/60 ml-1">({ord.guestPhone})</span>
                           </div>
-                        ))}
-                      </div>
-
-                      {/* Instructions */}
-                      {ord.specialInstructions && (
-                        <div className="text-[11px] text-[#d9b57d] bg-[#d9b57d]/10 p-2 rounded-sm border border-[#d9b57d]/30 break-words">
-                          Note: {ord.specialInstructions}
-                        </div>
-                      )}
-
-                      {/* Status & Payment bar */}
-                      <div className="pt-2 flex flex-col gap-2.5">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold font-serif text-[#d9b57d] text-sm sm:text-base">
-                            Total: ₹{ord.totalAmount}
-                          </span>
-                          <span
-                            className={`px-2.5 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider ${
-                              ord.paymentStatus === 'PAID'
-                                ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                                : 'bg-red-950 text-red-300 border border-red-800'
-                            }`}
-                          >
-                            {ord.paymentStatus}
+                          <span className="text-[10px] text-[#f7f7f2]/60 shrink-0 whitespace-nowrap">
+                            {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
 
-                        {/* Action Buttons: Cook Food & Serve Food */}
-                        <div className="grid grid-cols-1 gap-2 pt-1">
-                          {(ord.status === 'PENDING' || ord.status === 'CONFIRMED') && (
-                            <button
-                              onClick={() => handleStatusChange(ord._id, 'PREPARING')}
-                              className="w-full py-2.5 bg-amber-700 hover:bg-amber-600 active:bg-amber-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
-                            >
-                              🍳 Start Cooking Food
-                            </button>
-                          )}
-                          {ord.status === 'PREPARING' && (
-                            <button
-                              onClick={() => handleStatusChange(ord._id, 'READY')}
-                              className="w-full py-2.5 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] active:bg-[#c4a065] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
-                            >
-                              ✅ Food Cooked (Move to Serve)
-                            </button>
-                          )}
-                          {ord.status === 'READY' && (
-                            <button
-                              onClick={() => handleStatusChange(ord._id, 'DELIVERED')}
-                              className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
-                            >
-                              🍽️ Serve Food to Guest
-                            </button>
-                          )}
-                          {ord.status === 'DELIVERED' && (
-                            <div className="text-center py-2 bg-emerald-950/60 text-emerald-300 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-800">
-                              ✓ Served & Delivered
+                        {/* Items */}
+                        <div className="space-y-1.5 py-2.5 border-y border-[#f7f7f2]/10 text-xs">
+                          {ord.items.map((item: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-start gap-2 text-[#f7f7f2]/90">
+                              <span className="break-words min-w-0">
+                                <span className="font-bold text-amber-300 mr-1">{item.quantity}x</span>
+                                <strong>{item.name}</strong>{' '}
+                                {item.potionSize && item.potionSize !== 'Standard' && (
+                                  <span className="text-[#f7f7f2]/70 text-[11px]">({item.potionSize})</span>
+                                )}
+                              </span>
+                              <span className="text-[#f7f7f2]/70 shrink-0 font-medium">₹{item.price * item.quantity}</span>
                             </div>
-                          )}
+                          ))}
+                        </div>
 
-                          {ord.paymentStatus === 'UNPAID' && (
-                            <button
-                              onClick={() => handleSettlePayment(ord._id, 'CASH')}
-                              className="w-full py-2 bg-emerald-900/80 text-emerald-200 hover:bg-emerald-800 active:bg-emerald-950 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-700 transition-all cursor-pointer"
+                        {/* Instructions */}
+                        {ord.specialInstructions && (
+                          <div className="text-[11px] text-[#d9b57d] bg-[#d9b57d]/10 p-2 rounded-sm border border-[#d9b57d]/30 break-words">
+                            Note: {ord.specialInstructions}
+                          </div>
+                        )}
+
+                        {/* Status & Payment bar */}
+                        <div className="pt-2 flex flex-col gap-2.5">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold font-serif text-[#d9b57d] text-sm sm:text-base">
+                              Total: ₹{ord.totalAmount}
+                            </span>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider ${
+                                ord.paymentStatus === 'PAID'
+                                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                                  : 'bg-red-950 text-red-300 border border-red-800'
+                              }`}
                             >
-                              💵 Settle Cash / UPI Payment
-                            </button>
-                          )}
+                              {ord.paymentStatus}
+                            </span>
+                          </div>
 
-                          <a
-                            href={getOrderInvoiceUrl(ord.trackingToken || ord._id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full py-2 bg-[#f7f7f2]/10 hover:bg-[#f7f7f2]/20 active:bg-[#f7f7f2]/30 text-[#f7f7f2] font-bold uppercase tracking-wider rounded-sm text-xs flex items-center justify-center gap-1.5 transition-all"
-                          >
-                            <Download size={13} /> PDF Receipt
-                          </a>
+                          {/* Action Buttons: Cook Food & Serve Food */}
+                          <div className="grid grid-cols-1 gap-2 pt-1">
+                            {(ord.status === 'PENDING' || ord.status === 'CONFIRMED') && (
+                              <button
+                                onClick={() => handleStatusChange(ord._id, 'PREPARING')}
+                                className="w-full py-2.5 bg-amber-700 hover:bg-amber-600 active:bg-amber-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                              >
+                                🍳 Start Cooking Food
+                              </button>
+                            )}
+                            {ord.status === 'PREPARING' && (
+                              <button
+                                onClick={() => handleStatusChange(ord._id, 'READY')}
+                                className="w-full py-2.5 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] active:bg-[#c4a065] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                              >
+                                ✅ Food Cooked (Move to Serve)
+                              </button>
+                            )}
+                            {ord.status === 'READY' && (
+                              <button
+                                onClick={() => handleStatusChange(ord._id, 'DELIVERED')}
+                                className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                              >
+                                🍽️ Serve Food to Guest
+                              </button>
+                            )}
+                            {ord.status === 'DELIVERED' && (
+                              <div className="text-center py-2 bg-emerald-950/60 text-emerald-300 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-800">
+                                ✓ Served & Delivered
+                              </div>
+                            )}
+
+                            {ord.paymentStatus === 'UNPAID' && (
+                              <button
+                                onClick={() => handleSettlePayment(ord._id, 'CASH')}
+                                className="w-full py-2 bg-emerald-900/80 text-emerald-200 hover:bg-emerald-800 active:bg-emerald-950 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-700 transition-all cursor-pointer"
+                              >
+                                💵 Settle Cash / UPI Payment
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => downloadOrderReceiptPdf(ord)}
+                              className="w-full py-2 bg-[#f7f7f2]/10 hover:bg-[#f7f7f2]/20 active:bg-[#f7f7f2]/30 text-[#f7f7f2] font-bold uppercase tracking-wider rounded-sm text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                            >
+                              <Download size={13} /> PDF Receipt
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           );
         })}
       </div>

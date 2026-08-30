@@ -5,7 +5,6 @@ import {
   UtensilsCrossed,
   CalendarCheck,
   Users,
-  FileText,
   LogOut,
   ShieldCheck,
   Building2,
@@ -38,7 +37,6 @@ export const AdminLayout: React.FC = () => {
     { name: 'Room Bookings', path: '/admin/bookings', icon: CalendarCheck },
     { name: 'QR Code Directory', path: '/admin/qr-codes', icon: QrCode },
     { name: 'Customer History', path: '/admin/customers', icon: Users },
-    { name: 'Audit Logs', path: '/admin/audit-logs', icon: FileText },
   ];
 
   return (

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminController = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const Admin_1 = require("../models/Admin");
@@ -359,8 +360,15 @@ class AdminController {
     static async downloadInvoicePdf(req, res) {
         try {
             const { type, id } = req.params;
+            const isObjectId = mongoose_1.default.isValidObjectId(id);
             if (type === 'booking') {
-                const booking = await Booking_1.Booking.findById(id).populate('roomTypeId');
+                const booking = await Booking_1.Booking.findOne({
+                    $or: [
+                        { bookingId: id },
+                        { trackingToken: id },
+                        ...(isObjectId ? [{ _id: id }] : []),
+                    ],
+                }).populate('roomTypeId');
                 if (!booking)
                     return res.status(404).send('Booking not found');
                 const roomTypeName = booking.roomTypeId?.name || 'Executive Room';
@@ -370,7 +378,13 @@ class AdminController {
                 return res.send(pdfBuffer);
             }
             else if (type === 'order') {
-                const order = await Order_1.Order.findById(id);
+                const order = await Order_1.Order.findOne({
+                    $or: [
+                        { orderId: id },
+                        { trackingToken: id },
+                        ...(isObjectId ? [{ _id: id }] : []),
+                    ],
+                });
                 if (!order)
                     return res.status(404).send('Order not found');
                 const pdfBuffer = await InvoicePdfService_1.InvoicePdfService.generateOrderInvoicePdf(order);
@@ -383,6 +397,7 @@ class AdminController {
             }
         }
         catch (error) {
+            console.error('Error generating admin PDF invoice:', error);
             return res.status(500).send('Failed to generate PDF');
         }
     }

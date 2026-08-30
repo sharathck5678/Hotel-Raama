@@ -29,7 +29,6 @@ import { AdminOrdersView } from './pages/admin/AdminOrdersView';
 import { AdminBookingsView } from './pages/admin/AdminBookingsView';
 import { AdminRoomsView } from './pages/admin/AdminRoomsView';
 import { AdminCustomerHistoryView } from './pages/admin/AdminCustomerHistoryView';
-import { AdminAuditLogsView } from './pages/admin/AdminAuditLogsView';
 
 export const App: React.FC = () => {
   return (
@@ -72,7 +71,6 @@ export const App: React.FC = () => {
               <Route path="rooms" element={<AdminRoomsView />} />
               <Route path="qr-codes" element={<QrOrderingSectionPage />} />
               <Route path="customers" element={<AdminCustomerHistoryView />} />
-              <Route path="audit-logs" element={<AdminAuditLogsView />} />
             </Route>
           </Routes>
         </main>

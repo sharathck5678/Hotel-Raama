@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import crypto from 'crypto';
 import { RoomType } from '../models/RoomType';
 import { Room } from '../models/Room';
@@ -308,10 +309,15 @@ export class PublicController {
   static async downloadBookingInvoicePdf(req: Request, res: Response) {
     try {
       const { idOrToken } = req.params;
-      let booking = await Booking.findOne({ trackingToken: idOrToken }).populate('roomTypeId');
-      if (!booking) {
-        booking = await Booking.findById(idOrToken).populate('roomTypeId');
-      }
+      const isObjectId = mongoose.isValidObjectId(idOrToken);
+      const booking = await Booking.findOne({
+        $or: [
+          { trackingToken: idOrToken },
+          { bookingId: idOrToken },
+          ...(isObjectId ? [{ _id: idOrToken }] : []),
+        ],
+      }).populate('roomTypeId');
+
       if (!booking) return res.status(404).send('Booking invoice not found');
 
       const roomTypeName = (booking.roomTypeId as any)?.name || 'Executive Room';
@@ -331,10 +337,15 @@ export class PublicController {
   static async downloadOrderInvoicePdf(req: Request, res: Response) {
     try {
       const { idOrToken } = req.params;
-      let order = await Order.findOne({ trackingToken: idOrToken });
-      if (!order) {
-        order = await Order.findById(idOrToken);
-      }
+      const isObjectId = mongoose.isValidObjectId(idOrToken);
+      const order = await Order.findOne({
+        $or: [
+          { trackingToken: idOrToken },
+          { orderId: idOrToken },
+          ...(isObjectId ? [{ _id: idOrToken }] : []),
+        ],
+      });
+
       if (!order) return res.status(404).send('Order receipt not found');
 
       const pdfBuffer = await InvoicePdfService.generateOrderInvoicePdf(order);

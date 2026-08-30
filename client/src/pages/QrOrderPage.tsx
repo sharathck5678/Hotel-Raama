@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Plus, Minus, Utensils, GlassWater, Send, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateQrToken, fetchMenuCatalog, createFoodOrder, verifyOrderPayment } from '../services/api';
+import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 
 export const QrOrderPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -275,54 +276,56 @@ export const QrOrderPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-12 px-6 lg:px-8 relative">
       {/* Location Banner Header */}
-      <div className="max-w-4xl mx-auto text-center space-y-3 mb-12 border-b border-[#cbc0ad] pb-8">
-        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666]">
-          Verified Location
-        </span>
-        <h1 className="editorial-section-title text-[#333333]">
-          {locationTitle}
-        </h1>
-        <p className="text-xs font-sans text-[#666666]">
-          Floor {roomInfo.floor} · Contactless Ordering Portal
-        </p>
+      <ScrollReveal direction="up" duration={0.8}>
+        <div className="max-w-4xl mx-auto text-center space-y-3 mb-12 border-b border-[#cbc0ad] pb-8">
+          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666]">
+            Verified Location
+          </span>
+          <h1 className="editorial-section-title text-[#333333]">
+            {locationTitle}
+          </h1>
+          <p className="text-xs font-sans text-[#666666]">
+            Floor {roomInfo.floor} · Contactless Ordering Portal
+          </p>
 
 
-        {/* Section Tabs */}
-        <div className="flex flex-wrap justify-center gap-3 pt-6">
-          <button
-            onClick={() => setActiveSection('SWAAD_VEG')}
-            className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-              activeSection === 'SWAAD_VEG'
-                ? 'bg-[#47614d] text-[#f7f7f2]'
-                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
-            }`}
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-            <Utensils size={14} /> Swaad Pure Veg
-          </button>
-          <button
-            onClick={() => setActiveSection('HOTEL_RAAMA')}
-            className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-              activeSection === 'HOTEL_RAAMA'
-                ? 'bg-[#47614d] text-[#f7f7f2]'
-                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
-            }`}
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-[#d9b57d] inline-block"></span>
-            <Utensils size={14} /> Hotel Raama
-          </button>
-          <button
-            onClick={() => setActiveSection('LIQUID_LOUNGE')}
-            className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-              activeSection === 'LIQUID_LOUNGE'
-                ? 'bg-[#47614d] text-[#f7f7f2]'
-                : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
-            }`}
-          >
-            <GlassWater size={14} /> Liquid Lounge Bar
-          </button>
+          {/* Section Tabs */}
+          <div className="flex flex-wrap justify-center gap-3 pt-6">
+            <button
+              onClick={() => setActiveSection('SWAAD_VEG')}
+              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+                activeSection === 'SWAAD_VEG'
+                  ? 'bg-[#47614d] text-[#f7f7f2]'
+                  : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+              <Utensils size={14} /> Swaad Pure Veg
+            </button>
+            <button
+              onClick={() => setActiveSection('HOTEL_RAAMA')}
+              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+                activeSection === 'HOTEL_RAAMA'
+                  ? 'bg-[#47614d] text-[#f7f7f2]'
+                  : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#d9b57d] inline-block"></span>
+              <Utensils size={14} /> Hotel Raama
+            </button>
+            <button
+              onClick={() => setActiveSection('LIQUID_LOUNGE')}
+              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+                activeSection === 'LIQUID_LOUNGE'
+                  ? 'bg-[#47614d] text-[#f7f7f2]'
+                  : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#cbc0ad]'
+              }`}
+            >
+              <GlassWater size={14} /> Liquid Lounge Bar
+            </button>
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Menu Catalog */}
       <div className="max-w-6xl mx-auto space-y-12 pb-24">
@@ -331,78 +334,79 @@ export const QrOrderPage: React.FC = () => {
           if (catItems.length === 0) return null;
 
           return (
-            <div key={cat._id} className="space-y-4">
+            <ScrollReveal key={cat._id} direction="up" duration={0.8} className="space-y-4">
               <h2 className="text-2xl font-serif text-[#333333] border-b border-[#cbc0ad] pb-2">
                 {cat.name}
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <ScrollRevealGroup staggerDelay={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {catItems.map((item) => (
-                  <div
-                    key={item._id}
-                    className="bg-[#f7f7f2] rounded-sm p-6 border border-[#cbc0ad] flex flex-col justify-between hover:border-[#cbc0ad] transition-all shadow-sm"
-                  >
-                    <div>
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
-                        {item.section !== 'LIQUID_LOUNGE' && activeSection !== 'LIQUID_LOUNGE' && (
-                          <span
-                            className={`text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
-                              item.isVeg ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'
-                            }`}
-                          >
-                            {item.isVeg ? 'Veg' : 'Non-Veg'}
-                          </span>
+                  <ScrollRevealItem key={item._id}>
+                    <div
+                      className="bg-[#f7f7f2] rounded-sm p-6 border border-[#cbc0ad] flex flex-col justify-between hover:border-[#cbc0ad] transition-all shadow-sm h-full"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
+                          {item.section !== 'LIQUID_LOUNGE' && activeSection !== 'LIQUID_LOUNGE' && (
+                            <span
+                              className={`text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
+                                item.isVeg ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'
+                              }`}
+                            >
+                              {item.isVeg ? 'Veg' : 'Non-Veg'}
+                            </span>
+                          )}
+                        </div>
+
+                        {item.description && (
+                          <p className="text-xs font-sans text-[#666666] mt-2 line-clamp-2 leading-relaxed">
+                            {item.description}
+                          </p>
                         )}
                       </div>
 
-                      {item.description && (
-                        <p className="text-xs font-sans text-[#666666] mt-2 line-clamp-2 leading-relaxed">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
+                      <div className="pt-4 border-t border-[#cbc0ad] mt-4 flex items-center justify-between">
+                        <div>
+                          {item.price60ml ? (
+                            <div className="text-[10px] font-sans text-[#666666]">
+                              <span>30ML: <strong className="text-[#333333]">₹{item.price}</strong></span>
+                              <span className="ml-2">60ML: <strong className="text-[#333333]">₹{item.price60ml}</strong></span>
+                            </div>
+                          ) : (
+                            <span className="text-lg font-serif font-bold text-[#333333]">₹{item.price}</span>
+                          )}
+                        </div>
 
-                    <div className="pt-4 border-t border-[#cbc0ad] mt-4 flex items-center justify-between">
-                      <div>
                         {item.price60ml ? (
-                          <div className="text-[10px] font-sans text-[#666666]">
-                            <span>30ML: <strong className="text-[#333333]">₹{item.price}</strong></span>
-                            <span className="ml-2">60ML: <strong className="text-[#333333]">₹{item.price60ml}</strong></span>
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => addToCart(item, '30ML')}
+                              className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
+                            >
+                              + 30ML
+                            </button>
+                            <button
+                              onClick={() => addToCart(item, '60ML')}
+                              className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
+                            >
+                              + 60ML
+                            </button>
                           </div>
                         ) : (
-                          <span className="text-lg font-serif font-bold text-[#333333]">₹{item.price}</span>
+                          <button
+                            onClick={() => addToCart(item, 'Standard')}
+                            className="px-4 py-2 rounded-sm bg-[#47614d] text-[#f7f7f2] text-xs font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer flex items-center gap-1"
+                          >
+                            <Plus size={13} /> Add
+                          </button>
                         )}
                       </div>
-
-                      {item.price60ml ? (
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => addToCart(item, '30ML')}
-                            className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
-                          >
-                            + 30ML
-                          </button>
-                          <button
-                            onClick={() => addToCart(item, '60ML')}
-                            className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
-                          >
-                            + 60ML
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => addToCart(item, 'Standard')}
-                          className="px-4 py-2 rounded-sm bg-[#47614d] text-[#f7f7f2] text-xs font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer flex items-center gap-1"
-                        >
-                          <Plus size={13} /> Add
-                        </button>
-                      )}
                     </div>
-                  </div>
+                  </ScrollRevealItem>
                 ))}
-              </div>
-            </div>
+              </ScrollRevealGroup>
+            </ScrollReveal>
           );
         })}
       </div>

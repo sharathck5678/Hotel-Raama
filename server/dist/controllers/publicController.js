@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PublicController = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const crypto_1 = __importDefault(require("crypto"));
 const RoomType_1 = require("../models/RoomType");
 const Room_1 = require("../models/Room");
@@ -35,7 +36,7 @@ class PublicController {
      */
     static async checkAvailabilityAndPrice(req, res) {
         try {
-            const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType } = req.body;
+            const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType, extraPerson } = req.body;
             if (!roomTypeId || !checkIn || !checkOut) {
                 return res.status(400).json({ success: false, message: 'roomTypeId, checkIn, and checkOut are required.' });
             }
@@ -50,7 +51,7 @@ class PublicController {
             // Check availability
             const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(roomTypeId, checkInDate, checkOutDate);
             // Calculate server pricing
-            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(roomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP');
+            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(roomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
             return res.json({
                 success: true,
                 data: {
@@ -68,7 +69,7 @@ class PublicController {
      */
     static async createBooking(req, res) {
         try {
-            const { guestName, guestEmail, guestPhone, roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, specialRequests, planType, } = req.body;
+            const { guestName, guestEmail, guestPhone, roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, specialRequests, planType, extraPerson, } = req.body;
             if (!guestName || !guestEmail || !guestPhone || !roomTypeId || !checkIn || !checkOut) {
                 return res.status(400).json({ success: false, message: 'Missing required booking fields.' });
             }
@@ -80,7 +81,7 @@ class PublicController {
                 return res.status(400).json({ success: false, message: 'Selected room type is fully booked for these dates.' });
             }
             // 2. Strict Server-side Price Engine Calculation
-            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(roomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP');
+            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(roomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
             // Generate IDs
             const bookingId = `HR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
             const trackingToken = crypto_1.default.randomBytes(16).toString('hex');
@@ -107,6 +108,8 @@ class PublicController {
                     dinner: !!mealSelection?.dinner,
                     pricePerNight: pricing.mealPlanPricePerNight,
                 },
+                extraPerson: !!extraPerson,
+                extraPersonChargeSnapshot: pricing.extraPersonTotal,
                 couponCodeSnapshot: pricing.couponCode,
                 discountAmountSnapshot: pricing.discountAmount,
                 taxAmountSnapshot: pricing.taxAmount,
@@ -253,10 +256,14 @@ class PublicController {
     static async downloadBookingInvoicePdf(req, res) {
         try {
             const { idOrToken } = req.params;
-            let booking = await Booking_1.Booking.findOne({ trackingToken: idOrToken }).populate('roomTypeId');
-            if (!booking) {
-                booking = await Booking_1.Booking.findById(idOrToken).populate('roomTypeId');
-            }
+            const isObjectId = mongoose_1.default.isValidObjectId(idOrToken);
+            const booking = await Booking_1.Booking.findOne({
+                $or: [
+                    { trackingToken: idOrToken },
+                    { bookingId: idOrToken },
+                    ...(isObjectId ? [{ _id: idOrToken }] : []),
+                ],
+            }).populate('roomTypeId');
             if (!booking)
                 return res.status(404).send('Booking invoice not found');
             const roomTypeName = booking.roomTypeId?.name || 'Executive Room';
@@ -276,10 +283,14 @@ class PublicController {
     static async downloadOrderInvoicePdf(req, res) {
         try {
             const { idOrToken } = req.params;
-            let order = await Order_1.Order.findOne({ trackingToken: idOrToken });
-            if (!order) {
-                order = await Order_1.Order.findById(idOrToken);
-            }
+            const isObjectId = mongoose_1.default.isValidObjectId(idOrToken);
+            const order = await Order_1.Order.findOne({
+                $or: [
+                    { trackingToken: idOrToken },
+                    { orderId: idOrToken },
+                    ...(isObjectId ? [{ _id: idOrToken }] : []),
+                ],
+            });
             if (!order)
                 return res.status(404).send('Order receipt not found');
             const pdfBuffer = await InvoicePdfService_1.InvoicePdfService.generateOrderInvoicePdf(order);

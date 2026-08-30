@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { Clock, CheckCircle2, ChefHat, Bike, Download } from 'lucide-react';
-import { trackOrderStatus, getOrderInvoiceUrl } from '../services/api';
+import { trackOrderStatus } from '../services/api';
+import { downloadOrderReceiptPdf } from '../services/clientPdfService';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
 
@@ -68,7 +70,8 @@ export const OrderTrackingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-16 px-6 max-w-lg mx-auto space-y-6">
       {/* Card Header */}
-      <div className="bg-[#47614d] text-[#f7f7f2] p-8 rounded-sm border border-[#f7f7f2]/20 space-y-8 shadow-2xl text-center">
+      <ScrollReveal direction="up" duration={0.85}>
+        <div className="bg-[#47614d] text-[#f7f7f2] p-8 rounded-sm border border-[#f7f7f2]/20 space-y-8 shadow-2xl text-center">
         <div>
           <span className="text-[10px] font-sans text-[#d9b57d] font-bold uppercase tracking-[0.2em] block">
             {order.roomNumber && order.roomNumber.toLowerCase() !== 'none'
@@ -124,18 +127,18 @@ export const OrderTrackingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* PDF Receipt Link */}
+        {/* PDF Receipt Action */}
         <div>
-          <a
-            href={getOrderInvoiceUrl(order.trackingToken || order._id)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-4 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-md"
+          <button
+            type="button"
+            onClick={() => downloadOrderReceiptPdf(order)}
+            className="w-full py-4 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-[0.99]"
           >
             <Download size={15} /> Download Digital Receipt (PDF)
-          </a>
+          </button>
         </div>
       </div>
+    </ScrollReveal>
     </div>
   );
 };

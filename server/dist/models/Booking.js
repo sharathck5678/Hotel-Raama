@@ -21,6 +21,8 @@ const BookingSchema = new mongoose_1.Schema({
         dinner: { type: Boolean, default: false },
         pricePerNight: { type: Number, default: 0 },
     },
+    extraPerson: { type: Boolean, default: false },
+    extraPersonChargeSnapshot: { type: Number, default: 0 },
     couponCodeSnapshot: { type: String },
     discountAmountSnapshot: { type: Number, default: 0 },
     taxAmountSnapshot: { type: Number, default: 0 },
