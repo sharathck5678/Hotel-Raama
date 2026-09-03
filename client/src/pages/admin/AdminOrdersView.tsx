@@ -7,7 +7,7 @@ import { downloadOrderReceiptPdf } from '../../services/clientPdfService';
 import { ScrollReveal } from '../../components/ScrollReveal';
 
 const getSocketUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
+  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
   if (envUrl) {
     return envUrl.replace(/\/api\/?$/, '');
   }

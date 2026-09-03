@@ -4,18 +4,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key_id';
-const key_secret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mock_key_secret';
+const key_id = process.env.RAZORPAY_KEY_ID || '';
+const key_secret = process.env.RAZORPAY_KEY_SECRET || '';
 
 let instance: Razorpay | null = null;
 
-try {
-  instance = new Razorpay({
-    key_id,
-    key_secret,
-  });
-} catch (e) {
-  console.warn('Razorpay SDK initialization notice: running in mock fallback mode.');
+if (key_id && key_secret) {
+  try {
+    instance = new Razorpay({
+      key_id,
+      key_secret,
+    });
+  } catch (e) {
+    console.warn('Razorpay SDK initialization notice: running in mock fallback mode.');
+  }
 }
 
 export class RazorpayService {
@@ -26,7 +28,7 @@ export class RazorpayService {
     const amountInPaise = Math.round(amountInRupees * 100);
     const receipt = `rcpt_${bookingId}_${Date.now().toString().slice(-6)}`;
 
-    if (key_id === 'rzp_test_mock_key_id' || !instance) {
+    if (!key_id || !key_secret || !instance) {
       return {
         id: `order_mock_${crypto.randomBytes(8).toString('hex')}`,
         amount: amountInPaise,

@@ -8,17 +8,19 @@ const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key_id';
-const key_secret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_mock_key_secret';
+const key_id = process.env.RAZORPAY_KEY_ID || '';
+const key_secret = process.env.RAZORPAY_KEY_SECRET || '';
 let instance = null;
-try {
-    instance = new razorpay_1.default({
-        key_id,
-        key_secret,
-    });
-}
-catch (e) {
-    console.warn('Razorpay SDK initialization notice: running in mock fallback mode.');
+if (key_id && key_secret) {
+    try {
+        instance = new razorpay_1.default({
+            key_id,
+            key_secret,
+        });
+    }
+    catch (e) {
+        console.warn('Razorpay SDK initialization notice: running in mock fallback mode.');
+    }
 }
 class RazorpayService {
     /**
@@ -27,7 +29,7 @@ class RazorpayService {
     static async createOrder(amountInRupees, bookingId) {
         const amountInPaise = Math.round(amountInRupees * 100);
         const receipt = `rcpt_${bookingId}_${Date.now().toString().slice(-6)}`;
-        if (key_id === 'rzp_test_mock_key_id' || !instance) {
+        if (!key_id || !key_secret || !instance) {
             return {
                 id: `order_mock_${crypto_1.default.randomBytes(8).toString('hex')}`,
                 amount: amountInPaise,

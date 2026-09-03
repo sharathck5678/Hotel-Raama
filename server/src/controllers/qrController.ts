@@ -297,7 +297,7 @@ export class QrController {
           status: order.status,
           paymentMethod: order.paymentMethod,
           razorpayOrderId,
-          razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key_id',
+          razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
         },
       });
     } catch (error: any) {

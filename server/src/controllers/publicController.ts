@@ -171,7 +171,7 @@ export class PublicController {
           trackingToken: booking.trackingToken,
           totalAmount: booking.totalAmount,
           razorpayOrderId: razorpayOrder.id,
-          razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key_id',
+          razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
           expiresAt: booking.expiresAt,
         },
       });

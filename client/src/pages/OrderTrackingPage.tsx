@@ -6,7 +6,18 @@ import { trackOrderStatus } from '../services/api';
 import { downloadOrderReceiptPdf } from '../services/clientPdfService';
 import { ScrollReveal } from '../components/ScrollReveal';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+const getSocketUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.replace(/\/api\/?$/, '');
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000';
+  }
+  return '';
+};
+
+const SOCKET_URL = getSocketUrl();
 
 export const OrderTrackingPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();

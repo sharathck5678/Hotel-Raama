@@ -28,8 +28,15 @@ import {
 } from './localStore';
 
 const getApiBaseUrl = () => {
-  let url = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  return url;
+  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    return envUrl;
+  }
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000/api';
+  }
+  console.warn('[API Config Warning] VITE_API_BASE_URL or VITE_API_URL environment variable is not set in production build.');
+  return '';
 };
 
 const API_BASE_URL = getApiBaseUrl();

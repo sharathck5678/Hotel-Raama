@@ -146,7 +146,7 @@ export const RoomsPage: React.FC = () => {
 
       // 2. Trigger Razorpay Payment Modal
       const options = {
-        key: razorpayKeyId,
+        key: razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '',
         amount: Math.round(totalAmount * 100),
         currency: 'INR',
         name: 'Hotel Raama, Hassan',
