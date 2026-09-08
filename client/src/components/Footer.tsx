@@ -99,22 +99,27 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Col 4: Stay Details & Timings */}
+        {/* Col 4: Stay Details & Refund Policy */}
         <div>
           <span className="text-[10px] uppercase tracking-[1.6px] text-[#d9b57d] font-bold block mb-4">
-            Guest Information
+            Guest & Refund Policy
           </span>
-          <ul className="space-y-3 text-xs text-[#f7f7f2]/80">
+          <ul className="space-y-2.5 text-xs text-[#f7f7f2]/80">
             <li className="flex items-center gap-2">
               <Clock size={14} className="text-[#d9b57d]" /> Check-In: 12:00 PM
             </li>
             <li className="flex items-center gap-2">
-              <Clock size={14} className="text-[#d9b57d]" /> Check-Out: 11:00 AM
-            </li>
-            <li className="text-[11px] text-[#f7f7f2]/50 pt-3 border-t border-[#cbc0ad]/15 leading-relaxed">
-              Contactless room reservations and instant digital receipt verification.
+              <Clock size={14} className="text-[#d9b57d]" /> Check-Out: 12:00 PM
             </li>
           </ul>
+          <div className="mt-4 pt-3 border-t border-[#cbc0ad]/15 text-[11px] space-y-1">
+            <span className="font-bold text-[#d9b57d] block uppercase tracking-wider text-[10px]">Cancellation & Refund:</span>
+            <ul className="text-[#f7f7f2]/70 space-y-0.5 text-[10.5px]">
+              <li>• 7+ days before check-in date: <strong className="text-emerald-400 font-semibold">100% Refund</strong></li>
+              <li>• 3–6 days before check-in date: <strong className="text-amber-300 font-semibold">50% Refund</strong></li>
+              <li>• Under 3 days of check-in date / No-show: <strong className="text-rose-300 font-semibold">No Refund</strong></li>
+            </ul>
+          </div>
         </div>
 
       </div>
@@ -125,9 +130,9 @@ export const Footer: React.FC = () => {
           © {new Date().getFullYear()} Hotel Raama, Hassan. All rights reserved.
         </div>
         <div className="flex gap-6 uppercase tracking-[1.6px] text-[10px]">
-          <Link to="/location" className="hover:text-[#f7f7f2]">Privacy Policy</Link>
-          <Link to="/location" className="hover:text-[#f7f7f2]">Terms of Booking</Link>
-          <Link to="/admin/login" className="hover:text-[#d9b57d]">Staff Portal</Link>
+          <Link to="/privacy-policy" className="hover:text-[#d9b57d] transition-colors">Privacy Policy</Link>
+          <Link to="/terms-of-booking" className="hover:text-[#d9b57d] transition-colors">Terms of Booking</Link>
+          <Link to="/admin/login" className="hover:text-[#d9b57d] transition-colors">Staff Portal</Link>
         </div>
       </div>
     </footer>

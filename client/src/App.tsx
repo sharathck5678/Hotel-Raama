@@ -15,6 +15,8 @@ import { PartyHallPage } from './pages/PartyHallPage';
 import { AttractionsPage } from './pages/AttractionsPage';
 import { LocationPage } from './pages/LocationPage';
 import { MyBookingsOrdersPage } from './pages/MyBookingsOrdersPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { TermsOfBookingPage } from './pages/TermsOfBookingPage';
 
 // QR Order Pages
 import { QrOrderingSectionPage } from './pages/QrOrderingSectionPage';
@@ -50,6 +52,8 @@ export const App: React.FC = () => {
             <Route path="/attractions" element={<AttractionsPage />} />
             <Route path="/location" element={<LocationPage />} />
             <Route path="/my-bookings-orders" element={<MyBookingsOrdersPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms-of-booking" element={<TermsOfBookingPage />} />
 
             {/* Room QR Scan & Tracking Routes for Guests */}
             <Route path="/order/:token" element={<QrOrderPage />} />
