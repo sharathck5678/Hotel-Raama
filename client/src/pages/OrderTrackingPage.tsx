@@ -5,6 +5,7 @@ import { Clock, CheckCircle2, ChefHat, Bike, Download } from 'lucide-react';
 import { trackOrderStatus } from '../services/api';
 import { downloadOrderReceiptPdf } from '../services/clientPdfService';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { cloudRelay } from '../services/cloudRelayService';
 
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
@@ -59,8 +60,22 @@ export const OrderTrackingPage: React.FC = () => {
       setOrder(updatedOrder);
     });
 
+    // Sub-second Cloud Relay subscription for real-time mobile tracking
+    const unsubUpdate = cloudRelay.onOrderUpdate((updatedOrder) => {
+      const matchToken = token || '';
+      if (
+        updatedOrder.trackingToken === matchToken ||
+        updatedOrder.orderId === matchToken ||
+        updatedOrder._id === matchToken ||
+        matchToken.includes(updatedOrder.orderId || 'NON_MATCH')
+      ) {
+        setOrder(updatedOrder);
+      }
+    });
+
     return () => {
       socket.disconnect();
+      unsubUpdate();
     };
   }, [token]);
 

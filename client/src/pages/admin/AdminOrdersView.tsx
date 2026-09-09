@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { fetchAdminOrders, updateOrderStatus, updateOrderPayment } from '../../services/api';
 import { downloadOrderReceiptPdf } from '../../services/clientPdfService';
 import { ScrollReveal } from '../../components/ScrollReveal';
+import { cloudRelay } from '../../services/cloudRelayService';
+import { saveLocalOrder } from '../../services/localStore';
 
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
@@ -140,10 +142,25 @@ export const AdminOrdersView: React.FC = () => {
       loadOrders();
     }, 3000);
 
+    // Real-Time Cloud Relay Subscription (sub-second cross-device sync)
+    const unsubNew = cloudRelay.onNewOrder((newOrder) => {
+      saveLocalOrder(newOrder);
+      const labelText = formatRoomNumber(newOrder.roomNumber);
+      toast.success(`NEW ORDER RECEIVED! ${labelText} - Order #${newOrder.orderId}`);
+      if (soundEnabled) playNotificationSound();
+      setOrders((prev) => [newOrder, ...prev.filter((o) => (o._id || o.orderId) !== (newOrder._id || newOrder.orderId))]);
+    });
+
+    const unsubUpdate = cloudRelay.onOrderUpdate((updatedOrder) => {
+      setOrders((prev) => prev.map((o) => ((o._id || o.orderId) === (updatedOrder._id || updatedOrder.orderId) ? updatedOrder : o)));
+    });
+
     return () => {
       if (socket) socket.disconnect();
       clearInterval(pollInterval);
       window.removeEventListener('storage', handleStorage);
+      unsubNew();
+      unsubUpdate();
     };
   }, [soundEnabled]);
 

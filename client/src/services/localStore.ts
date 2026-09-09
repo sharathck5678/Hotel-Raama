@@ -3,6 +3,7 @@ import {
   FALLBACK_ROOM_TYPES,
   mockAdminMetrics,
 } from '../data/mockData';
+import { cloudRelay } from './cloudRelayService';
 
 const ORDERS_KEY = 'raama_local_orders';
 const BOOKINGS_KEY = 'raama_local_bookings';
@@ -213,6 +214,9 @@ export const saveLocalOrder = (orderData: any) => {
   setStored(ORDERS_KEY, updated);
   addLocalAuditLog('ORDER_CREATED', 'Order', { orderId, totalAmount: newOrder.totalAmount });
   syncLocalOrdersToCloud(updated);
+  try {
+    cloudRelay.broadcastNewOrder(newOrder);
+  } catch (e) {}
   return newOrder;
 };
 
@@ -262,6 +266,9 @@ export const updateLocalOrderStatus = (idOrOrderId: string, newStatus: string) =
     status: newStatus,
   });
   syncLocalOrdersToCloud(updated);
+  try {
+    cloudRelay.broadcastOrderUpdate(updatedOrder);
+  } catch (e) {}
   return updatedOrder;
 };
 
@@ -290,6 +297,9 @@ export const updateLocalOrderPayment = (idOrOrderId: string, payload: { paymentS
       paymentMethod: updatedOrder.paymentMethod,
     });
     syncLocalOrdersToCloud(updated);
+    try {
+      cloudRelay.broadcastOrderUpdate(updatedOrder);
+    } catch (e) {}
   }
   return updatedOrder;
 };
