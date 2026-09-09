@@ -482,3 +482,33 @@ export const fetchAuditLogs = () =>
       success: true,
       data: getLocalAuditLogs(),
     }));
+
+// Admin Menu Management API Functions
+export const fetchAdminMenuItems = () =>
+  api
+    .get('/admin/menu-items')
+    .then((res) => res.data)
+    .catch(() => ({
+      success: true,
+      data: { categories: FALLBACK_MENU_CATEGORIES, items: FALLBACK_MENU_ITEMS },
+    }));
+
+export const createAdminMenuItem = (payload: any) =>
+  api
+    .post('/admin/menu-items', payload)
+    .then((res) => res.data);
+
+export const updateAdminMenuItem = (id: string, payload: any) =>
+  api
+    .put(`/admin/menu-items/${id}`, payload)
+    .then((res) => res.data);
+
+export const deleteAdminMenuItem = (id: string) =>
+  api
+    .delete(`/admin/menu-items/${id}`)
+    .then((res) => res.data);
+
+export const toggleAdminMenuItemAvailability = (id: string) =>
+  api
+    .patch(`/admin/menu-items/${id}/availability`)
+    .then((res) => res.data);

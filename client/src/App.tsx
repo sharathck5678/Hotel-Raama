@@ -29,6 +29,7 @@ import { ProtectedAdminRoute } from './pages/admin/ProtectedAdminRoute';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminDashboardView } from './pages/admin/AdminDashboardView';
 import { AdminOrdersView } from './pages/admin/AdminOrdersView';
+import { AdminMenuView } from './pages/admin/AdminMenuView';
 import { AdminBookingsView } from './pages/admin/AdminBookingsView';
 import { AdminRoomsView } from './pages/admin/AdminRoomsView';
 import { AdminCustomerHistoryView } from './pages/admin/AdminCustomerHistoryView';
@@ -73,6 +74,7 @@ export const App: React.FC = () => {
             >
               <Route index element={<AdminDashboardView />} />
               <Route path="orders" element={<AdminOrdersView />} />
+              <Route path="menu" element={<AdminMenuView />} />
               <Route path="bookings" element={<AdminBookingsView />} />
               <Route path="rooms" element={<AdminRoomsView />} />
               <Route path="qr-codes" element={<QrOrderingSectionPage />} />

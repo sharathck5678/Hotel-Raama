@@ -483,4 +483,113 @@ export class AdminController {
       return res.status(500).json({ success: false, message: 'Failed to fetch audit logs.' });
     }
   }
+
+  /**
+   * GET /api/admin/menu-items
+   */
+  static async getMenuItems(req: AuthRequest, res: Response) {
+    try {
+      const items = await MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
+      const categories = await MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+      return res.json({ success: true, data: { items, categories } });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: 'Failed to fetch menu items.' });
+    }
+  }
+
+  /**
+   * POST /api/admin/menu-items
+   */
+  static async createMenuItem(req: AuthRequest, res: Response) {
+    try {
+      const { name, code, description, categoryId, price, halfPrice, isHalfAvailable, isVeg, section, isAvailable } = req.body;
+      if (!name || price === undefined) {
+        return res.status(400).json({ success: false, message: 'Name and price are required.' });
+      }
+
+      const newItem = await MenuItem.create({
+        name,
+        code: code || name.toUpperCase().replace(/[^A-Z0-9]/g, '_').slice(0, 20),
+        description: description || '',
+        categoryId: categoryId || null,
+        price: Number(price),
+        halfPrice: halfPrice !== undefined && halfPrice !== null && halfPrice !== '' ? Number(halfPrice) : undefined,
+        isHalfAvailable: !!isHalfAvailable,
+        isVeg: isVeg !== undefined ? !!isVeg : true,
+        section: section || 'SWAAD',
+        isAvailable: isAvailable !== undefined ? !!isAvailable : true,
+      });
+
+      return res.json({ success: true, data: newItem, message: 'Menu item created successfully.' });
+    } catch (error) {
+      console.error('Create MenuItem Error:', error);
+      return res.status(500).json({ success: false, message: 'Failed to create menu item.' });
+    }
+  }
+
+  /**
+   * PUT /api/admin/menu-items/:id
+   */
+  static async updateMenuItem(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { name, code, description, categoryId, price, halfPrice, isHalfAvailable, isVeg, section, isAvailable } = req.body;
+
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (code !== undefined) updateData.code = code;
+      if (description !== undefined) updateData.description = description;
+      if (categoryId !== undefined) updateData.categoryId = categoryId;
+      if (price !== undefined) updateData.price = Number(price);
+      if (halfPrice !== undefined) updateData.halfPrice = halfPrice ? Number(halfPrice) : null;
+      if (isHalfAvailable !== undefined) updateData.isHalfAvailable = !!isHalfAvailable;
+      if (isVeg !== undefined) updateData.isVeg = !!isVeg;
+      if (section !== undefined) updateData.section = section;
+      if (isAvailable !== undefined) updateData.isAvailable = !!isAvailable;
+
+      const updated = await MenuItem.findByIdAndUpdate(id, updateData, { new: true });
+      if (!updated) {
+        return res.status(404).json({ success: false, message: 'Menu item not found.' });
+      }
+
+      return res.json({ success: true, data: updated, message: 'Menu item updated successfully.' });
+    } catch (error) {
+      console.error('Update MenuItem Error:', error);
+      return res.status(500).json({ success: false, message: 'Failed to update menu item.' });
+    }
+  }
+
+  /**
+   * DELETE /api/admin/menu-items/:id
+   */
+  static async deleteMenuItem(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const deleted = await MenuItem.findByIdAndDelete(id);
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: 'Menu item not found.' });
+      }
+      return res.json({ success: true, message: 'Menu item deleted successfully.' });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: 'Failed to delete menu item.' });
+    }
+  }
+
+  /**
+   * PATCH /api/admin/menu-items/:id/availability
+   */
+  static async toggleMenuItemAvailability(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const item = await MenuItem.findById(id);
+      if (!item) {
+        return res.status(404).json({ success: false, message: 'Menu item not found.' });
+      }
+      item.isAvailable = !item.isAvailable;
+      await item.save();
+      return res.json({ success: true, data: item, message: `Item is now ${item.isAvailable ? 'Available' : 'Unavailable'}.` });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: 'Failed to update availability.' });
+    }
+  }
 }

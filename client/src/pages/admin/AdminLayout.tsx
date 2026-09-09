@@ -11,6 +11,7 @@ import {
   QrCode,
   Menu,
   X,
+  BookOpen,
 } from 'lucide-react';
 import { adminLogout } from '../../services/api';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export const AdminLayout: React.FC = () => {
   const navItems = [
     { name: 'Overview', path: '/admin', icon: LayoutDashboard },
     { name: 'Kitchen Orders', path: '/admin/orders', icon: UtensilsCrossed },
+    { name: 'Menu Catalog', path: '/admin/menu', icon: BookOpen },
     { name: 'Room Bookings', path: '/admin/bookings', icon: CalendarCheck },
     { name: 'QR Code Directory', path: '/admin/qr-codes', icon: QrCode },
     { name: 'Customer History', path: '/admin/customers', icon: Users },

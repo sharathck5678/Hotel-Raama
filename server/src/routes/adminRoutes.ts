@@ -35,4 +35,11 @@ router.get('/billing/invoice/:type/:id', AdminController.downloadInvoicePdf);
 // Audit Logs
 router.get('/audit-logs', AdminController.getAuditLogs);
 
+// Menu Management
+router.get('/menu-items', AdminController.getMenuItems);
+router.post('/menu-items', AdminController.createMenuItem);
+router.put('/menu-items/:id', AdminController.updateMenuItem);
+router.delete('/menu-items/:id', AdminController.deleteMenuItem);
+router.patch('/menu-items/:id/availability', AdminController.toggleMenuItemAvailability);
+
 export default router;
