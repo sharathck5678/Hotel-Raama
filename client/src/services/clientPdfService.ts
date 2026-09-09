@@ -59,6 +59,10 @@ export interface BookingPdfData {
  * Generate and trigger download of Order PDF Receipt directly in the browser
  */
 export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
+  if (order.paymentStatus && order.paymentStatus !== 'PAID') {
+    toast.error('PDF Receipt is locked. Available only after payment is settled.');
+    return;
+  }
   try {
     const doc = new jsPDF({
       orientation: 'portrait',

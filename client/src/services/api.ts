@@ -12,11 +12,11 @@ import {
   mockCreateOrder,
 } from '../data/mockData';
 import {
-  getLocalOrders,
   saveLocalOrder,
   updateLocalOrderStatus,
   updateLocalOrderPayment,
   findLocalOrder,
+  syncLocalOrdersFromCloud,
   getLocalBookings,
   saveLocalBooking,
   updateLocalBookingStatus,
@@ -271,8 +271,9 @@ export const trackOrderStatus = (token: string) =>
   api
     .get(`/orders/track/${token}`)
     .then((res) => res.data)
-    .catch((err) => {
-      console.warn('[API Warning] trackOrderStatus fallback to localStore:', err.message);
+    .catch(async (err) => {
+      console.warn('[API Warning] trackOrderStatus fallback to Cloud Sync / localStore:', err.message);
+      await syncLocalOrdersFromCloud();
       const localOrder = findLocalOrder(token);
       if (localOrder) {
         return { success: true, data: localOrder };
@@ -282,7 +283,7 @@ export const trackOrderStatus = (token: string) =>
         data: {
           _id: 'mock_order_id',
           orderId: `ORD${token.slice(-5)}`,
-          status: 'CONFIRMED',
+          status: 'PENDING',
           guestName: 'Valued Guest',
           guestPhone: '9876543210',
           roomNumber: '104',
@@ -292,8 +293,8 @@ export const trackOrderStatus = (token: string) =>
             { menuItemId: 'item_s51', name: 'Filter Coffee', price: 30, quantity: 2, potionSize: 'Standard' },
           ],
           totalAmount: 310,
-          paymentStatus: 'PAID',
-          paymentMethod: 'RAZORPAY',
+          paymentStatus: 'UNPAID',
+          paymentMethod: 'CASH',
           trackingToken: token,
           createdAt: new Date().toISOString(),
         },
@@ -400,16 +401,20 @@ export const updateBookingStatus = (id: string, payload: any) =>
 export const fetchAdminOrders = () =>
   api
     .get('/admin/orders')
-    .then((res) => {
+    .then(async (res) => {
       if (res.data?.success && Array.isArray(res.data.data)) {
         return res.data;
       }
-      return { success: true, data: getLocalOrders() };
+      const data = await syncLocalOrdersFromCloud();
+      return { success: true, data };
     })
-    .catch(() => ({
-      success: true,
-      data: getLocalOrders(),
-    }));
+    .catch(async () => {
+      const data = await syncLocalOrdersFromCloud();
+      return {
+        success: true,
+        data,
+      };
+    });
 
 export const updateOrderStatus = (id: string, status: string) =>
   api

@@ -374,13 +374,19 @@ export const MyBookingsOrdersPage: React.FC = () => {
                       </div>
 
                       <div className="flex justify-between items-center pt-2 border-t border-[#f7f7f2]/10">
-                        <button
-                          type="button"
-                          onClick={() => downloadOrderReceiptPdf(order)}
-                          className="px-3.5 py-2 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
-                        >
-                          <Download size={13} /> Receipt PDF
-                        </button>
+                        {order.paymentStatus === 'PAID' ? (
+                          <button
+                            type="button"
+                            onClick={() => downloadOrderReceiptPdf(order)}
+                            className="px-3.5 py-2 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
+                          >
+                            <Download size={13} /> Receipt PDF
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-[#d9b57d] font-sans font-semibold uppercase tracking-wider bg-[#f7f7f2]/10 px-2.5 py-1.5 rounded-sm border border-[#d9b57d]/30">
+                            🔒 Receipt Unlocked Upon Payment
+                          </span>
+                        )}
 
                         <Link
                           to={`/track-order/${order.token}`}

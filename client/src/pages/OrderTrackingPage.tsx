@@ -155,13 +155,24 @@ export const OrderTrackingPage: React.FC = () => {
 
         {/* PDF Receipt Action */}
         <div>
-          <button
-            type="button"
-            onClick={() => downloadOrderReceiptPdf(order)}
-            className="w-full py-4 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-[0.99]"
-          >
-            <Download size={15} /> Download Digital Receipt (PDF)
-          </button>
+          {order.paymentStatus === 'PAID' ? (
+            <button
+              type="button"
+              onClick={() => downloadOrderReceiptPdf(order)}
+              className="w-full py-4 bg-[#f7f7f2] text-[#333333] hover:bg-[#d9b57d] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-[0.99]"
+            >
+              <Download size={15} /> Download Digital Receipt (PDF)
+            </button>
+          ) : (
+            <div className="w-full p-4 bg-[#f7f7f2]/10 border border-[#d9b57d]/30 rounded-sm text-center space-y-1">
+              <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-wider block">
+                🔒 Payment Pending
+              </span>
+              <p className="text-[#f7f7f2]/70 text-[11px] font-sans">
+                Digital receipt will be available for download once payment is completed.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </ScrollReveal>
