@@ -8,13 +8,8 @@ import {
   Check,
   X,
   Utensils,
-  Filter,
-  ToggleLeft,
-  ToggleRight,
   Leaf,
   Beef,
-  DollarSign,
-  Tag,
   BookOpen,
   AlertTriangle,
 } from 'lucide-react';
