@@ -6,8 +6,18 @@ import { validateQrToken, fetchMenuCatalog, createFoodOrder, verifyOrderPayment 
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 
 export const QrOrderPage: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
+  const { token: pathToken } = useParams<{ token: string }>();
   const navigate = useNavigate();
+
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const token =
+    pathToken ||
+    searchParams.get('token') ||
+    searchParams.get('qrToken') ||
+    searchParams.get('room') ||
+    searchParams.get('qr') ||
+    localStorage.getItem('scanned_qr_token') ||
+    '101';
 
   const [roomInfo, setRoomInfo] = useState<any | null>(null);
   const [categories, setCategories] = useState<any[]>([]);

@@ -58,6 +58,11 @@ export const App: React.FC = () => {
 
             {/* Room QR Scan & Tracking Routes for Guests */}
             <Route path="/order/:token" element={<QrOrderPage />} />
+            <Route path="/order" element={<QrOrderPage />} />
+            <Route path="/qr/:token" element={<QrOrderPage />} />
+            <Route path="/qr" element={<QrOrderPage />} />
+            <Route path="/menu/:token" element={<QrOrderPage />} />
+            <Route path="/menu" element={<QrOrderPage />} />
             <Route path="/track-order/:token" element={<OrderTrackingPage />} />
 
             {/* Admin Login */}

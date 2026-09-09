@@ -62,11 +62,33 @@ export const AdminOrdersView: React.FC = () => {
     }
   };
 
+  const knownOrderIdsRef = React.useRef<Set<string>>(new Set());
+
   const loadOrders = () => {
     fetchAdminOrders()
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
-          setOrders(res.data);
+          const fetchedOrders = res.data;
+
+          if (knownOrderIdsRef.current.size > 0) {
+            fetchedOrders.forEach((o: any) => {
+              const id = o._id || o.orderId;
+              if (id && !knownOrderIdsRef.current.has(id)) {
+                const labelText = formatRoomNumber(o.roomNumber);
+                toast.success(`NEW ORDER RECEIVED! ${labelText} - Order #${o.orderId}`);
+                if (soundEnabled) playNotificationSound();
+              }
+            });
+          }
+
+          const newSet = new Set<string>();
+          fetchedOrders.forEach((o: any) => {
+            const id = o._id || o.orderId;
+            if (id) newSet.add(id);
+          });
+          knownOrderIdsRef.current = newSet;
+
+          setOrders(fetchedOrders);
         }
       })
       .finally(() => setLoading(false));
@@ -113,10 +135,10 @@ export const AdminOrdersView: React.FC = () => {
     };
     window.addEventListener('storage', handleStorage);
 
-    // Background Polling Fallback (syncs every 5s for cross-network / mobile orders)
+    // Background Polling Fallback (syncs every 3s for cross-network / mobile orders)
     const pollInterval = setInterval(() => {
       loadOrders();
-    }, 5000);
+    }, 3000);
 
     return () => {
       if (socket) socket.disconnect();

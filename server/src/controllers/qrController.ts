@@ -92,11 +92,16 @@ export class QrController {
       const cleanToken = token.trim();
       const isPartyHallToken = /party|hall|sambhrama/i.test(cleanToken);
       const isBoardRoomToken = /board/i.test(cleanToken);
+      const numMatch = cleanToken.match(/(\d+)/);
+      const roomNumOnly = numMatch ? numMatch[1] : cleanToken;
 
       let room = await Room.findOne({
         $or: [
           { qrToken: cleanToken },
           { qrToken: { $regex: new RegExp(`^${cleanToken}$`, 'i') } },
+          { roomNumber: roomNumOnly },
+          { roomNumber: `Room ${roomNumOnly}` },
+          { roomNumber: `#${roomNumOnly}` },
           { roomNumber: { $regex: new RegExp(`^${cleanToken.replace(/[-_]/g, ' ')}$`, 'i') } },
           ...(isPartyHallToken ? [{ roomNumber: { $regex: /party|hall|sambhrama/i } }] : []),
           ...(isBoardRoomToken ? [{ roomNumber: { $regex: /board/i } }] : []),
@@ -221,8 +226,13 @@ export class QrController {
       const orderItems: IOrderItem[] = [];
 
       for (const item of items) {
-        const itemId = (item.menuItemId || item._id || '').toString();
-        const dbItem = menuMap.get(itemId);
+        const rawItemId = typeof item.menuItemId === 'object' && item.menuItemId?._id
+          ? item.menuItemId._id
+          : typeof item._id === 'object' && item._id?._id
+          ? item._id._id
+          : item.menuItemId || item._id || '';
+        const itemIdStr = String(rawItemId);
+        const dbItem = menuMap.get(itemIdStr);
 
         const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
         let unitPrice = dbItem ? dbItem.price : (parseFloat(item.price) || 100);
@@ -237,8 +247,12 @@ export class QrController {
         const itemSubtotal = unitPrice * quantity;
         subtotal += itemSubtotal;
 
+        const finalObjectId = dbItem
+          ? dbItem._id
+          : (Types.ObjectId.isValid(itemIdStr) && itemIdStr.length === 24 ? new Types.ObjectId(itemIdStr) : new Types.ObjectId());
+
         orderItems.push({
-          menuItemId: dbItem ? dbItem._id : (Types.ObjectId.isValid(itemId) ? new Types.ObjectId(itemId) : new Types.ObjectId()),
+          menuItemId: finalObjectId,
           name: itemName,
           price: unitPrice,
           quantity,
