@@ -24,7 +24,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 1,
     isAc: false,
     amenities: ['Free Wi-Fi', 'TV', 'Hot Water', 'Work Desk'],
-    images: ['/single-occupancy-room.png'],
+    images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'],
   },
   {
     _id: 'rt_2',
@@ -36,7 +36,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 2,
     isAc: false,
     amenities: ['Free Wi-Fi', 'LED TV', '24/7 Hot Water', 'Daily Housekeeping'],
-    images: ['/double-occupancy-room.png'],
+    images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'],
   },
   {
     _id: 'rt_3',
@@ -48,7 +48,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 1,
     isAc: true,
     amenities: ['Air Conditioning', 'High Speed Wi-Fi', 'Smart TV', 'Room Service'],
-    images: ['/single-occupancy-room.png'],
+    images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'],
   },
   {
     _id: 'rt_4',
@@ -60,7 +60,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 2,
     isAc: true,
     amenities: ['Air Conditioning', 'King Bed', 'Tea/Coffee Maker', 'Minibar', 'Smart TV'],
-    images: ['/double-occupancy-room.png'],
+    images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'],
   },
   {
     _id: 'rt_5',
@@ -72,7 +72,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 3,
     isAc: false,
     amenities: ['3 Single Beds', 'Free Wi-Fi', 'Spacious Wardrobe', 'Bottled Water'],
-    images: ['/triple-occupancy-ac.png'],
+    images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'],
   },
   {
     _id: 'rt_6',
@@ -85,7 +85,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 3,
     isAc: true,
     amenities: ['Air Conditioning', '3 Beds', 'Smart TV', 'Tea/Coffee Station'],
-    images: ['/triple-occupancy-ac.png'],
+    images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'],
   },
   {
     _id: 'rt_7',
@@ -97,7 +97,7 @@ export const FALLBACK_ROOM_TYPES = [
     maxOccupancy: 4,
     isAc: true,
     amenities: ['Living Room Lounge', 'Jacuzzi / Bathtub', 'Fruit Basket', 'Express Check-in', 'Premium A/C'],
-    images: ['/suite-room.png'],
+    images: ['/suite-room.png', '/hotel-corridor.jpg', '/suite-room-angle.png'],
   },
 ];
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, X, CreditCard, ShieldCheck } from 'lucide-react';
+import { Check, X, CreditCard, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchRoomTypes, checkAvailability, createBookingHold, verifyBookingPayment } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
@@ -11,6 +11,143 @@ declare global {
     Razorpay: any;
   }
 }
+
+// Interactive Room Image Slideshow Component
+const RoomSlideshow: React.FC<{
+  images?: string[];
+  roomName: string;
+  badgeText?: string;
+}> = ({ images, roomName, badgeText }) => {
+  const slideImages = React.useMemo(() => {
+    let list = [...(images || [])];
+    if (list.length === 0) {
+      list.push('https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80');
+    }
+    // Always include hallway/corridor photo
+    if (!list.includes('/hotel-corridor.jpg')) {
+      list.push('/hotel-corridor.jpg');
+    }
+
+    const isSingle = roomName.toLowerCase().includes('single');
+    const isDouble = roomName.toLowerCase().includes('double');
+    const isTriple = roomName.toLowerCase().includes('triple');
+    const isSuite = roomName.toLowerCase().includes('suite');
+
+    if (isSingle) {
+      // For single bedrooms, replace any old 3rd photo with the new single room angle photo
+      list = list.map((img) => (img === '/swaad-restaurant.png' || img === '/liquid-lounge-bar.png' || img === '/hotel-raama-dining.jpg' ? '/single-room-angle.jpg' : img));
+      if (!list.includes('/single-room-angle.jpg')) {
+        list.push('/single-room-angle.jpg');
+      }
+    } else if (isDouble) {
+      // For double bedrooms, replace any old 3rd photo with the new double room angle photo
+      list = list.map((img) => (img === '/swaad-restaurant.png' || img === '/liquid-lounge-bar.png' || img === '/hotel-raama-dining.jpg' ? '/double-room-angle.png' : img));
+      if (!list.includes('/double-room-angle.png')) {
+        list.push('/double-room-angle.png');
+      }
+    } else if (isTriple) {
+      // For triple occupancy rooms, replace any old 3rd photo with the new triple room angle photo
+      list = list.map((img) => (img === '/swaad-restaurant.png' || img === '/liquid-lounge-bar.png' || img === '/hotel-raama-dining.jpg' || img === '/sambhrama-party-hall.png' ? '/triple-room-angle.png' : img));
+      if (!list.includes('/triple-room-angle.png')) {
+        list.push('/triple-room-angle.png');
+      }
+    } else if (isSuite) {
+      // For suite rooms, replace any old 3rd photo with the new suite room angle photo
+      list = list.map((img) => (img === '/swaad-restaurant.png' || img === '/liquid-lounge-bar.png' || img === '/hotel-raama-dining.jpg' || img === '/sambhrama-party-hall.png' ? '/suite-room-angle.png' : img));
+      if (!list.includes('/suite-room-angle.png')) {
+        list.push('/suite-room-angle.png');
+      }
+    } else {
+      if (list.length < 3) {
+        if (!list.includes('/hotel-raama-dining.jpg')) list.push('/hotel-raama-dining.jpg');
+      }
+    }
+    return list;
+  }, [images, roomName]);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const prevSlide = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + slideImages.length) % slideImages.length);
+  };
+
+  const nextSlide = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % slideImages.length);
+  };
+
+  const goToSlide = (idx: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex(idx);
+  };
+
+  return (
+    <div className="relative h-64 overflow-hidden group rounded-t-sm bg-stone-900">
+      <motion.img
+        key={slideImages[currentIndex]}
+        src={slideImages[currentIndex]}
+        alt={`${roomName} - Photo ${currentIndex + 1}`}
+        className="w-full h-full object-cover select-none"
+        initial={{ opacity: 0.8 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      />
+
+      {badgeText && (
+        <div className="absolute top-4 left-4 bg-[#47614d] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#d9b57d] shadow-md z-10">
+          {badgeText}
+        </div>
+      )}
+
+      {/* Slide Index Pill */}
+      <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-sans text-white font-semibold z-10 tracking-wider">
+        {currentIndex + 1} / {slideImages.length}
+      </div>
+
+      {/* Navigation Arrows */}
+      {slideImages.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={prevSlide}
+            aria-label="Previous photo"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 z-10 cursor-pointer backdrop-blur-sm shadow-md"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={nextSlide}
+            aria-label="Next photo"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 z-10 cursor-pointer backdrop-blur-sm shadow-md"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </>
+      )}
+
+      {/* Indicator Dots */}
+      {slideImages.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
+          {slideImages.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={(e) => goToSlide(idx, e)}
+              className={`h-2 rounded-full transition-all cursor-pointer ${
+                idx === currentIndex ? 'w-5 bg-[#d9b57d]' : 'w-2 bg-white/60 hover:bg-white'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const RoomsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -297,16 +434,11 @@ export const RoomsPage: React.FC = () => {
                 className="bg-[#f7f7f2] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm flex flex-col justify-between hover:border-[#cbc0ad] transition-all duration-300 h-full"
               >
               <div>
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={room.images?.[0] || 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80'}
-                    alt={room.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 left-4 bg-[#47614d] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#d9b57d]">
-                    {room.isAc ? 'A/C Executive' : 'Non A/C Premium'}
-                  </div>
-                </div>
+                <RoomSlideshow
+                  images={room.images}
+                  roomName={room.name}
+                  badgeText={room.isAc ? 'A/C Executive' : 'Non A/C Premium'}
+                />
 
                 <div className="p-7 space-y-4">
                   <div className="flex justify-between items-start">
@@ -381,12 +513,18 @@ export const RoomsPage: React.FC = () => {
               <X size={20} />
             </button>
 
-            <div className="mb-6 border-b border-[#cbc0ad] pb-4">
-              <span className="text-[#8c764b] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
-              <h2 className="text-3xl font-serif text-[#333333]">{selectedRoom.name}</h2>
-              <p className="text-xs font-sans text-[#666666] mt-1">
-                Base Rate: ₹{selectedRoom.basePrice} / night · Max Occupancy: {selectedRoom.maxOccupancy || 2} {selectedRoom.maxOccupancy === 1 ? 'Guest' : 'Guests'}
-              </p>
+            <div className="mb-6 border-b border-[#cbc0ad] pb-4 space-y-4">
+              <div>
+                <span className="text-[#8c764b] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
+                <h2 className="text-3xl font-serif text-[#333333]">{selectedRoom.name}</h2>
+                <p className="text-xs font-sans text-[#666666] mt-1">
+                  Base Rate: ₹{selectedRoom.basePrice} / night · Max Occupancy: {selectedRoom.maxOccupancy || 2} {selectedRoom.maxOccupancy === 1 ? 'Guest' : 'Guests'}
+                </p>
+              </div>
+
+              <div className="rounded-sm overflow-hidden border border-[#cbc0ad]">
+                <RoomSlideshow images={selectedRoom.images} roomName={selectedRoom.name} />
+              </div>
             </div>
 
             <form onSubmit={handleBookingSubmit} className="space-y-6">
@@ -509,7 +647,7 @@ export const RoomsPage: React.FC = () => {
               <div className="p-4 bg-white/70 rounded-sm border border-[#cbc0ad] flex items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-sans font-bold text-[#333333]">Extra Person Bedding & Stay</span>
+                    <span className="text-xs font-sans font-bold text-[#333333]">Extra Person</span>
                     <span className="bg-emerald-500/10 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-sm border border-emerald-700/30">
                       +₹600 / night
                     </span>

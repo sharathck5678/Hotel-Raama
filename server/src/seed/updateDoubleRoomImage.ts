@@ -9,7 +9,7 @@ dotenv.config();
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hotel_raama');
     const res = await RoomType.updateMany(
       { $or: [{ code: 'PREM_DBL_NONAC' }, { code: 'EXEC_DBL_AC' }, { name: { $regex: /Double/i } }] },
-      { $set: { images: ['/double-occupancy-room.png'] } }
+      { $set: { images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'] } }
     );
     console.log('Updated Double Occupancy Rooms in MongoDB:', res);
     const items = await RoomType.find({ code: { $in: ['PREM_DBL_NONAC', 'EXEC_DBL_AC'] } });

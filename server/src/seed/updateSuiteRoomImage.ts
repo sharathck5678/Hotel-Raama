@@ -9,7 +9,7 @@ dotenv.config();
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hotel_raama');
     const res = await RoomType.updateMany(
       { $or: [{ code: 'SUITE_ROOM' }, { name: { $regex: /Suite/i } }] },
-      { $set: { images: ['/suite-room.png'] } }
+      { $set: { images: ['/suite-room.png', '/hotel-corridor.jpg', '/suite-room-angle.png'] } }
     );
     console.log('Updated Suite Room in MongoDB:', res);
     const item = await RoomType.findOne({ code: 'SUITE_ROOM' });
