@@ -258,6 +258,9 @@ export const QrOrderPage: React.FC = () => {
   const locationTitle = isVenue ? roomInfo.roomNumber : `Room #${roomInfo.roomNumber}`;
 
   const sectionItems = items.filter((i) => {
+    // Hide out of stock items from guest QR ordering menu
+    if (i.isAvailable === false) return false;
+
     if (activeSection === 'SWAAD_VEG') {
       return i.section === 'SWAAD';
     } else if (activeSection === 'HOTEL_RAAMA') {

@@ -60,8 +60,12 @@ export const AdminMenuView: React.FC = () => {
     fetchAdminMenuItems()
       .then((res) => {
         if (res.success && res.data) {
-          const itemList = res.data.items || res.data || [];
-          setItems(Array.isArray(itemList) ? itemList : []);
+          const rawItems = res.data.items || res.data || [];
+          const itemList = (Array.isArray(rawItems) ? rawItems : []).map((i: any) => ({
+            ...i,
+            isAvailable: i.isAvailable !== false,
+          }));
+          setItems(itemList);
           setCategories(res.data.categories || []);
         }
       })
@@ -105,21 +109,24 @@ export const AdminMenuView: React.FC = () => {
       isVeg: item.isVeg !== undefined ? !!item.isVeg : true,
       section: item.section || 'SWAAD',
       categoryId: item.categoryId || '',
-      isAvailable: item.isAvailable !== undefined ? !!item.isAvailable : true,
+      isAvailable: item.isAvailable !== false,
     });
     setIsModalOpen(true);
   };
 
   const handleToggleAvailability = async (item: any) => {
     try {
+      const currentAvailable = item.isAvailable !== false;
+      const nextAvailable = !currentAvailable;
+
       // Optimistic update
       setItems((prev) =>
-        prev.map((i) => (i._id === item._id ? { ...i, isAvailable: !i.isAvailable } : i))
+        prev.map((i) => (i._id === item._id ? { ...i, isAvailable: nextAvailable } : i))
       );
 
       const res = await toggleAdminMenuItemAvailability(item._id);
       if (res.success) {
-        toast.success(`${item.name} is now ${!item.isAvailable ? 'Available' : 'Unavailable'}`);
+        toast.success(`${item.name} is now ${nextAvailable ? 'In Stock' : 'Out of Stock'}`);
       } else {
         loadData(); // Revert
       }
@@ -371,24 +378,29 @@ export const AdminMenuView: React.FC = () => {
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <button
-                        onClick={() => handleToggleAvailability(item)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
-                          item.isAvailable
-                            ? 'bg-emerald-500/15 text-emerald-800 border border-emerald-600/30'
-                            : 'bg-red-500/15 text-red-800 border border-red-600/30'
-                        }`}
-                      >
-                        {item.isAvailable ? (
-                          <>
-                            <Check size={12} /> In Stock
-                          </>
-                        ) : (
-                          <>
-                            <X size={12} /> Out of Stock
-                          </>
-                        )}
-                      </button>
+                      {(() => {
+                        const isItemAvailable = item.isAvailable !== false;
+                        return (
+                          <button
+                            onClick={() => handleToggleAvailability(item)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                              isItemAvailable
+                                ? 'bg-emerald-500/15 text-emerald-800 border border-emerald-600/30'
+                                : 'bg-red-500/15 text-red-800 border border-red-600/30'
+                            }`}
+                          >
+                            {isItemAvailable ? (
+                              <>
+                                <Check size={12} /> In Stock
+                              </>
+                            ) : (
+                              <>
+                                <X size={12} /> Out of Stock
+                              </>
+                            )}
+                          </button>
+                        );
+                      })()}
                     </td>
 
                     <td className="py-3.5 px-4 text-right space-x-2">

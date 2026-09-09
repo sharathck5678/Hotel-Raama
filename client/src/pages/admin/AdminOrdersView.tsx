@@ -159,12 +159,18 @@ export const AdminOrdersView: React.FC = () => {
     );
   }
 
-  const cookOrders = orders.filter(
-    (o) => o.status === 'PENDING' || o.status === 'CONFIRMED' || o.status === 'PREPARING'
-  );
-  const serveOrders = orders.filter(
-    (o) => o.status === 'READY' || o.status === 'DELIVERED'
-  );
+  const cookOrders = orders.filter((o) => {
+    const s = String(o.status || o.orderStatus || o.kitchenStage || '').toUpperCase();
+    if (s === 'SERVED' || s === 'DELIVERED' || s === 'READY' || s === 'COMPLETED' || s === 'CANCELLED') {
+      return false;
+    }
+    return true; // All active/placed/pending/confirmed kitchen orders appear in Cook Food column
+  });
+
+  const serveOrders = orders.filter((o) => {
+    const s = String(o.status || o.orderStatus || o.kitchenStage || '').toUpperCase();
+    return s === 'READY' || s === 'DELIVERED' || s === 'SERVED' || s === 'COMPLETED';
+  });
 
   const columns = [
     {

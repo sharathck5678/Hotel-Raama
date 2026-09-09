@@ -207,6 +207,9 @@ export const DiningPage: React.FC = () => {
   };
 
   const currentItems = items.filter((i) => {
+    // Hide out of stock items from guest site
+    if (i.isAvailable === false) return false;
+
     if (activeTab === 'SWAAD_VEG') {
       if (i.section !== 'SWAAD') return false;
     } else if (activeTab === 'HOTEL_RAAMA') {
