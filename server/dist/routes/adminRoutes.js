@@ -27,4 +27,10 @@ router.get('/reports/customer-history', adminController_1.AdminController.getCus
 router.get('/billing/invoice/:type/:id', adminController_1.AdminController.downloadInvoicePdf);
 // Audit Logs
 router.get('/audit-logs', adminController_1.AdminController.getAuditLogs);
+// Menu Management
+router.get('/menu-items', adminController_1.AdminController.getMenuItems);
+router.post('/menu-items', adminController_1.AdminController.createMenuItem);
+router.put('/menu-items/:id', adminController_1.AdminController.updateMenuItem);
+router.delete('/menu-items/:id', adminController_1.AdminController.deleteMenuItem);
+router.patch('/menu-items/:id/availability', adminController_1.AdminController.toggleMenuItemAvailability);
 exports.default = router;

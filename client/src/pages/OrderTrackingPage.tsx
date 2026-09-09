@@ -8,13 +8,28 @@ import { ScrollReveal } from '../components/ScrollReveal';
 
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  const isBrowser = typeof window !== 'undefined';
+  const hostname = isBrowser ? window.location.hostname : 'localhost';
+
   if (envUrl) {
-    return envUrl.replace(/\/api\/?$/, '');
+    let cleanUrl = envUrl.replace(/\/api\/?$/, '');
+    if (isBrowser && cleanUrl.includes('localhost') && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      cleanUrl = cleanUrl.replace('localhost', hostname);
+    }
+    return cleanUrl;
   }
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://localhost:5000';
+
+  if (isBrowser) {
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${hostname}:5000`;
+    }
+    if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+      return `${protocol}//${hostname}:5000`;
+    }
   }
-  return '';
+
+  return 'http://localhost:5000';
 };
 
 const SOCKET_URL = getSocketUrl();

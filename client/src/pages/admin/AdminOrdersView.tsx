@@ -8,14 +8,28 @@ import { ScrollReveal } from '../../components/ScrollReveal';
 
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  const isBrowser = typeof window !== 'undefined';
+  const hostname = isBrowser ? window.location.hostname : 'localhost';
+
   if (envUrl) {
-    return envUrl.replace(/\/api\/?$/, '');
+    let cleanUrl = envUrl.replace(/\/api\/?$/, '');
+    if (isBrowser && cleanUrl.includes('localhost') && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      cleanUrl = cleanUrl.replace('localhost', hostname);
+    }
+    return cleanUrl;
   }
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return `http://${hostname}:5000`;
+
+  if (isBrowser) {
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${hostname}:5000`;
+    }
+    if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+      return `${protocol}//${hostname}:5000`;
+    }
   }
-  return null;
+
+  return 'http://localhost:5000';
 };
 
 const formatRoomNumber = (room?: string) => {
@@ -363,7 +377,15 @@ export const AdminOrdersView: React.FC = () => {
 
                           {/* Action Buttons: Cook Food & Serve Food */}
                           <div className="grid grid-cols-1 gap-2 pt-1">
-                            {(ord.status === 'PENDING' || ord.status === 'CONFIRMED') && (
+                            {ord.status === 'PENDING' && (
+                              <button
+                                onClick={() => handleStatusChange(ord._id, 'PREPARING')}
+                                className="w-full py-2.5 bg-[#d9b57d] hover:bg-[#c8a46c] active:bg-[#b7935b] text-[#333333] font-sans font-bold rounded-sm text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                              >
+                                👍 Accept & Start Cooking
+                              </button>
+                            )}
+                            {ord.status === 'CONFIRMED' && (
                               <button
                                 onClick={() => handleStatusChange(ord._id, 'PREPARING')}
                                 className="w-full py-2.5 bg-amber-700 hover:bg-amber-600 active:bg-amber-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"

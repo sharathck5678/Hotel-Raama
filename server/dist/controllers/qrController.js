@@ -257,7 +257,7 @@ class QrController {
                 subtotal,
                 tax: 0,
                 totalAmount,
-                status: chosenPaymentMethod === 'CASH' ? 'CONFIRMED' : 'PENDING',
+                status: 'PENDING',
                 paymentStatus: 'UNPAID',
                 paymentMethod: chosenPaymentMethod,
                 razorpayOrderId,
@@ -309,9 +309,11 @@ class QrController {
                 await order.save();
                 return res.status(400).json({ success: false, message: 'Payment verification failed.' });
             }
-            // Transition to PAID & CONFIRMED
+            // Transition to PAID (keep status PENDING so kitchen accepts order)
             order.paymentStatus = 'PAID';
-            order.status = 'CONFIRMED';
+            if (!order.status || order.status === 'PENDING') {
+                order.status = 'PENDING';
+            }
             order.razorpayPaymentId = razorpayPaymentId;
             order.razorpaySignature = razorpaySignature;
             await order.save();

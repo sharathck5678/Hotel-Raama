@@ -29,14 +29,27 @@ import {
 
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  const isBrowser = typeof window !== 'undefined';
+  const hostname = isBrowser ? window.location.hostname : 'localhost';
+
   if (envUrl) {
+    if (isBrowser && envUrl.includes('localhost') && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return envUrl.replace('localhost', hostname);
+    }
     return envUrl;
   }
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://localhost:5000/api';
+
+  if (isBrowser) {
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:5000/api';
+    }
+    if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+      return `${protocol}//${hostname}:5000/api`;
+    }
   }
-  console.warn('[API Config Warning] VITE_API_BASE_URL or VITE_API_URL environment variable is not set in production build.');
-  return '';
+
+  return 'http://localhost:5000/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
