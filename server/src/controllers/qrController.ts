@@ -295,7 +295,8 @@ export class QrController {
       });
 
       // Emit Real-time Socket.IO event to Admin Kitchen Dashboard immediately on order creation!
-      SocketService.emitNewOrder(order);
+      const plainOrder = order.toObject ? order.toObject() : order;
+      SocketService.emitNewOrder(plainOrder);
 
       return res.status(201).json({
         success: true,
@@ -359,7 +360,8 @@ export class QrController {
       await order.save();
 
       // Emit Real-time Socket.IO event to Admin Kitchen Dashboard after payment is verified
-      SocketService.emitNewOrder(order);
+      const plainOrder = order.toObject ? order.toObject() : order;
+      SocketService.emitNewOrder(plainOrder);
 
       return res.json({
         success: true,

@@ -5,26 +5,19 @@ import { toast } from 'sonner';
 import { fetchAdminOrders, updateOrderStatus, updateOrderPayment } from '../../services/api';
 import { downloadOrderReceiptPdf } from '../../services/clientPdfService';
 import { ScrollReveal } from '../../components/ScrollReveal';
-import { cloudRelay } from '../../services/cloudRelayService';
-import { saveLocalOrder } from '../../services/localStore';
 
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
-  const isBrowser = typeof window !== 'undefined';
-  const hostname = isBrowser ? window.location.hostname : 'localhost';
-
   if (envUrl) {
-    let cleanUrl = envUrl.replace(/\/api\/?$/, '');
-    if (isBrowser && cleanUrl.includes('localhost') && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      cleanUrl = cleanUrl.replace('localhost', hostname);
-    }
-    return cleanUrl;
+    return envUrl.replace(/\/api\/?$/, '');
   }
 
+  const isBrowser = typeof window !== 'undefined';
   if (isBrowser) {
+    const hostname = window.location.hostname;
     const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `http://${hostname}:5000`;
+      return 'http://localhost:5000';
     }
     if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
       return `${protocol}//${hostname}:5000`;
@@ -91,7 +84,12 @@ export const AdminOrdersView: React.FC = () => {
           knownOrderIdsRef.current = newSet;
 
           setOrders(fetchedOrders);
+        } else if (res && !res.success && res.message) {
+          toast.error(res.message);
         }
+      })
+      .catch(() => {
+        toast.error('Failed to fetch kitchen orders from server.');
       })
       .finally(() => setLoading(false));
   };
@@ -108,7 +106,7 @@ export const AdminOrdersView: React.FC = () => {
           withCredentials: true,
           transports: ['websocket', 'polling'],
           timeout: 4000,
-          reconnectionAttempts: 2,
+          reconnectionAttempts: 5,
         });
 
         socket.on('connect', () => {
@@ -119,48 +117,25 @@ export const AdminOrdersView: React.FC = () => {
           const labelText = formatRoomNumber(newOrder.roomNumber);
           toast.success(`NEW ORDER! ${labelText} - Order #${newOrder.orderId}`);
           if (soundEnabled) playNotificationSound();
-          setOrders((prev) => [newOrder, ...prev.filter((o) => o._id !== newOrder._id)]);
+          setOrders((prev) => [newOrder, ...prev.filter((o) => (o._id || o.orderId) !== (newOrder._id || newOrder.orderId))]);
         });
 
         socket.on('order_updated', (updatedOrder: any) => {
-          setOrders((prev) => prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o)));
+          setOrders((prev) => prev.map((o) => ((o._id || o.orderId) === (updatedOrder._id || updatedOrder.orderId) ? updatedOrder : o)));
         });
       } catch (err) {
         console.warn('Socket initialization skipped:', err);
       }
     }
 
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'raama_local_orders') {
-        loadOrders();
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-
-    // Background Polling Fallback (syncs every 3s for cross-network / mobile orders)
+    // Background Polling (fetches live MongoDB orders every 3s)
     const pollInterval = setInterval(() => {
       loadOrders();
     }, 3000);
 
-    // Real-Time Cloud Relay Subscription (sub-second cross-device sync)
-    const unsubNew = cloudRelay.onNewOrder((newOrder) => {
-      saveLocalOrder(newOrder);
-      const labelText = formatRoomNumber(newOrder.roomNumber);
-      toast.success(`NEW ORDER RECEIVED! ${labelText} - Order #${newOrder.orderId}`);
-      if (soundEnabled) playNotificationSound();
-      setOrders((prev) => [newOrder, ...prev.filter((o) => (o._id || o.orderId) !== (newOrder._id || newOrder.orderId))]);
-    });
-
-    const unsubUpdate = cloudRelay.onOrderUpdate((updatedOrder) => {
-      setOrders((prev) => prev.map((o) => ((o._id || o.orderId) === (updatedOrder._id || updatedOrder.orderId) ? updatedOrder : o)));
-    });
-
     return () => {
       if (socket) socket.disconnect();
       clearInterval(pollInterval);
-      window.removeEventListener('storage', handleStorage);
-      unsubNew();
-      unsubUpdate();
     };
   }, [soundEnabled]);
 

@@ -9,15 +9,11 @@ import {
   FALLBACK_ATTRACTIONS,
   mockCalculateAvailability,
   mockCreateBooking,
-  mockCreateOrder,
 } from '../data/mockData';
 import {
-  saveLocalOrder,
-  updateLocalOrderStatus,
   updateLocalOrderPayment,
   findLocalOrder,
   syncLocalOrdersFromCloud,
-  getLocalBookings,
   saveLocalBooking,
   updateLocalBookingStatus,
   findLocalBooking,
@@ -29,17 +25,13 @@ import {
 
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
-  const isBrowser = typeof window !== 'undefined';
-  const hostname = isBrowser ? window.location.hostname : 'localhost';
-
   if (envUrl) {
-    if (isBrowser && envUrl.includes('localhost') && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return envUrl.replace('localhost', hostname);
-    }
     return envUrl;
   }
 
+  const isBrowser = typeof window !== 'undefined';
   if (isBrowser) {
+    const hostname = window.location.hostname;
     const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:5000/api';
@@ -244,15 +236,10 @@ export const createFoodOrder = (payload: any) =>
     .post('/orders', payload)
     .then((res) => res.data)
     .catch((err) => {
-      console.warn('[API Warning] createFoodOrder fallback to localStore:', err.message);
-      const mockResult = mockCreateOrder(payload);
-      const saved = saveLocalOrder({
-        ...payload,
-        orderId: mockResult.orderId,
-        trackingToken: mockResult.trackingToken,
-        totalAmount: mockResult.totalAmount,
-      });
-      return { success: true, data: { ...mockResult, ...saved } };
+      return {
+        success: false,
+        message: err.response?.data?.message || 'Failed to place food order. Unable to connect to backend server.',
+      };
     });
 
 export const verifyOrderPayment = (payload: any) =>
@@ -305,45 +292,24 @@ export const trackOrderStatus = (token: string) =>
 export const getBookingInvoiceUrl = (idOrToken: string) => `${API_BASE_URL}/billing/invoice/booking/${idOrToken}`;
 export const getOrderInvoiceUrl = (idOrToken: string) => `${API_BASE_URL}/billing/invoice/order/${idOrToken}`;
 
-// --- PROTECTED ADMIN APIS WITH MOCK FALLBACKS ---
+// --- PROTECTED ADMIN APIS ---
 
 export const adminLogin = (credentials: any) =>
   api
     .post('/admin/login', credentials)
     .then((res) => {
       if (res.data?.success) {
-        const token = res.data.token || res.data.data?.token || 'raama_admin_token';
-        localStorage.setItem('admin_token', token);
+        const token = res.data.token || res.data.data?.token;
+        if (token) {
+          localStorage.setItem('admin_token', token);
+        }
       }
       return res.data;
     })
     .catch((err) => {
-      // Fallback environment verification if API server is offline/mocking
-      const inputEmail = credentials?.email?.toLowerCase()?.trim();
-      const inputPass = credentials?.password;
-      const targetEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'admin@hotelraama.com').toLowerCase().trim();
-      const targetPass = import.meta.env.VITE_ADMIN_PASSWORD || 'AdminRaama@2026';
-
-      if (inputEmail === targetEmail && inputPass === targetPass) {
-        const token = 'raama_admin_authenticated_token';
-        localStorage.setItem('admin_token', token);
-        return {
-          success: true,
-          message: 'Authenticated successfully (Direct Access)',
-          token,
-          data: {
-            admin: {
-              email: targetEmail,
-              name: 'Hotel Raama Admin',
-              role: 'ADMIN',
-            },
-            token,
-          },
-        };
-      }
       return {
         success: false,
-        message: err.response?.data?.message || 'Invalid administrator email or password.',
+        message: err.response?.data?.message || 'Authentication failed. Unable to connect to server.',
       };
     });
 
@@ -364,9 +330,9 @@ export const fetchAdminMe = () => {
   return api
     .get('/admin/me')
     .then((res) => res.data)
-    .catch(() => ({
-      success: true,
-      data: { email: 'admin@hotelraama.com', name: 'Hotel Raama Admin', role: 'ADMIN' },
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to authenticate session',
     }));
 };
 
@@ -374,45 +340,47 @@ export const fetchDashboardMetrics = () =>
   api
     .get('/admin/dashboard')
     .then((res) => res.data)
-    .catch(() => ({ success: true, data: getLocalMetrics() }));
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch dashboard metrics',
+      data: getLocalMetrics(),
+    }));
 
 export const fetchAdminBookings = () =>
   api
     .get('/admin/bookings')
     .then((res) => res.data)
-    .catch(() => ({
-      success: true,
-      data: getLocalBookings(),
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch bookings',
+      data: [],
     }));
 
 export const updateBookingStatus = (id: string, payload: any) =>
   api
     .patch(`/admin/bookings/${id}/status`, payload)
     .then((res) => res.data)
-    .catch(() => {
-      const updated = updateLocalBookingStatus(id, payload);
+    .catch((err) => {
       return {
-        success: true,
-        message: 'Booking status updated.',
-        data: updated,
+        success: false,
+        message: err.response?.data?.message || 'Failed to update booking status.',
       };
     });
 
 export const fetchAdminOrders = () =>
   api
     .get('/admin/orders')
-    .then(async (res) => {
+    .then((res) => {
       if (res.data?.success && Array.isArray(res.data.data)) {
         return res.data;
       }
-      const data = await syncLocalOrdersFromCloud();
-      return { success: true, data };
+      return { success: true, data: [] };
     })
-    .catch(async () => {
-      const data = await syncLocalOrdersFromCloud();
+    .catch((err) => {
       return {
-        success: true,
-        data,
+        success: false,
+        message: err.response?.data?.message || 'Failed to fetch kitchen orders from server.',
+        data: [],
       };
     });
 
@@ -420,12 +388,10 @@ export const updateOrderStatus = (id: string, status: string) =>
   api
     .patch(`/admin/orders/${id}/status`, { status })
     .then((res) => res.data)
-    .catch(() => {
-      const updated = updateLocalOrderStatus(id, status);
+    .catch((err) => {
       return {
-        success: true,
-        message: 'Order status updated.',
-        data: updated,
+        success: false,
+        message: err.response?.data?.message || 'Failed to update order status.',
       };
     });
 
