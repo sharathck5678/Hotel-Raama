@@ -12,8 +12,8 @@ const getSocketUrl = () => {
   const isBrowser = typeof window !== 'undefined';
   const hostname = isBrowser ? window.location.hostname : 'localhost';
 
-  if (envUrl) {
-    let cleanUrl = envUrl.replace(/\/api\/?$/, '');
+  if (envUrl && envUrl.trim() !== '') {
+    let cleanUrl = envUrl.trim().replace(/\/api\/?$/, '');
     if (isBrowser && cleanUrl.includes('localhost') && hostname !== 'localhost' && hostname !== '127.0.0.1') {
       cleanUrl = cleanUrl.replace('localhost', hostname);
     }
@@ -30,7 +30,7 @@ const getSocketUrl = () => {
     }
   }
 
-  return 'http://localhost:5000';
+  return 'https://hotel-raama.onrender.com';
 };
 
 const SOCKET_URL = getSocketUrl();

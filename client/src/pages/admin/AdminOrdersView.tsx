@@ -8,8 +8,8 @@ import { ScrollReveal } from '../../components/ScrollReveal';
 
 const getSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
-  if (envUrl) {
-    return envUrl.replace(/\/api\/?$/, '');
+  if (envUrl && envUrl.trim() !== '') {
+    return envUrl.trim().replace(/\/api\/?$/, '');
   }
 
   const isBrowser = typeof window !== 'undefined';
@@ -24,7 +24,7 @@ const getSocketUrl = () => {
     }
   }
 
-  return 'http://localhost:5000';
+  return 'https://hotel-raama.onrender.com';
 };
 
 const formatRoomNumber = (room?: string) => {

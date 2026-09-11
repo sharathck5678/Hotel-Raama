@@ -23,10 +23,13 @@ import {
   getLocalMetrics,
 } from './localStore';
 
+const RENDER_BACKEND_URL = 'https://hotel-raama.onrender.com';
+
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
-  if (envUrl) {
-    return envUrl;
+  if (envUrl && envUrl.trim() !== '') {
+    const clean = envUrl.trim().replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
   }
 
   const isBrowser = typeof window !== 'undefined';
@@ -41,7 +44,7 @@ const getApiBaseUrl = () => {
     }
   }
 
-  return 'http://localhost:5000/api';
+  return `${RENDER_BACKEND_URL}/api`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -49,7 +52,7 @@ const API_BASE_URL = getApiBaseUrl();
 export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  timeout: 4000,
+  timeout: 15000,
 });
 
 api.interceptors.request.use((config) => {
