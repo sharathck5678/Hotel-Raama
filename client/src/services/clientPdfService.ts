@@ -75,18 +75,18 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
     const createdAt = order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN') : new Date().toLocaleString('en-IN');
 
     // Header Background Accent Bar
-    doc.setFillColor(24, 30, 25); // #181E19 Deep Forest Slate
+    doc.setFillColor(7, 26, 61); // #071A3D Dark Navy
     doc.rect(0, 0, pageWidth, 32, 'F');
 
     // Brand Name & Subtitle
-    doc.setTextColor(247, 247, 242); // #F7F7F2
+    doc.setTextColor(250, 249, 246); // #FAF9F6 Warm Cream
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.text('HOTEL RAAMA', 14, 13);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(217, 181, 125); // #D9B57D Gold
+    doc.setTextColor(223, 176, 0); // #DFB000 Gold
     doc.text('ROOM SERVICE & RESTAURANT DINING RECEIPT', 14, 19);
 
     doc.setTextColor(200, 200, 200);
@@ -94,7 +94,7 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
     doc.text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201 | Phone: 081722 57001', 14, 25);
 
     // Right Header Tag
-    doc.setFillColor(71, 97, 77); // #47614D
+    doc.setFillColor(0, 23, 74); // #00174A Primary Navy
     doc.roundedRect(pageWidth - 62, 9, 48, 14, 2, 2, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
@@ -104,13 +104,13 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
     // Order Information Cards
     let yPos = 42;
 
-    doc.setFillColor(247, 247, 242);
+    doc.setFillColor(250, 249, 246); // #FAF9F6 Warm Cream
     doc.setDrawColor(203, 192, 173); // #CBC0AD
     doc.roundedRect(14, yPos, (pageWidth - 32) / 2, 34, 1.5, 1.5, 'FD');
     doc.roundedRect(pageWidth / 2 + 2, yPos, (pageWidth - 32) / 2, 34, 1.5, 1.5, 'FD');
 
     // Left Box: Order Metadata
-    doc.setTextColor(71, 97, 77);
+    doc.setTextColor(0, 23, 74); // #00174A Primary Navy
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.text('ORDER DETAILS', 18, yPos + 6);
@@ -125,7 +125,7 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
 
     // Right Box: Guest & Payment
     const rightBoxX = pageWidth / 2 + 6;
-    doc.setTextColor(71, 97, 77);
+    doc.setTextColor(0, 23, 74); // #00174A Primary Navy
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.text('GUEST & PAYMENT', rightBoxX, yPos + 6);
@@ -154,8 +154,8 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
       body: tableBody,
       theme: 'grid',
       headStyles: {
-        fillColor: [71, 97, 77], // Forest Green
-        textColor: [247, 247, 242],
+        fillColor: [0, 23, 74], // Primary Navy
+        textColor: [250, 249, 246], // Warm Cream
         fontStyle: 'bold',
         fontSize: 8.5,
         halign: 'left',
@@ -175,7 +175,7 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
         cellPadding: 2.5,
       },
       alternateRowStyles: {
-        fillColor: [250, 250, 248],
+        fillColor: [250, 249, 246],
       },
     });
 
@@ -185,7 +185,7 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
     const totalAmount = Number(order.totalAmount || items.reduce((acc, it) => acc + it.price * it.quantity, 0));
     const summaryX = pageWidth - 70;
 
-    doc.setFillColor(247, 247, 242);
+    doc.setFillColor(250, 249, 246);
     doc.setDrawColor(203, 192, 173);
     doc.roundedRect(summaryX - 10, finalY + 6, 66, 20, 1.5, 1.5, 'FD');
 
@@ -195,7 +195,7 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
     doc.text('Grand Total:', summaryX - 6, finalY + 14);
 
     doc.setFontSize(11);
-    doc.setTextColor(71, 97, 77);
+    doc.setTextColor(0, 23, 74); // #00174A Primary Navy
     doc.text(`Rs. ${totalAmount.toFixed(2)}`, pageWidth - 18, finalY + 14, { align: 'right' });
 
     doc.setFont('helvetica', 'normal');
@@ -249,18 +249,18 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
     const totalAmount = Number(booking.totalAmount || (roomRate * nights + mealPrice * nights - discount + tax));
 
     // Header Background Accent Bar
-    doc.setFillColor(24, 30, 25); // Deep Forest Slate
+    doc.setFillColor(7, 26, 61); // #071A3D Dark Navy
     doc.rect(0, 0, pageWidth, 34, 'F');
 
     // Brand Name & Subtitle
-    doc.setTextColor(247, 247, 242);
+    doc.setTextColor(250, 249, 246); // #FAF9F6 Warm Cream
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.text('HOTEL RAAMA', 14, 13);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(217, 181, 125);
+    doc.setTextColor(223, 176, 0); // #DFB000 Gold
     doc.text('OFFICIAL BOOKING TAX INVOICE', 14, 19);
 
     doc.setTextColor(200, 200, 200);
@@ -268,7 +268,7 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
     doc.text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201 | Phone: 081722 57001', 14, 26);
 
     // Right Header Tag
-    doc.setFillColor(71, 97, 77);
+    doc.setFillColor(0, 23, 74); // #00174A Primary Navy
     doc.roundedRect(pageWidth - 65, 9, 51, 15, 2, 2, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
@@ -278,13 +278,13 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
     let yPos = 44;
 
     // Booking Details 2-Column Box
-    doc.setFillColor(247, 247, 242);
+    doc.setFillColor(250, 249, 246); // #FAF9F6 Warm Cream
     doc.setDrawColor(203, 192, 173);
     doc.roundedRect(14, yPos, (pageWidth - 32) / 2, 38, 1.5, 1.5, 'FD');
     doc.roundedRect(pageWidth / 2 + 2, yPos, (pageWidth - 32) / 2, 38, 1.5, 1.5, 'FD');
 
     // Left Box: Booking Info
-    doc.setTextColor(71, 97, 77);
+    doc.setTextColor(0, 23, 74); // #00174A Primary Navy
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.text('STAY INFORMATION', 18, yPos + 6);
@@ -300,7 +300,7 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
 
     // Right Box: Guest Details & Payment
     const rightBoxX = pageWidth / 2 + 6;
-    doc.setTextColor(71, 97, 77);
+    doc.setTextColor(0, 23, 74); // #00174A Primary Navy
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.text('GUEST & PAYMENT INFO', rightBoxX, yPos + 6);
@@ -355,8 +355,8 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
       body: tableBody,
       theme: 'grid',
       headStyles: {
-        fillColor: [71, 97, 77],
-        textColor: [247, 247, 242],
+        fillColor: [0, 23, 74], // Primary Navy
+        textColor: [250, 249, 246], // Warm Cream
         fontStyle: 'bold',
         fontSize: 8.5,
         halign: 'left',
@@ -376,7 +376,7 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
         cellPadding: 2.5,
       },
       alternateRowStyles: {
-        fillColor: [250, 250, 248],
+        fillColor: [250, 250, 246],
       },
     });
 
@@ -384,7 +384,7 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
 
     // Totals Box
     const summaryX = pageWidth - 70;
-    doc.setFillColor(247, 247, 242);
+    doc.setFillColor(250, 249, 246);
     doc.setDrawColor(203, 192, 173);
     doc.roundedRect(summaryX - 10, finalY + 6, 66, 20, 1.5, 1.5, 'FD');
 
@@ -394,7 +394,7 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
     doc.text('Total Paid:', summaryX - 6, finalY + 14);
 
     doc.setFontSize(11);
-    doc.setTextColor(71, 97, 77);
+    doc.setTextColor(0, 23, 74); // #00174A Primary Navy
     doc.text(`Rs. ${totalAmount.toFixed(2)}`, pageWidth - 18, finalY + 14, { align: 'right' });
 
     doc.setFont('helvetica', 'normal');

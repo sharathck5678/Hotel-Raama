@@ -148,20 +148,20 @@ export const QrOrderingSectionPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 text-[#333333]">
+    <div className="space-y-6 sm:space-y-8 text-[#00174A]">
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-12">
         
         {/* Title & Banner Header */}
         <ScrollReveal direction="up" duration={0.8}>
-          <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto border-b border-[#cbc0ad] pb-6 sm:pb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#0B1849]/10 border border-[#cbc0ad] text-[#333333] text-[10px] font-sans font-bold uppercase tracking-widest">
+          <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto border-b border-[#10184A]/15 pb-6 sm:pb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#00174A]/10 border border-[#10184A]/15 text-[#00174A] text-[10px] font-sans font-bold uppercase tracking-widest">
               <QrCode size={13} /> Admin Console · Room & Venue QR Cards
             </div>
-            <h1 className="editorial-section-title text-[#333333]">
+            <h1 className="editorial-section-title text-[#00174A]">
               QR Ordering Directory & Room Cards
             </h1>
-            <p className="font-sans text-xs sm:text-sm text-[#666666] leading-relaxed">
-              Manage static QR codes for Rooms 1 through 40, Sambhrama Party Hall, and Board Room. Click or scan any card to launch guest ordering for <strong className="text-[#333333]">Swaad Pure Veg</strong>, <strong className="text-[#333333]">Non-Veg Specialities</strong>, and <strong className="text-[#333333]">Liquid Lounge Bar</strong>.
+            <p className="font-sans text-xs sm:text-sm text-[#667085] leading-relaxed">
+              Manage static QR codes for Rooms 1 through 40, Sambhrama Party Hall, and Board Room. Click or scan any card to launch guest ordering for <strong className="text-[#00174A]">Swaad Pure Veg</strong>, <strong className="text-[#00174A]">Non-Veg Specialities</strong>, and <strong className="text-[#00174A]">Liquid Lounge Bar</strong>.
             </p>
           </div>
         </ScrollReveal>
@@ -169,15 +169,15 @@ export const QrOrderingSectionPage: React.FC = () => {
 
         {/* Search & Filter Controls */}
         <ScrollReveal direction="up" duration={0.8}>
-          <div className="bg-[#f7f7f2] p-4 rounded-sm border border-[#cbc0ad] flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="bg-[#FAF9F6] p-4 rounded-sm border border-[#10184A]/15 flex flex-col lg:flex-row items-center justify-between gap-4">
             {/* Tabs */}
-            <div className="flex bg-[#0B1849]/5 p-1 rounded-sm border border-[#cbc0ad] w-full lg:w-auto overflow-x-auto">
+            <div className="flex bg-[#00174A]/5 p-1 rounded-sm border border-[#10184A]/15 w-full lg:w-auto overflow-x-auto">
               <button
                 onClick={() => setActiveFilter('ALL')}
                 className={`flex-1 lg:flex-initial px-4 py-2 rounded-sm text-xs font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                   activeFilter === 'ALL'
-                    ? 'bg-[#47614d] text-[#f7f7f2]'
-                    : 'text-[#666666] hover:text-[#333333]'
+                    ? 'bg-[#00174A] text-[#FAF9F6]'
+                    : 'text-[#667085] hover:text-[#00174A]'
                 }`}
               >
                 All QR Codes ({rooms.length})
@@ -186,8 +186,8 @@ export const QrOrderingSectionPage: React.FC = () => {
                 onClick={() => setActiveFilter('ROOMS')}
                 className={`flex-1 lg:flex-initial px-4 py-2 rounded-sm text-xs font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                   activeFilter === 'ROOMS'
-                    ? 'bg-[#47614d] text-[#f7f7f2]'
-                    : 'text-[#666666] hover:text-[#333333]'
+                    ? 'bg-[#00174A] text-[#FAF9F6]'
+                    : 'text-[#667085] hover:text-[#00174A]'
                 }`}
               >
                 Rooms 1-40 ({rooms.filter(r => !isVenueRoom(r.roomNumber)).length})
@@ -196,8 +196,8 @@ export const QrOrderingSectionPage: React.FC = () => {
                 onClick={() => setActiveFilter('VENUES')}
                 className={`flex-1 lg:flex-initial px-4 py-2 rounded-sm text-xs font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
                   activeFilter === 'VENUES'
-                    ? 'bg-[#47614d] text-[#f7f7f2]'
-                    : 'text-[#666666] hover:text-[#333333]'
+                    ? 'bg-[#00174A] text-[#FAF9F6]'
+                    : 'text-[#667085] hover:text-[#00174A]'
                 }`}
               >
                 Halls & Board Room ({rooms.filter(r => isVenueRoom(r.roomNumber)).length})
@@ -208,13 +208,13 @@ export const QrOrderingSectionPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
               {/* Search Input */}
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#666666]" size={15} />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085]" size={15} />
                 <input
                   type="text"
                   placeholder="Search Room / Board Room..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm pl-10 pr-4 py-2 text-xs font-sans text-[#333333] placeholder-[#596277] focus:outline-none focus:border-[#47614d] transition-colors"
+                  className="w-full bg-white border border-[#10184A]/20 rounded-sm pl-10 pr-4 py-2 text-xs font-sans text-[#00174A] placeholder-[#667085] focus:outline-none focus:border-[#00174A] transition-colors"
                 />
               </div>
 
@@ -224,10 +224,10 @@ export const QrOrderingSectionPage: React.FC = () => {
                   type="button"
                   onClick={() => setIsDropdownOpen((prev) => !prev)}
                   disabled={downloading}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#47614d] text-[#f7f7f2] hover:bg-[#3d5442] active:bg-[#344838] border border-[#3d5442] rounded-sm text-xs font-sans font-semibold uppercase tracking-wider shadow-sm transition-all duration-200 cursor-pointer hover:border-[#d9b57d] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#DFB000] border border-[#DFB000] rounded-sm text-xs font-sans font-semibold uppercase tracking-wider shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   title="Download QR Codes as high-quality PNG"
                 >
-                  <Download size={14} className="text-[#d9b57d]" />
+                  <Download size={14} className="text-[#00174A]" />
                   <span>{downloading ? 'Downloading...' : 'DOWNLOAD PNG'}</span>
                   <ChevronDown
                     size={13}
@@ -237,9 +237,9 @@ export const QrOrderingSectionPage: React.FC = () => {
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-[#f7f7f2] rounded-sm border border-[#cbc0ad] shadow-xl py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="px-3 py-2 border-b border-[#cbc0ad]/60 mb-1">
-                      <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#47614d]">
+                  <div className="absolute right-0 mt-2 w-72 bg-[#FAF9F6] rounded-sm border border-[#10184A]/15 shadow-xl py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="px-3 py-2 border-b border-[#10184A]/15 mb-1">
+                      <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#00174A]">
                         QR PNG Export Options
                       </span>
                     </div>
@@ -251,13 +251,13 @@ export const QrOrderingSectionPage: React.FC = () => {
                         setIsDropdownOpen(false);
                         downloadBulkQr(rooms, 'All QR Codes');
                       }}
-                      className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#333333] hover:bg-[#47614d] hover:text-[#f7f7f2] flex items-center justify-between transition-colors cursor-pointer group"
+                      className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#00174A] hover:bg-[#00174A] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
                     >
                       <div className="flex items-center gap-2">
-                        <Download size={13} className="text-[#47614d] group-hover:text-[#d9b57d] shrink-0" />
+                        <Download size={13} className="text-[#00174A] group-hover:text-[#DFB000] shrink-0" />
                         <span className="font-semibold">Download All QR Codes</span>
                       </div>
-                      <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-sm bg-[#0B1849]/5 group-hover:bg-[#f7f7f2]/20 font-bold">
+                      <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-sm bg-[#00174A]/5 group-hover:bg-white/20 font-bold">
                         {rooms.length} PNGs
                       </span>
                     </button>
@@ -269,13 +269,13 @@ export const QrOrderingSectionPage: React.FC = () => {
                         setIsDropdownOpen(false);
                         downloadBulkQr(filteredRooms, 'Filtered QR Codes');
                       }}
-                      className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#333333] hover:bg-[#47614d] hover:text-[#f7f7f2] flex items-center justify-between transition-colors cursor-pointer group"
+                      className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#00174A] hover:bg-[#00174A] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
                     >
                       <div className="flex items-center gap-2">
-                        <Download size={13} className="text-[#47614d] group-hover:text-[#d9b57d] shrink-0" />
+                        <Download size={13} className="text-[#00174A] group-hover:text-[#DFB000] shrink-0" />
                         <span className="font-semibold">Download Filtered QR Codes</span>
                       </div>
-                      <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-sm bg-[#0B1849]/5 group-hover:bg-[#f7f7f2]/20 font-bold">
+                      <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-sm bg-[#00174A]/5 group-hover:bg-white/20 font-bold">
                         {filteredRooms.length} PNGs
                       </span>
                     </button>
@@ -287,13 +287,13 @@ export const QrOrderingSectionPage: React.FC = () => {
                         setIsDropdownOpen(false);
                         toast.info('Click the "DOWNLOAD PNG" button on any room card below.');
                       }}
-                      className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#333333] hover:bg-[#47614d] hover:text-[#f7f7f2] flex items-center justify-between transition-colors cursor-pointer group border-t border-[#cbc0ad]/40 mt-1 pt-2"
+                      className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#00174A] hover:bg-[#00174A] hover:text-white flex items-center justify-between transition-colors cursor-pointer group border-t border-[#10184A]/15 mt-1 pt-2"
                     >
                       <div className="flex items-center gap-2">
-                        <QrCode size={13} className="text-[#47614d] group-hover:text-[#d9b57d] shrink-0" />
+                        <QrCode size={13} className="text-[#00174A] group-hover:text-[#DFB000] shrink-0" />
                         <span className="font-semibold">Download Individual QR Code</span>
                       </div>
-                      <span className="text-[10px] text-[#666666] group-hover:text-[#f7f7f2]/80">
+                      <span className="text-[10px] text-[#667085] group-hover:text-white/80">
                         Per Card
                       </span>
                     </button>
@@ -307,12 +307,12 @@ export const QrOrderingSectionPage: React.FC = () => {
         {/* Loading Spinner */}
         {loading ? (
           <div className="text-center py-20">
-            <div className="inline-block w-8 h-8 border-4 border-[#cbc0ad] border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs font-sans text-[#666666] mt-4">Loading QR directory...</p>
+            <div className="inline-block w-8 h-8 border-4 border-[#DFB000] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xs font-sans text-[#667085] mt-4">Loading QR directory...</p>
           </div>
         ) : filteredRooms.length === 0 ? (
-          <div className="text-center py-16 bg-[#f7f7f2] rounded-sm border border-[#cbc0ad]">
-            <p className="text-xs font-sans text-[#666666]">No rooms or QR codes matched your search criteria.</p>
+          <div className="text-center py-16 bg-[#FAF9F6] rounded-sm border border-[#10184A]/15">
+            <p className="text-xs font-sans text-[#667085]">No rooms or QR codes matched your search criteria.</p>
           </div>
         ) : (
           /* QR Code Grid */
@@ -326,32 +326,32 @@ export const QrOrderingSectionPage: React.FC = () => {
               return (
                 <ScrollRevealItem key={room._id}>
                   <div
-                    className={`bg-[#47614d] text-[#f7f7f2] rounded-sm border p-4 sm:p-6 flex flex-col justify-between hover:border-[#d9b57d] transition-all duration-300 shadow-md h-full ${
-                      isVenue ? 'border-[#d9b57d]' : 'border-[#f7f7f2]/15'
+                    className={`bg-[#00174A] text-[#FAF9F6] rounded-sm border p-4 sm:p-6 flex flex-col justify-between hover:border-[#DFB000] transition-all duration-300 shadow-md h-full ${
+                      isVenue ? 'border-[#DFB000]' : 'border-white/15'
                     }`}
                   >
                     <div>
                       {/* Header */}
                       <div className="flex justify-between items-start mb-3 sm:mb-4">
                         <div>
-                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-[#f7f7f2]/10 text-[#d9b57d]">
+                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-white/10 text-[#DFB000]">
                             {isBoardRoom
                               ? 'Executive Meeting Venue'
                               : isVenue
                               ? 'Special Event Venue'
                               : `Floor ${room.floor}`}
                           </span>
-                          <h3 className="text-xl sm:text-2xl font-serif text-[#f7f7f2] mt-1.5 truncate">
+                          <h3 className="text-xl sm:text-2xl font-serif text-[#FAF9F6] mt-1.5 truncate">
                             {isVenue ? room.roomNumber : `Room #${room.roomNumber}`}
                           </h3>
                         </div>
 
-                        <span className="text-[9px] font-sans text-[#d9b57d] bg-[#f7f7f2]/10 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-[#f7f7f2]/15 shrink-0 ml-2">
+                        <span className="text-[9px] font-sans text-[#DFB000] bg-white/10 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-white/15 shrink-0 ml-2">
                           QR Active
                         </span>
                       </div>
 
-                      <p className="text-xs font-sans text-[#f7f7f2]/70 mb-5 line-clamp-1">
+                      <p className="text-xs font-sans text-white/70 mb-5 line-clamp-1">
                         {room.roomTypeId?.name ||
                           (isBoardRoom
                             ? 'Executive Board Room'
@@ -361,7 +361,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                       </p>
 
                       {/* QR Code Visual Container */}
-                      <div className="bg-white p-5 rounded-sm flex flex-col items-center justify-center border border-[#cbc0ad] shadow-md transition-all duration-300">
+                      <div className="bg-white p-5 rounded-sm flex flex-col items-center justify-center border border-[#10184A]/15 shadow-md transition-all duration-300">
                         <div
                           onClick={() => navigate(`/order/${room.qrToken}`)}
                           className="cursor-pointer group flex flex-col items-center"
@@ -382,7 +382,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                             e.stopPropagation();
                             downloadSingleQr(room);
                           }}
-                          className="mt-4 w-full py-3 px-4 rounded-sm bg-[#47614d] text-[#f7f7f2] hover:bg-[#d9b57d] hover:text-[#0B1849] active:bg-[#c49f67] text-xs font-sans font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer border border-[#3d5442] hover:border-[#d9b57d]"
+                          className="mt-4 w-full py-3 px-4 rounded-sm bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#DFB000] text-xs font-sans font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer border border-[#DFB000]"
                           title={`Download high-quality PNG for ${isVenue ? room.roomNumber : `Room #${room.roomNumber}`}`}
                         >
                           <Download size={16} />

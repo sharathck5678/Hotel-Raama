@@ -21,8 +21,8 @@ export const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ c
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen bg-[#f7f7f2] text-[#333333] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#cbc0ad]"></div>
+      <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
       </div>
     );
   }

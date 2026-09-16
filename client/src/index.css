@@ -1,22 +1,46 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Outfit:wght@200..800&family=Plus+Jakarta+Sans:wght@200..800&display=swap');
 @import "tailwindcss";
 
+@theme {
+  --color-primary-navy: #00174A;
+  --color-secondary-navy: #10184A;
+  --color-dark-navy: #071A3D;
+  --color-gold: #DFB000;
+  --color-gold-light: #E8C56A;
+  --color-crimson: #C8102E;
+  --color-cream: #FAF9F6;
+  --color-muted-gray: #667085;
+}
+
 @layer base {
   :root {
-    /* Colors */
-    --color-text-primary: #333333;
-    --color-text-light: #f7f7f2;
-    --color-text-accent: #d9b57d;
+    /* Brand Color Palette */
+    --color-primary-navy: #00174A;
+    --color-secondary-navy: #10184A;
+    --color-dark-navy: #071A3D;
+    --color-gold: #DFB000;
+    --color-gold-light: #E8C56A;
+    --color-crimson: #C8102E;
+    --color-cream: #FAF9F6;
+    --color-white: #FFFFFF;
+    --color-muted-gray: #667085;
+
+    /* Theme Tokens */
+    --color-text-primary: #00174A;
+    --color-text-secondary: #667085;
+    --color-text-light: #FAF9F6;
+    --color-text-accent: #DFB000;
     
-    --color-bg-primary: #f7f7f2;
-    --color-bg-soft: #f8f7f3;
-    --color-bg-card: #ffffff;
+    --color-bg-primary: #FAF9F6;
+    --color-bg-soft: #FAF9F6;
+    --color-bg-card: #FFFFFF;
     
-    --color-accent-green: #47614d;
-    --color-accent-green-hover: #374c3c;
-    --color-accent-sand: #cbc0ad;
-    --color-accent-salmon: #fa8072;
-    --color-accent-danger: #b60000;
+    /* Legacy aliases updated to brand tokens */
+    --color-accent-green: #00174A;
+    --color-accent-green-hover: #10184A;
+    --color-accent-sand: #DFB000;
+    --color-accent-salmon: #C8102E;
+    --color-accent-danger: #C8102E;
     
     /* Radius */
     --radius-pill: 500px;
@@ -42,8 +66,8 @@ html {
 }
 
 body {
-  background-color: var(--color-bg-primary, #f7f7f2);
-  color: var(--color-text-primary, #333333);
+  background-color: var(--color-bg-primary, #FAF9F6);
+  color: var(--color-text-primary, #00174A);
   font-family: "Fff Acidgrotesk", "Plus Jakarta Sans", "Outfit", Tahoma, sans-serif;
   letter-spacing: 0.02em;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -127,7 +151,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid #d9b57d;
+  outline: 3px solid #DFB000;
   outline-offset: 0px;
 }
 
@@ -137,12 +161,12 @@ textarea:focus-visible {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f7f7f2;
+  background: #FAF9F6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbc0ad;
+  background: #E8C56A;
   border-radius: 500px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #47614d;
+  background: #DFB000;
 }

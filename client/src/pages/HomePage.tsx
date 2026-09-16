@@ -39,7 +39,7 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f2] text-[#333333]">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A]">
       
       {/* 1. HERO SECTION - Editorial Luxury Full Bleed */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-20">
@@ -60,23 +60,23 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center text-[#f7f7f2] space-y-8 pt-6">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center text-white space-y-8 pt-6">
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-4"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#f7f7f2]/10 border border-[#f7f7f2]/20 text-[#d9b57d] text-[10px] font-sans font-semibold uppercase tracking-[0.2em]">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[#DFB000] text-[10px] font-sans font-semibold uppercase tracking-[0.2em]">
               Hotel Raama · Hassan
             </span>
             
-            <h1 className="editorial-hero-title text-[#f7f7f2] uppercase tracking-tight">
+            <h1 className="editorial-hero-title text-white uppercase tracking-tight">
               A Quiet Place <br />
-              <span className="italic font-light text-[#d9b57d]">To Slow Down.</span>
+              <span className="italic font-light text-[#DFB000]">To Slow Down.</span>
             </h1>
             
-            <p className="font-sans text-[#f7f7f2]/80 text-sm sm:text-base max-w-xl mx-auto font-normal leading-relaxed">
+            <p className="font-sans text-white/80 text-sm sm:text-base max-w-xl mx-auto font-normal leading-relaxed">
               Refined accommodations, culinary artistry at Swaad & Liquid Lounge, and contactless hospitality in the heart of Hassan.
             </p>
           </motion.div>
@@ -86,43 +86,43 @@ export const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-black/20 backdrop-blur-xs text-[#f7f7f2] p-6 sm:p-8 rounded-xl border border-white/15 shadow-xl max-w-4xl mx-auto text-left"
+            className="bg-black/20 backdrop-blur-xs text-white p-6 sm:p-8 rounded-xl border border-white/15 shadow-xl max-w-4xl mx-auto text-left"
           >
             <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#d9b57d] mb-2 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#d9b57d]" /> Check-In
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#DFB000] mb-2 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#DFB000]" /> Check-In
                 </label>
                 <input
                   type="date"
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#d9b57d] focus:outline-none shadow-xs"
+                  className="w-full bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#DFB000] focus:outline-none shadow-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#d9b57d] mb-2 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#d9b57d]" /> Check-Out
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#DFB000] mb-2 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#DFB000]" /> Check-Out
                 </label>
                 <input
                   type="date"
                   value={checkOut}
                   onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#d9b57d] focus:outline-none shadow-xs"
+                  className="w-full bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#DFB000] focus:outline-none shadow-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#d9b57d] mb-2 flex items-center gap-1.5">
-                  <Users size={13} className="text-[#d9b57d]" /> Guests
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#DFB000] mb-2 flex items-center gap-1.5">
+                  <Users size={13} className="text-[#DFB000]" /> Guests
                 </label>
                 <select
                   value={numGuests}
                   onChange={(e) => setNumGuests(parseInt(e.target.value))}
-                  className="w-full bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#d9b57d] focus:outline-none shadow-xs"
+                  className="w-full bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#DFB000] focus:outline-none shadow-xs"
                 >
                   <option value={1}>1 Guest</option>
                   <option value={2}>2 Guests</option>
@@ -134,7 +134,7 @@ export const HomePage: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-lg bg-[#47614d] text-[#f7f7f2] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#374c3c] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg"
+                  className="w-full py-3 rounded-lg bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg"
                 >
                   Check Availability <ArrowRight size={14} />
                 </button>
@@ -165,7 +165,7 @@ export const HomePage: React.FC = () => {
           {roomTypes.slice(0, 3).map((room) => (
             <ScrollRevealItem key={room._id}>
               <div
-                className="bg-[#f7f7f2] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm group hover:border-[#cbc0ad] transition-all duration-300 flex flex-col h-full"
+                className="bg-[#FAF9F6] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm group hover:border-[#cbc0ad] transition-all duration-300 flex flex-col h-full"
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
@@ -173,7 +173,7 @@ export const HomePage: React.FC = () => {
                     alt={room.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
-                  <div className="absolute top-4 right-4 bg-[#47614d] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#d9b57d]">
+                  <div className="absolute top-4 right-4 bg-[#DFB000] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#00174A]">
                     {room.isAc ? 'A/C Executive' : 'Non-A/C Premium'}
                   </div>
                 </div>
@@ -195,7 +195,7 @@ export const HomePage: React.FC = () => {
 
                     <Link
                       to={`/rooms?select=${room._id}`}
-                      className="px-4 py-2.5 rounded-sm bg-[#47614d] text-[#f7f7f2] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#374c3c] transition-all"
+                      className="px-4 py-2.5 rounded-sm bg-[#DFB000] text-[#00174A] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#E8C56A] transition-all"
                     >
                       Reserve Now
                     </Link>
@@ -208,13 +208,13 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 3. DINING & LOUNGE SPOTLIGHT - Midnight Navy Dark Section */}
-      <section className="py-24 bg-[#47614d] text-[#f7f7f2] border-y border-[#f7f7f2]/10">
+      <section className="py-24 bg-[#00174A] text-[#FAF9F6] border-y border-white/10">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <ScrollReveal direction="up" duration={0.8}>
             <div className="text-center max-w-2xl mx-auto mb-20">
-              <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Culinary Artistry</span>
-              <h2 className="editorial-section-title text-[#f7f7f2] mt-2">Swaad, Hotel Raama & Liquid Lounge</h2>
-              <p className="font-sans text-[#f7f7f2]/75 mt-4 text-xs sm:text-sm leading-relaxed">
+              <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Culinary Artistry</span>
+              <h2 className="editorial-section-title text-white mt-2">Swaad, Hotel Raama & Liquid Lounge</h2>
+              <p className="font-sans text-white/75 mt-4 text-xs sm:text-sm leading-relaxed">
                 Authentic South Indian vegetarian dining, signature non-veg delicacies, and executive whiskies & handcrafted cocktails. Served in ambience or directly to your room.
               </p>
             </div>
@@ -223,19 +223,19 @@ export const HomePage: React.FC = () => {
           <ScrollRevealGroup staggerDelay={0.15} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* 1. Swaad Card */}
             <ScrollRevealItem>
-              <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group flex flex-col justify-end min-h-[380px] h-full">
+              <div className="relative rounded-sm overflow-hidden border border-white/15 group flex flex-col justify-end min-h-[380px] h-full">
                 <img
                   src="/swaad-restaurant.png"
                   alt="Swaad Restaurant"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
-                  <h3 className="text-2xl font-serif text-[#f7f7f2]">Swaad Pure Veg</h3>
-                  <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed">
+                  <h3 className="text-2xl font-serif text-white">Swaad Pure Veg</h3>
+                  <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
                     Crispy Masala Dosas, North Indian Curries, Tandoori Baskets, and traditional South & North Indian Thalis.
                   </p>
                   <div className="mt-5">
-                    <Link to="/dining?tab=SWAAD_VEG" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
+                    <Link to="/dining?tab=SWAAD_VEG" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#DFB000] hover:text-white transition-colors">
                       Explore Pure Veg Menu <ArrowUpRight size={14} />
                     </Link>
                   </div>
@@ -245,19 +245,19 @@ export const HomePage: React.FC = () => {
 
             {/* 2. Hotel Raama Non-Veg Card */}
             <ScrollRevealItem>
-              <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group flex flex-col justify-end min-h-[380px] h-full">
+              <div className="relative rounded-sm overflow-hidden border border-white/15 group flex flex-col justify-end min-h-[380px] h-full">
                 <img
                   src="/hotel-raama-dining.jpg"
                   alt="Hotel Raama Non-Veg Dining"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
-                  <h3 className="text-2xl font-serif text-[#f7f7f2]">Hotel Raama (Non-Veg)</h3>
-                  <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed">
+                  <h3 className="text-2xl font-serif text-white">Hotel Raama (Non-Veg)</h3>
+                  <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
                     Signature Mutton Chops, Nati Koli Biriyani, Coastal Seafood fry, Chicken Sukka, and aromatic Tandoori kebabs.
                   </p>
                   <div className="mt-5">
-                    <Link to="/dining?tab=HOTEL_RAAMA" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
+                    <Link to="/dining?tab=HOTEL_RAAMA" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#DFB000] hover:text-white transition-colors">
                       Explore Non-Veg Menu <ArrowUpRight size={14} />
                     </Link>
                   </div>
@@ -267,19 +267,19 @@ export const HomePage: React.FC = () => {
 
             {/* 3. Liquid Lounge Card */}
             <ScrollRevealItem className="md:col-span-2 lg:col-span-1">
-              <div className="relative rounded-sm overflow-hidden border border-[#f7f7f2]/15 group flex flex-col justify-end min-h-[380px] h-full">
+              <div className="relative rounded-sm overflow-hidden border border-white/15 group flex flex-col justify-end min-h-[380px] h-full">
                 <img
                   src="/liquid-lounge-bar.png"
                   alt="Liquid Lounge Bar"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
-                  <h3 className="text-2xl font-serif text-[#f7f7f2]">Liquid Lounge Bar (LLB)</h3>
-                  <p className="text-xs font-sans text-[#f7f7f2]/80 mt-2 leading-relaxed">
+                  <h3 className="text-2xl font-serif text-white">Liquid Lounge Bar (LLB)</h3>
+                  <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
                     Curated whiskies, single malts, draught beers, and handcrafted cocktails in an executive setting.
                   </p>
                   <div className="mt-5">
-                    <Link to="/dining?tab=LIQUID_LOUNGE" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#d9b57d] hover:text-[#f7f7f2] transition-colors">
+                    <Link to="/dining?tab=LIQUID_LOUNGE" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#DFB000] hover:text-white transition-colors">
                       Explore Bar Menu <ArrowUpRight size={14} />
                     </Link>
                   </div>
@@ -293,7 +293,7 @@ export const HomePage: React.FC = () => {
       {/* 3.5 TRIPADVISOR REVIEWS SPOTLIGHT */}
       <section className="py-16 max-w-7xl mx-auto px-6 lg:px-8">
         <ScrollReveal direction="up" duration={0.85}>
-          <div className="bg-[#f7f7f2] p-8 sm:p-12 rounded-sm border border-[#cbc0ad] shadow-md flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+          <div className="bg-[#FAF9F6] p-8 sm:p-12 rounded-sm border border-[#cbc0ad] shadow-md flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
             
             {/* Left: Ratings Badge matching TripAdvisor widget */}
             <div className="flex items-center gap-6 shrink-0 w-full lg:w-auto justify-center">
@@ -339,7 +339,7 @@ export const HomePage: React.FC = () => {
                 href="https://www.tripadvisor.in/Hotel_Review-g503696-d8507683-Reviews-Hotel_Raama-Hassan_Hassan_District_Karnataka.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3.5 rounded-sm bg-[#47614d] hover:bg-[#374c3c] text-[#f7f7f2] font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                className="px-6 py-3.5 rounded-sm bg-[#DFB000] hover:bg-[#E8C56A] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 <span>View Reviews on TripAdvisor</span>
                 <ArrowUpRight size={15} />
@@ -355,7 +355,7 @@ export const HomePage: React.FC = () => {
           
           {/* Left Column: Sambhrama */}
           <ScrollReveal direction="left" duration={0.85} className="lg:col-span-1 h-full">
-            <div className="relative rounded-sm overflow-hidden p-8 text-[#f7f7f2] space-y-6 border border-[#cbc0ad] shadow-md group h-full">
+            <div className="relative rounded-sm overflow-hidden p-8 text-white space-y-6 border border-[#cbc0ad] shadow-md group h-full">
               <img
                 src="/sambhrama-party-hall.png"
                 alt="Sambhrama Party Hall"
@@ -363,15 +363,15 @@ export const HomePage: React.FC = () => {
               />
               <div className="relative z-10 space-y-6">
                 <div>
-                  <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Banquets & Events</span>
-                  <h3 className="text-3xl font-serif text-[#f7f7f2] mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">Sambhrama Party Hall</h3>
+                  <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Banquets & Events</span>
+                  <h3 className="text-3xl font-serif text-white mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">Sambhrama Party Hall</h3>
                 </div>
-                <p className="text-xs font-sans text-[#f7f7f2] leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                <p className="text-xs font-sans text-white leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                   Host grand weddings, corporate banquets, and celebrations. Custom vegetarian & non-veg catering packages starting at ₹450 / pax + GST.
                 </p>
                 <Link
                   to="/party-hall"
-                  className="inline-flex items-center gap-2 w-full justify-center py-3.5 rounded-sm bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#d9b57d] transition-all cursor-pointer shadow-lg"
+                  className="inline-flex items-center gap-2 w-full justify-center py-3.5 rounded-sm bg-[#FAF9F6] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#DFB000] transition-all cursor-pointer shadow-lg"
                 >
                   View Party Packages
                 </Link>
@@ -389,7 +389,7 @@ export const HomePage: React.FC = () => {
             <ScrollRevealGroup staggerDelay={0.12} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {attractions.slice(0, 4).map((attraction) => (
                 <ScrollRevealItem key={attraction._id}>
-                  <div className="p-5 rounded-sm bg-[#f7f7f2] border border-[#cbc0ad] flex gap-4 items-center h-full">
+                  <div className="p-5 rounded-sm bg-[#FAF9F6] border border-[#cbc0ad] flex gap-4 items-center h-full">
                     <img
                       src={attraction.image}
                       alt={attraction.name}
@@ -406,7 +406,7 @@ export const HomePage: React.FC = () => {
             </ScrollRevealGroup>
 
             <div className="text-right">
-              <Link to="/attractions" className="text-xs font-sans font-bold uppercase tracking-wider text-[#333333] hover:text-[#666666] inline-flex items-center gap-1.5">
+              <Link to="/attractions" className="text-xs font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#667085] inline-flex items-center gap-1.5">
                 Explore All Sightseeing Spots <ArrowRight size={14} />
               </Link>
             </div>

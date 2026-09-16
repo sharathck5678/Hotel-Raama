@@ -44,9 +44,9 @@ export const Navbar: React.FC = () => {
     ? `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isTransparent
           ? 'bg-gradient-to-b from-black/80 via-black/40 to-transparent border-b border-white/10'
-          : 'bg-[#47614d] backdrop-blur-md border-b border-[#354c3c] shadow-lg'
+          : 'bg-[#00174A] backdrop-blur-md border-b border-[#10184A] shadow-lg'
       }`
-    : 'sticky top-0 z-50 bg-[#47614d] border-b border-[#354c3c] shadow-md transition-all duration-300';
+    : 'sticky top-0 z-50 bg-[#00174A] border-b border-[#10184A] shadow-md transition-all duration-300';
 
   return (
     <header className={headerClass}>
@@ -74,10 +74,10 @@ export const Navbar: React.FC = () => {
                     isActive
                       ? isTransparent
                         ? 'bg-white/25 text-white font-bold shadow-sm backdrop-blur-xs'
-                        : 'bg-black/25 text-[#d9b57d] font-bold border border-[#d9b57d]/30 shadow-xs'
+                        : 'bg-black/25 text-[#DFB000] font-bold border border-[#DFB000]/30 shadow-xs'
                       : isTransparent
                       ? 'text-white/90 hover:text-white hover:bg-white/15'
-                      : 'text-[#f7f7f2]/90 hover:text-white hover:bg-white/10'
+                      : 'text-white/90 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {link.name}
@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center gap-3">
             <Link
               to="/rooms"
-              className="px-5 py-2.5 rounded-full bg-[#d9b57d] text-[#1c2e22] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#c9a56d] transition-all duration-300 flex items-center gap-2 shadow-sm focus-design"
+              className="px-5 py-2.5 rounded-full bg-[#DFB000] text-[#00174A] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#E8C56A] transition-all duration-300 flex items-center gap-2 shadow-sm focus-design"
             >
               <Calendar size={13} /> Book Room
             </Link>
@@ -110,9 +110,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer - Unified Brand Green Theme */}
+      {/* Mobile Navigation Drawer - Unified Brand Navy Theme */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#47614d] border-b border-[#354c3c] px-6 pt-3 pb-8 space-y-2 shadow-2xl">
+        <div className="lg:hidden bg-[#00174A] border-b border-[#10184A] px-6 pt-3 pb-8 space-y-2 shadow-2xl">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
@@ -122,8 +122,8 @@ export const Navbar: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-2.5 rounded-full text-xs uppercase tracking-[1.6px] font-medium transition-colors ${
                   isActive 
-                    ? 'bg-[#d9b57d] text-[#1c2e22] font-bold shadow-xs' 
-                    : 'text-[#f7f7f2]/90 hover:text-white hover:bg-white/10'
+                    ? 'bg-[#DFB000] text-[#00174A] font-bold shadow-xs' 
+                    : 'text-white/90 hover:text-white hover:bg-white/10'
                 }`}
               >
                 {link.name}
@@ -134,7 +134,7 @@ export const Navbar: React.FC = () => {
             <Link
               to="/rooms"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-3 rounded-full bg-[#d9b57d] text-[#1c2e22] font-bold text-xs uppercase tracking-[1.6px] shadow-sm"
+              className="w-full text-center py-3 rounded-full bg-[#DFB000] text-[#00174A] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#E8C56A] shadow-sm transition-colors"
             >
               Book Room Now
             </Link>

@@ -398,7 +398,7 @@ export const DiningPage: React.FC = () => {
           contact: guestPhone,
         },
         theme: {
-          color: '#47614d',
+          color: '#00174A',
         },
         modal: {
           ondismiss: function () {
@@ -441,20 +441,20 @@ export const DiningPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-16 max-w-7xl mx-auto px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 relative">
       {/* Header Banner */}
-      <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 border-b border-[#cbc0ad] pb-8">
-        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#666666] block mb-1">
+      <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 border-b border-[#10184A]/15 pb-8">
+        <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#667085] block mb-1">
           Culinary Experiences
         </span>
-        <h1 className="editorial-section-title text-[#333333]">Dining & Beverage Menu</h1>
-        <p className="font-sans text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
+        <h1 className="editorial-section-title text-[#00174A]">Dining & Beverage Menu</h1>
+        <p className="font-sans text-xs sm:text-sm text-[#667085] max-w-xl mx-auto leading-relaxed">
           Delights from Swaad Pure Veg Restaurant, Non-Veg Specialities, or executive spirits from Liquid Lounge Bar (LLB). Order straight to your room or collect at reception.
         </p>
 
         {/* Verified QR Session Banner */}
         {isQrScanned ? (
-          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-lg bg-[#2e4233] text-white shadow-md mx-auto my-3 text-xs sm:text-sm font-sans">
+          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-lg bg-[#00174A] text-white shadow-md mx-auto my-3 text-xs sm:text-sm font-sans">
             <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0">
               <ShieldCheck size={15} />
             </div>
@@ -464,7 +464,7 @@ export const DiningPage: React.FC = () => {
             </span>
           </div>
         ) : (
-          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-lg bg-[#2e4233] text-white shadow-md mx-auto my-3 text-xs sm:text-sm font-sans">
+          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-lg bg-[#00174A] text-white shadow-md mx-auto my-3 text-xs sm:text-sm font-sans">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0" />
             <span>
               <strong className="text-amber-300 font-bold uppercase tracking-wider">QR CODE SCAN REQUIRED:</strong>{' '}
@@ -480,17 +480,17 @@ export const DiningPage: React.FC = () => {
               setViewerPageIndex(0);
               setViewerOpen(true);
             }}
-            className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 border border-[#ded5c8] bg-[#fbf9f5] text-[#2c2c2c] hover:bg-white hover:border-[#c59a58] transition-all cursor-pointer shadow-sm"
+            className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 border border-[#10184A]/20 bg-white text-[#00174A] hover:bg-white hover:border-[#DFB000] transition-all cursor-pointer shadow-sm"
           >
-            <FileText size={18} className="text-[#333333]" />
+            <FileText size={18} className="text-[#00174A]" />
             <span>VIEW SCANNED MENU CARDS</span>
-            <ArrowRight size={15} className="text-[#333333]" />
+            <ArrowRight size={15} className="text-[#00174A]" />
           </button>
 
           {totalCartCount > 0 && (
             <button
               onClick={() => setCartOpen(true)}
-              className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 bg-[#2e4233] text-[#f7f7f2] shadow-md hover:bg-[#243428] transition-all cursor-pointer"
+              className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 bg-[#DFB000] text-[#00174A] shadow-md hover:bg-[#E8C56A] transition-all cursor-pointer"
             >
               <ShoppingBag size={16} /> View Cart ({totalCartCount}) — ₹{totalCartPrice}
             </button>
@@ -504,14 +504,14 @@ export const DiningPage: React.FC = () => {
             onClick={() => handleTabChange('SWAAD_VEG')}
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
               activeTab === 'SWAAD_VEG'
-                ? 'bg-[#2e4233] text-white border-[#2e4233] shadow-md ring-1 ring-[#2e4233]'
-                : 'bg-[#fbf9f5] text-[#2c2c2c] border-[#ded5c8] hover:border-[#cbc0ad]'
+                ? 'bg-[#00174A] text-white border-[#00174A] shadow-md ring-1 ring-[#00174A]'
+                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#DFB000]'
             }`}
           >
             <div
               className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
                 activeTab === 'SWAAD_VEG'
-                  ? 'bg-[#3b5341] border-emerald-500/30 text-emerald-400'
+                  ? 'bg-[#10184A] border-emerald-500/30 text-emerald-400'
                   : 'bg-emerald-50 border-emerald-200 text-emerald-700'
               }`}
             >
@@ -523,20 +523,20 @@ export const DiningPage: React.FC = () => {
             </span>
           </button>
 
-          {/* HOTEL RAAMA */}
+          {/* HOTEL RAAMA (Crimson Red for Non-Veg restaurant branding) */}
           <button
             onClick={() => handleTabChange('HOTEL_RAAMA')}
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
               activeTab === 'HOTEL_RAAMA'
-                ? 'bg-[#2e4233] text-white border-[#2e4233] shadow-md ring-1 ring-[#2e4233]'
-                : 'bg-[#fbf9f5] text-[#2c2c2c] border-[#ded5c8] hover:border-[#cbc0ad]'
+                ? 'bg-[#C8102E] text-white border-[#C8102E] shadow-md ring-1 ring-[#C8102E]'
+                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#C8102E]'
             }`}
           >
             <div
               className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
                 activeTab === 'HOTEL_RAAMA'
-                  ? 'bg-[#b88c4b] border-[#d9b57d]/50 text-white'
-                  : 'bg-[#b88c4b] border-[#a07739] text-white'
+                  ? 'bg-[#A00D24] border-[#C8102E]/50 text-white'
+                  : 'bg-[#C8102E] border-[#A00D24] text-white'
               }`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -557,15 +557,15 @@ export const DiningPage: React.FC = () => {
             onClick={() => handleTabChange('LIQUID_LOUNGE')}
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
               activeTab === 'LIQUID_LOUNGE'
-                ? 'bg-[#2e4233] text-white border-[#2e4233] shadow-md ring-1 ring-[#2e4233]'
-                : 'bg-[#fbf9f5] text-[#2c2c2c] border-[#ded5c8] hover:border-[#cbc0ad]'
+                ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-md ring-1 ring-[#071A3D]'
+                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#DFB000]'
             }`}
           >
             <div
               className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
                 activeTab === 'LIQUID_LOUNGE'
-                  ? 'bg-[#1b2b20] border-emerald-500/30 text-emerald-400'
-                  : 'bg-[#2e4233] border-[#203024] text-white'
+                  ? 'bg-[#00174A] border-[#DFB000]/30 text-[#DFB000]'
+                  : 'bg-[#071A3D] border-[#10184A] text-white'
               }`}
             >
               <Martini size={19} />
@@ -580,18 +580,18 @@ export const DiningPage: React.FC = () => {
         {/* Search & Filter Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 max-w-xl mx-auto mt-6">
           <div className="relative w-full sm:flex-grow">
-            <Search size={16} className="absolute left-3.5 top-3 text-[#666666]" />
+            <Search size={16} className="absolute left-3.5 top-3 text-[#667085]" />
             <input
               type="text"
               placeholder={`Search ${activeTab === 'LIQUID_LOUNGE' ? 'drinks...' : 'dishes...'}`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm pl-10 pr-9 py-2.5 text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none shadow-sm"
+              className="w-full bg-white border border-[#10184A]/20 rounded-sm pl-10 pr-9 py-2.5 text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none shadow-sm"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-2.5 text-[#666666] hover:text-[#333333] cursor-pointer"
+                className="absolute right-3 top-2.5 text-[#667085] hover:text-[#00174A] cursor-pointer"
               >
                 <X size={14} />
               </button>
@@ -602,14 +602,14 @@ export const DiningPage: React.FC = () => {
             onClick={() => setFilterOpen(!filterOpen)}
             className={`w-full sm:w-auto px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border transition-all cursor-pointer shadow-sm shrink-0 ${
               filterOpen || selectedCategoryIds.length > 0 || selectedCourse !== 'ALL'
-                ? 'bg-[#47614d] text-[#f7f7f2] border-[#47614d]'
-                : 'bg-[#f7f7f2] text-[#333333] border-[#cbc0ad] hover:bg-[#47614d]/10'
+                ? 'bg-[#00174A] text-[#FAF9F6] border-[#00174A]'
+                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:bg-[#00174A]/10'
             }`}
           >
             <SlidersHorizontal size={14} />
             <span>Filter</span>
             {(selectedCategoryIds.length > 0 || selectedCourse !== 'ALL') && (
-              <span className="w-5 h-5 rounded-full bg-[#d9b57d] text-[#333333] text-[10px] font-bold flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-[#DFB000] text-[#00174A] text-[10px] font-bold flex items-center justify-center">
                 {selectedCategoryIds.length + (selectedCourse !== 'ALL' ? 1 : 0)}
               </span>
             )}
@@ -619,14 +619,14 @@ export const DiningPage: React.FC = () => {
         {/* Quick Filter Tag Chips (when filters are active) */}
         {(selectedCourse !== 'ALL' || selectedCategoryIds.length > 0 || searchTerm) && (
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto mt-3">
-            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#666666]">
+            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#667085]">
               Active Filters:
             </span>
 
             {selectedCourse !== 'ALL' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#47614d]/10 border border-[#47614d]/30 text-[#47614d] text-xs font-sans font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#00174A]/10 border border-[#00174A]/30 text-[#00174A] text-xs font-sans font-semibold">
                 Course: {COURSE_OPTIONS.find((c) => c.id === selectedCourse)?.label}
-                <button onClick={() => setSelectedCourse('ALL')} className="hover:text-red-600 cursor-pointer">
+                <button onClick={() => setSelectedCourse('ALL')} className="hover:text-[#C8102E] cursor-pointer">
                   <X size={12} />
                 </button>
               </span>
@@ -638,10 +638,10 @@ export const DiningPage: React.FC = () => {
               return (
                 <span
                   key={catId}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#d9b57d]/20 border border-[#d9b57d]/60 text-[#333333] text-xs font-sans font-semibold"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#DFB000]/20 border border-[#DFB000]/60 text-[#00174A] text-xs font-sans font-semibold"
                 >
                   {cat.name.split('(')[0].trim()}
-                  <button onClick={() => toggleCategory(catId)} className="hover:text-red-600 cursor-pointer">
+                  <button onClick={() => toggleCategory(catId)} className="hover:text-[#C8102E] cursor-pointer">
                     <X size={12} />
                   </button>
                 </span>
@@ -649,9 +649,9 @@ export const DiningPage: React.FC = () => {
             })}
 
             {searchTerm && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-stone-200 border border-stone-300 text-[#333333] text-xs font-sans font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-stone-200 border border-stone-300 text-[#00174A] text-xs font-sans font-semibold">
                 "{searchTerm}"
-                <button onClick={() => setSearchTerm('')} className="hover:text-red-600 cursor-pointer">
+                <button onClick={() => setSearchTerm('')} className="hover:text-[#C8102E] cursor-pointer">
                   <X size={12} />
                 </button>
               </span>
@@ -659,7 +659,7 @@ export const DiningPage: React.FC = () => {
 
             <button
               onClick={resetAllFilters}
-              className="text-[11px] font-sans font-bold text-red-700 hover:text-red-800 underline ml-2 cursor-pointer flex items-center gap-1"
+              className="text-[11px] font-sans font-bold text-[#C8102E] hover:text-[#A00D24] underline ml-2 cursor-pointer flex items-center gap-1"
             >
               <RotateCcw size={11} /> Clear all
             </button>
@@ -668,17 +668,17 @@ export const DiningPage: React.FC = () => {
 
         {/* Collapsible Filter Panel */}
         {filterOpen && (
-          <div className="max-w-4xl mx-auto mt-6 bg-white border border-[#cbc0ad] rounded-sm p-6 shadow-xl text-left space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="flex justify-between items-center border-b border-[#cbc0ad] pb-3">
+          <div className="max-w-4xl mx-auto mt-6 bg-white border border-[#10184A]/20 rounded-sm p-6 shadow-xl text-left space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex justify-between items-center border-b border-[#10184A]/15 pb-3">
               <div className="flex items-center gap-2">
-                <Filter size={16} className="text-[#47614d]" />
-                <h3 className="font-serif font-bold text-base sm:text-lg text-[#333333]">
+                <Filter size={16} className="text-[#00174A]" />
+                <h3 className="font-serif font-bold text-base sm:text-lg text-[#00174A]">
                   Filter Menu Items
                 </h3>
               </div>
               <button
                 onClick={() => setFilterOpen(false)}
-                className="p-1 rounded-sm hover:bg-stone-100 text-[#666666] hover:text-[#333333] cursor-pointer"
+                className="p-1 rounded-sm hover:bg-stone-100 text-[#667085] hover:text-[#00174A] cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -687,13 +687,13 @@ export const DiningPage: React.FC = () => {
             {/* 1. Course / Meal Type Filters */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#666666]">
+                <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#667085]">
                   1. Filter by Course / Meal Type
                 </span>
                 {selectedCourse !== 'ALL' && (
                   <button
                     onClick={() => setSelectedCourse('ALL')}
-                    className="text-[11px] font-sans text-stone-500 hover:text-stone-800 underline cursor-pointer"
+                    className="text-[11px] font-sans text-[#667085] hover:text-[#00174A] underline cursor-pointer"
                   >
                     Reset Course
                   </button>
@@ -709,8 +709,8 @@ export const DiningPage: React.FC = () => {
                       onClick={() => setSelectedCourse(opt.id)}
                       className={`px-3.5 py-2 rounded-sm text-xs font-sans font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSelected
-                          ? 'bg-[#47614d] text-white shadow-sm ring-1 ring-[#47614d]'
-                          : 'bg-[#f7f7f2] text-[#333333] border border-[#cbc0ad] hover:border-[#47614d]'
+                          ? 'bg-[#00174A] text-white shadow-sm ring-1 ring-[#00174A]'
+                          : 'bg-[#FAF9F6] text-[#00174A] border border-[#10184A]/20 hover:border-[#00174A]'
                       }`}
                     >
                       {isSelected && <Check size={13} />}
@@ -722,29 +722,29 @@ export const DiningPage: React.FC = () => {
             </div>
 
             {/* 2. Multi-Select Category Checkboxes */}
-            <div className="space-y-3 pt-2 border-t border-[#cbc0ad]/60">
+            <div className="space-y-3 pt-2 border-t border-[#10184A]/15">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#666666]">
+                <span className="text-xs font-sans font-bold uppercase tracking-wider text-[#667085]">
                   2. Select Categories ({selectedCategoryIds.length > 0 ? `${selectedCategoryIds.length} Selected` : 'All Categories'})
                 </span>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={selectAllCategories}
-                    className="text-xs font-sans font-bold text-[#47614d] hover:underline cursor-pointer"
+                    className="text-xs font-sans font-bold text-[#00174A] hover:underline cursor-pointer"
                   >
                     Select All
                   </button>
                   <span className="text-stone-300">|</span>
                   <button
                     onClick={clearAllCategories}
-                    className="text-xs font-sans font-bold text-stone-500 hover:text-stone-800 hover:underline cursor-pointer"
+                    className="text-xs font-sans font-bold text-[#667085] hover:text-[#00174A] hover:underline cursor-pointer"
                   >
                     Clear Categories
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1 border border-[#cbc0ad]/40 rounded-sm bg-[#f7f7f2]/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1 border border-[#10184A]/15 rounded-sm bg-[#FAF9F6]/50">
                 {availableSectionCategories.map((cat) => {
                   const isChecked = selectedCategoryIds.includes(cat._id);
                   const itemCount = items.filter(
@@ -757,27 +757,27 @@ export const DiningPage: React.FC = () => {
                       onClick={() => toggleCategory(cat._id)}
                       className={`flex items-start gap-2.5 p-2.5 rounded-sm border transition-all cursor-pointer select-none text-xs font-sans ${
                         isChecked
-                          ? 'bg-[#47614d]/10 border-[#47614d] text-[#333333]'
-                          : 'bg-white border-[#cbc0ad]/60 text-[#666666] hover:border-[#cbc0ad]'
+                          ? 'bg-[#00174A]/10 border-[#00174A] text-[#00174A]'
+                          : 'bg-white border-[#10184A]/15 text-[#667085] hover:border-[#10184A]/30'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => {}} // Handled by label onClick
-                        className="mt-0.5 rounded text-[#47614d] focus:ring-[#47614d] cursor-pointer"
+                        className="mt-0.5 rounded text-[#00174A] focus:ring-[#00174A] cursor-pointer"
                       />
                       <div className="flex-grow min-w-0">
-                        <p className={`font-semibold leading-tight line-clamp-1 ${isChecked ? 'text-[#333333]' : 'text-stone-700'}`}>
+                        <p className={`font-semibold leading-tight line-clamp-1 ${isChecked ? 'text-[#00174A]' : 'text-[#00174A]/80'}`}>
                           {cat.name.split('(')[0].trim()}
                         </p>
                         {cat.name.includes('(') && (
-                          <p className="text-[10px] text-stone-400 truncate">
+                          <p className="text-[10px] text-[#667085] truncate">
                             {cat.name.substring(cat.name.indexOf('('))}
                           </p>
                         )}
                       </div>
-                      <span className="shrink-0 text-[10px] font-bold text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">
+                      <span className="shrink-0 text-[10px] font-bold text-[#667085] bg-stone-100 px-1.5 py-0.5 rounded">
                         {itemCount}
                       </span>
                     </label>
@@ -787,22 +787,22 @@ export const DiningPage: React.FC = () => {
             </div>
 
             {/* Filter Drawer Footer */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#cbc0ad]">
-              <span className="text-xs font-sans text-[#666666]">
-                Showing <strong className="text-[#333333]">{currentItems.length}</strong> matching items across{' '}
-                <strong className="text-[#333333]">{currentCategories.length}</strong> categories
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#10184A]/15">
+              <span className="text-xs font-sans text-[#667085]">
+                Showing <strong className="text-[#00174A]">{currentItems.length}</strong> matching items across{' '}
+                <strong className="text-[#00174A]">{currentCategories.length}</strong> categories
               </span>
 
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={resetAllFilters}
-                  className="px-4 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider text-[#666666] hover:text-[#333333] border border-[#cbc0ad] bg-[#f7f7f2] hover:bg-stone-200 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider text-[#667085] hover:text-[#00174A] border border-[#10184A]/20 bg-[#FAF9F6] hover:bg-stone-200 transition-all cursor-pointer"
                 >
                   Reset All
                 </button>
                 <button
                   onClick={() => setFilterOpen(false)}
-                  className="px-5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider bg-[#47614d] text-white hover:bg-[#374c3c] transition-all cursor-pointer shadow-sm"
+                  className="px-5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] transition-all cursor-pointer shadow-sm"
                 >
                   Apply & View ({currentItems.length})
                 </button>
@@ -814,7 +814,7 @@ export const DiningPage: React.FC = () => {
 
       {/* Menu Catalog */}
       {loading ? (
-        <div className="text-center font-sans text-xs text-[#666666] py-16">Loading menu items...</div>
+        <div className="text-center font-sans text-xs text-[#667085] py-16">Loading menu items...</div>
       ) : (
         <div className="space-y-16">
           {currentCategories.map((cat) => {
@@ -823,9 +823,9 @@ export const DiningPage: React.FC = () => {
 
             return (
               <ScrollReveal key={cat._id} direction="up" duration={0.8} className="space-y-6">
-                <div className="flex items-center gap-3 border-b border-[#cbc0ad] pb-3">
-                  <h2 className="text-2xl font-serif text-[#333333]">{cat.name}</h2>
-                  <span className="text-[10px] font-sans text-[#666666] font-semibold uppercase bg-[#0B1849]/5 px-2.5 py-0.5 rounded-sm border border-[#cbc0ad]">
+                <div className="flex items-center gap-3 border-b border-[#10184A]/15 pb-3">
+                  <h2 className="text-2xl font-serif text-[#00174A]">{cat.name}</h2>
+                  <span className="text-[10px] font-sans text-[#667085] font-semibold uppercase bg-[#00174A]/5 px-2.5 py-0.5 rounded-sm border border-[#10184A]/15">
                     {catItems.length} Items
                   </span>
                 </div>
@@ -834,11 +834,11 @@ export const DiningPage: React.FC = () => {
                   {catItems.map((item) => (
                     <ScrollRevealItem key={item._id}>
                       <div
-                        className="bg-[#f7f7f2] rounded-sm p-6 border border-[#cbc0ad] flex flex-col justify-between hover:border-[#cbc0ad] transition-all duration-300 shadow-sm h-full"
+                        className="bg-white rounded-sm p-6 border border-[#10184A]/15 flex flex-col justify-between hover:border-[#DFB000]/60 transition-all duration-300 shadow-sm h-full"
                       >
                         <div className="space-y-2">
                           <div className="flex justify-between items-start gap-2">
-                            <h3 className="text-lg font-serif font-bold text-[#333333]">{item.name}</h3>
+                            <h3 className="text-lg font-serif font-bold text-[#00174A]">{item.name}</h3>
                             {item.section !== 'LIQUID_LOUNGE' && activeTab !== 'LIQUID_LOUNGE' && (
                               <span
                                 className={`shrink-0 text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
@@ -853,21 +853,21 @@ export const DiningPage: React.FC = () => {
                           </div>
 
                           {item.description && (
-                            <p className="text-xs font-sans text-[#666666] leading-relaxed line-clamp-2">
+                            <p className="text-xs font-sans text-[#667085] leading-relaxed line-clamp-2">
                               {item.description}
                             </p>
                           )}
                         </div>
 
-                        <div className="pt-4 border-t border-[#cbc0ad] mt-4 flex items-center justify-between">
+                        <div className="pt-4 border-t border-[#10184A]/15 mt-4 flex items-center justify-between">
                           <div>
                             {item.price60ml ? (
-                              <div className="text-[11px] font-sans text-[#666666]">
-                                <span>30ML: <strong className="text-[#333333]">₹{item.price}</strong></span>
-                                <span className="ml-2">60ML: <strong className="text-[#333333]">₹{item.price60ml}</strong></span>
+                              <div className="text-[11px] font-sans text-[#667085]">
+                                <span>30ML: <strong className="text-[#00174A]">₹{item.price}</strong></span>
+                                <span className="ml-2">60ML: <strong className="text-[#00174A]">₹{item.price60ml}</strong></span>
                               </div>
                             ) : (
-                              <span className="text-lg font-serif font-bold text-[#333333]">₹{item.price}</span>
+                              <span className="text-lg font-serif font-bold text-[#00174A]">₹{item.price}</span>
                             )}
                           </div>
 
@@ -875,13 +875,13 @@ export const DiningPage: React.FC = () => {
                             <div className="flex gap-1.5">
                               <button
                                 onClick={() => addToCart(item, '30ML')}
-                                className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
+                                className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
                               >
                                 + 30ML
                               </button>
                               <button
                                 onClick={() => addToCart(item, '60ML')}
-                                className="px-2.5 py-1 rounded-sm bg-[#47614d] text-[#f7f7f2] text-[10px] font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer"
+                                className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
                               >
                                 + 60ML
                               </button>
@@ -889,7 +889,7 @@ export const DiningPage: React.FC = () => {
                           ) : (
                             <button
                               onClick={() => addToCart(item, 'Standard')}
-                              className="px-4 py-2 rounded-sm bg-[#47614d] text-[#f7f7f2] text-xs font-sans font-semibold uppercase hover:bg-[#374c3c] cursor-pointer flex items-center gap-1"
+                              className="px-4 py-2 rounded-sm bg-[#DFB000] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm"
                             >
                               <Plus size={13} /> Add
                             </button>
@@ -910,7 +910,7 @@ export const DiningPage: React.FC = () => {
         <div className="fixed bottom-6 right-6 z-40">
           <button
             onClick={() => setCartOpen(true)}
-            className="px-6 py-3.5 rounded-sm bg-[#47614d] text-[#f7f7f2] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#374c3c] transition-all cursor-pointer border border-[#f7f7f2]/20"
+            className="px-6 py-3.5 rounded-sm bg-[#DFB000] text-[#00174A] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#E8C56A] transition-all cursor-pointer border border-[#00174A]/20"
           >
             <ShoppingBag size={16} /> Cart ({totalCartCount} Items) · ₹{totalCartPrice}
           </button>
@@ -920,17 +920,17 @@ export const DiningPage: React.FC = () => {
       {/* CART & CHECKOUT MODAL */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#47614d] text-[#f7f7f2] border border-[#f7f7f2]/20 rounded-sm max-w-xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl space-y-6">
+          <div className="bg-[#00174A] text-[#FAF9F6] border border-white/20 rounded-sm max-w-xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl space-y-6">
             <button
               onClick={() => setCartOpen(false)}
-              className="absolute top-6 right-6 p-2 rounded-full bg-[#f7f7f2]/10 text-[#f7f7f2]/70 hover:text-[#f7f7f2]"
+              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white/70 hover:text-white"
             >
               <X size={18} />
             </button>
 
-            <div className="border-b border-[#f7f7f2]/10 pb-4">
-              <span className="text-[#d9b57d] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Dining Cart</span>
-              <h2 className="text-2xl font-serif text-[#f7f7f2]">Order Checkout</h2>
+            <div className="border-b border-white/10 pb-4">
+              <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Dining Cart</span>
+              <h2 className="text-2xl font-serif text-[#FAF9F6]">Order Checkout</h2>
             </div>
 
             {/* Cart Items List */}
@@ -938,23 +938,23 @@ export const DiningPage: React.FC = () => {
               {cartList.map((item: any) => {
                 const key = `${item.menuItemId}_${item.potionSize}`;
                 return (
-                  <div key={key} className="flex items-center justify-between bg-[#f7f7f2]/5 p-3 rounded-sm border border-[#f7f7f2]/10 text-xs font-sans">
+                  <div key={key} className="flex items-center justify-between bg-white/5 p-3 rounded-sm border border-white/10 text-xs font-sans">
                     <div>
-                      <span className="font-bold text-[#f7f7f2] block">{item.name}</span>
-                      <span className="text-[10px] text-[#f7f7f2]/60">Size: {item.potionSize} · ₹{item.price} each</span>
+                      <span className="font-bold text-[#FAF9F6] block">{item.name}</span>
+                      <span className="text-[10px] text-white/60">Size: {item.potionSize} · ₹{item.price} each</span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-2 py-1">
-                        <button onClick={() => updateQuantity(key, -1)} className="text-[#f7f7f2]/70 hover:text-[#f7f7f2]">
+                      <div className="flex items-center gap-2 bg-[#10184A] border border-white/20 rounded-sm px-2 py-1">
+                        <button onClick={() => updateQuantity(key, -1)} className="text-white/70 hover:text-white">
                           <Minus size={12} />
                         </button>
                         <span className="font-bold text-xs">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(key, 1)} className="text-[#f7f7f2]/70 hover:text-[#f7f7f2]">
+                        <button onClick={() => updateQuantity(key, 1)} className="text-white/70 hover:text-white">
                           <Plus size={12} />
                         </button>
                       </div>
-                      <span className="font-bold text-sm text-[#d9b57d] min-w-14 text-right">₹{item.price * item.quantity}</span>
+                      <span className="font-bold text-sm text-[#DFB000] min-w-14 text-right">₹{item.price * item.quantity}</span>
                     </div>
                   </div>
                 );
@@ -962,20 +962,20 @@ export const DiningPage: React.FC = () => {
             </div>
 
             {/* Total Amount Summary */}
-            <div className="flex justify-between items-center pt-3 border-t border-[#f7f7f2]/10 text-sm font-sans font-bold">
+            <div className="flex justify-between items-center pt-3 border-t border-white/10 text-sm font-sans font-bold">
               <span>Total Payable Amount:</span>
-              <span className="text-xl font-serif text-[#d9b57d]">₹{totalCartPrice}</span>
+              <span className="text-xl font-serif text-[#DFB000]">₹{totalCartPrice}</span>
             </div>
 
             {/* Checkout Form */}
             <form onSubmit={handleOrderSubmit} className="space-y-4 pt-2">
               {activeRoomNumber && (
-                <div className="p-3 bg-[#f7f7f2]/10 rounded-sm border border-[#d9b57d]/30 flex items-center justify-between">
+                <div className="p-3 bg-white/10 rounded-sm border border-[#DFB000]/30 flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-sans uppercase font-bold text-[#d9b57d] tracking-wider block">
+                    <span className="text-[9px] font-sans uppercase font-bold text-[#DFB000] tracking-wider block">
                       Auto-Fetched Verified Location
                     </span>
-                    <span className="text-sm font-serif font-bold text-[#f7f7f2]">
+                    <span className="text-sm font-serif font-bold text-[#FAF9F6]">
                       Room #{activeRoomNumber}
                     </span>
                   </div>
@@ -987,52 +987,50 @@ export const DiningPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-sans uppercase text-[#f7f7f2]/80 font-bold mb-1">Guest Name *</label>
+                  <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">Guest Name *</label>
                   <input
                     type="text"
                     placeholder="John Doe"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
+                    className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-sans uppercase text-[#f7f7f2]/80 font-bold mb-1">Phone Number *</label>
+                  <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">Phone Number *</label>
                   <input
                     type="tel"
                     placeholder="9876543210"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
+                    className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
                     required
                   />
                 </div>
               </div>
 
-
-
               {/* Special Instructions */}
               <div>
-                <label className="block text-[10px] font-sans uppercase text-[#f7f7f2]/80 font-bold mb-1">Special Instructions</label>
+                <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">Special Instructions</label>
                 <input
                   type="text"
                   placeholder="e.g. Less spicy, extra cutlery"
                   value={specialInstructions}
                   onChange={(e) => setSpecialInstructions(e.target.value)}
-                  className="w-full bg-[#47614d] border border-[#f7f7f2]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#f7f7f2]"
+                  className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
                 />
               </div>
 
               {/* Payment Mode Selection */}
               <div className="space-y-2 pt-2">
-                <span className="text-[10px] font-sans uppercase tracking-wider text-[#d9b57d] font-bold block">Payment Method *</span>
+                <span className="text-[10px] font-sans uppercase tracking-wider text-[#DFB000] font-bold block">Payment Method *</span>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMode('RAZORPAY')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'RAZORPAY' ? 'bg-[#f7f7f2] text-[#333333] font-bold border-[#f7f7f2]' : 'bg-transparent text-[#f7f7f2]/70 border-[#f7f7f2]/20'
+                      paymentMode === 'RAZORPAY' ? 'bg-[#FAF9F6] text-[#00174A] font-bold border-[#FAF9F6]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💳 Online (Razorpay)</span>
@@ -1043,7 +1041,7 @@ export const DiningPage: React.FC = () => {
                     type="button"
                     onClick={() => setPaymentMode('CASH')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'CASH' ? 'bg-[#f7f7f2] text-[#333333] font-bold border-[#f7f7f2]' : 'bg-transparent text-[#f7f7f2]/70 border-[#f7f7f2]/20'
+                      paymentMode === 'CASH' ? 'bg-[#FAF9F6] text-[#00174A] font-bold border-[#FAF9F6]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💵 Pay at Reception</span>
@@ -1055,7 +1053,7 @@ export const DiningPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={placingOrder}
-                className="w-full py-4 rounded-sm bg-[#f7f7f2] text-[#333333] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#d9b57d] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
+                className="w-full py-4 rounded-sm bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
               >
                 <Send size={15} /> {paymentMode === 'RAZORPAY' ? 'Pay & Send Order' : 'Send Order (Pay at Reception)'}
               </button>
@@ -1067,13 +1065,13 @@ export const DiningPage: React.FC = () => {
       {/* SCANNED MENU VIEWER MODAL */}
       {viewerOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-4xl flex justify-between items-center mb-4 text-[#f7f7f2]">
-            <span className="text-xs font-sans uppercase tracking-widest text-[#d9b57d] font-bold">
+          <div className="w-full max-w-4xl flex justify-between items-center mb-4 text-[#FAF9F6]">
+            <span className="text-xs font-sans uppercase tracking-widest text-[#DFB000] font-bold">
               {activeTab !== 'LIQUID_LOUNGE' ? 'Swaad Menu Card' : 'Liquid Lounge Bar Menu'} (Page {viewerPageIndex + 1} of {currentScannedPages.length})
             </span>
             <button
               onClick={() => setViewerOpen(false)}
-              className="p-2 rounded-full bg-[#f7f7f2]/10 text-[#f7f7f2] hover:bg-[#f7f7f2]/20"
+              className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
             >
               <X size={20} />
             </button>
@@ -1083,13 +1081,13 @@ export const DiningPage: React.FC = () => {
             <img
               src={currentScannedPages[viewerPageIndex]}
               alt={`Page ${viewerPageIndex + 1}`}
-              className="max-h-[75vh] w-auto object-contain rounded-sm border border-[#f7f7f2]/20 shadow-2xl"
+              className="max-h-[75vh] w-auto object-contain rounded-sm border border-white/20 shadow-2xl"
             />
 
             {viewerPageIndex > 0 && (
               <button
                 onClick={() => setViewerPageIndex((prev) => prev - 1)}
-                className="absolute left-4 p-3 rounded-full bg-[#0B1849]/80 text-[#f7f7f2] border border-[#f7f7f2]/20 hover:bg-[#47614d]"
+                className="absolute left-4 p-3 rounded-full bg-[#00174A]/80 text-[#FAF9F6] border border-white/20 hover:bg-[#DFB000] hover:text-[#00174A]"
               >
                 <ChevronLeft size={24} />
               </button>
@@ -1098,7 +1096,7 @@ export const DiningPage: React.FC = () => {
             {viewerPageIndex < currentScannedPages.length - 1 && (
               <button
                 onClick={() => setViewerPageIndex((prev) => prev + 1)}
-                className="absolute right-4 p-3 rounded-full bg-[#0B1849]/80 text-[#f7f7f2] border border-[#f7f7f2]/20 hover:bg-[#47614d]"
+                className="absolute right-4 p-3 rounded-full bg-[#00174A]/80 text-[#FAF9F6] border border-white/20 hover:bg-[#DFB000] hover:text-[#00174A]"
               >
                 <ChevronRight size={24} />
               </button>

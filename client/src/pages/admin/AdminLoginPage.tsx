@@ -36,36 +36,36 @@ export const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f2] text-[#333333] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] flex items-center justify-center p-6">
       <ScrollReveal direction="up" duration={0.85} className="w-full max-w-md">
-        <div className="bg-[#ffffff] text-[#333333] border border-[#cbc0ad] rounded-[20px] p-8 sm:p-10 max-w-md w-full space-y-7 shadow-xl">
+        <div className="bg-white text-[#00174A] border border-[#10184A]/15 rounded-[20px] p-8 sm:p-10 max-w-md w-full space-y-7 shadow-xl">
           
           {/* Header Badge */}
           <div className="text-center space-y-2.5">
-            <div className="w-14 h-14 rounded-full bg-[#47614d]/10 border border-[#47614d]/30 text-[#47614d] flex items-center justify-center mx-auto shadow-sm">
+            <div className="w-14 h-14 rounded-full bg-[#00174A]/10 border border-[#00174A]/30 text-[#00174A] flex items-center justify-center mx-auto shadow-sm">
               <ShieldCheck size={28} />
             </div>
-            <span className="text-[10px] font-bold text-[#47614d] uppercase tracking-[1.6px] block">
+            <span className="text-[10px] font-bold text-[#00174A] uppercase tracking-[1.6px] block">
               Hotel Raama Control Panel
             </span>
-            <h1 className="text-3xl font-bold text-[#333333]">Admin Login</h1>
-            <p className="text-xs text-[#666666]">
+            <h1 className="text-3xl font-bold text-[#00174A]">Admin Login</h1>
+            <p className="text-xs text-[#667085]">
               Enter authorized management credentials to access live operations
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
-              <label className="block font-bold text-[#666666] uppercase tracking-[1.6px] mb-1.5 text-[10px]">
+              <label className="block font-bold text-[#667085] uppercase tracking-[1.6px] mb-1.5 text-[10px]">
                 Admin Email
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-3 text-[#666666]" />
+                <Mail size={16} className="absolute left-3.5 top-3 text-[#667085]" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-full pl-10 pr-4 py-2.5 text-xs text-[#333333] focus-design transition-colors"
+                  className="w-full bg-[#FAF9F6] border border-[#10184A]/20 rounded-full pl-10 pr-4 py-2.5 text-xs text-[#00174A] focus:border-[#DFB000] focus-design transition-colors"
                   required
                   placeholder=""
                   autoComplete="email"
@@ -74,16 +74,16 @@ export const AdminLoginPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-bold text-[#666666] uppercase tracking-[1.6px] mb-1.5 text-[10px]">
+              <label className="block font-bold text-[#667085] uppercase tracking-[1.6px] mb-1.5 text-[10px]">
                 Password
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-3 text-[#666666]" />
+                <Lock size={16} className="absolute left-3.5 top-3 text-[#667085]" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#f7f7f2] border border-[#cbc0ad] rounded-full pl-10 pr-4 py-2.5 text-xs text-[#333333] focus-design transition-colors"
+                  className="w-full bg-[#FAF9F6] border border-[#10184A]/20 rounded-full pl-10 pr-4 py-2.5 text-xs text-[#00174A] focus:border-[#DFB000] focus-design transition-colors"
                   required
                   placeholder="••••••••••••"
                   autoComplete="current-password"
@@ -94,13 +94,13 @@ export const AdminLoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-full bg-[#47614d] text-[#f7f7f2] hover:bg-[#374c3c] font-semibold text-xs uppercase tracking-[1.6px] shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 focus-design mt-2"
+              className="w-full py-3.5 rounded-full bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] font-bold text-xs uppercase tracking-[1.6px] shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 focus-design mt-2"
             >
               {loading ? 'Authenticating...' : 'Authenticate & Sign In'} <ArrowRight size={15} />
             </button>
           </form>
 
-          <div className="text-center pt-2 border-t border-[#cbc0ad]/40 text-[10px] text-[#666666]">
+          <div className="text-center pt-2 border-t border-[#10184A]/10 text-[10px] text-[#667085]">
             Protected JWT HTTP-Only Cookie Session
           </div>
         </div>

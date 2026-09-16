@@ -224,31 +224,31 @@ export const AdminMenuView: React.FC = () => {
   });
 
   return (
-    <div className="p-6 space-[#f7f7f2] space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#cbc0ad]/40 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#10184A]/15 pb-5">
         <div>
-          <span className="text-[#8c764b] text-[10px] font-sans font-bold uppercase tracking-[0.2em] block">
+          <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em] block">
             Restaurant Management
           </span>
-          <h1 className="text-3xl font-serif text-[#333333] flex items-center gap-2">
-            <BookOpen className="text-[#47614d]" size={28} /> Menu Catalog
+          <h1 className="text-3xl font-serif text-[#00174A] flex items-center gap-2">
+            <BookOpen className="text-[#00174A]" size={28} /> Menu Catalog
           </h1>
-          <p className="text-xs font-sans text-[#666666] mt-1">
+          <p className="text-xs font-sans text-[#667085] mt-1">
             Manage dish titles, categories, pricing, portion rates, and real-time kitchen availability.
           </p>
         </div>
 
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center justify-center gap-2 bg-[#47614d] hover:bg-[#374c3c] text-white px-5 py-2.5 rounded-sm font-sans text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+          className="inline-flex items-center justify-center gap-2 bg-[#DFB000] hover:bg-[#E8C56A] text-[#00174A] px-5 py-2.5 rounded-sm font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
         >
           <Plus size={16} /> Add New Dish
         </button>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-sm border border-[#cbc0ad] shadow-xs space-y-4">
+      <div className="bg-white p-4 rounded-sm border border-[#10184A]/15 shadow-xs space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {/* Search */}
           <div className="relative">
@@ -258,7 +258,7 @@ export const AdminMenuView: React.FC = () => {
               placeholder="Search dish or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none"
+              className="w-full pl-9 pr-3.5 py-2 bg-[#FAF9F6] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none"
             />
           </div>
 
@@ -267,7 +267,7 @@ export const AdminMenuView: React.FC = () => {
             <select
               value={selectedSection}
               onChange={(e) => setSelectedSection(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none cursor-pointer"
+              className="w-full px-3.5 py-2 bg-[#FAF9F6] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
             >
               <option value="ALL">All Restaurant Sections</option>
               <option value="SWAAD">Swaad Fine Dining</option>
@@ -282,7 +282,7 @@ export const AdminMenuView: React.FC = () => {
             <select
               value={dietaryFilter}
               onChange={(e) => setDietaryFilter(e.target.value as any)}
-              className="w-full px-3.5 py-2 bg-[#f7f7f2] border border-[#cbc0ad] rounded-sm text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none cursor-pointer"
+              className="w-full px-3.5 py-2 bg-[#FAF9F6] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
             >
               <option value="ALL">All Dietary Tags</option>
               <option value="VEG">🟢 Vegetarian Only</option>
@@ -291,7 +291,7 @@ export const AdminMenuView: React.FC = () => {
           </div>
 
           {/* Item Count Summary */}
-          <div className="flex items-center justify-end text-xs font-sans text-[#666666] font-medium px-2">
+          <div className="flex items-center justify-end text-xs font-sans text-[#667085] font-medium px-2">
             Showing {filteredItems.length} of {items.length} dishes
           </div>
         </div>
@@ -299,22 +299,22 @@ export const AdminMenuView: React.FC = () => {
 
       {/* Menu Table / Grid */}
       {loading ? (
-        <div className="text-center py-20 bg-white border border-[#cbc0ad] rounded-sm">
-          <div className="w-8 h-8 border-3 border-[#47614d] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-xs font-sans text-[#666666]">Loading menu catalog...</p>
+        <div className="text-center py-20 bg-white border border-[#10184A]/15 rounded-sm">
+          <div className="w-8 h-8 border-3 border-[#DFB000] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs font-sans text-[#667085]">Loading menu catalog...</p>
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="text-center py-20 bg-white border border-[#cbc0ad] rounded-sm">
-          <Utensils className="mx-auto text-[#cbc0ad] mb-3" size={40} />
-          <p className="text-sm font-serif text-[#333333] font-semibold">No dishes found matching your criteria</p>
-          <p className="text-xs font-sans text-[#666666] mt-1">Try adjusting your search terms or filters.</p>
+        <div className="text-center py-20 bg-white border border-[#10184A]/15 rounded-sm">
+          <Utensils className="mx-auto text-gray-300 mb-3" size={40} />
+          <p className="text-sm font-serif text-[#00174A] font-semibold">No dishes found matching your criteria</p>
+          <p className="text-xs font-sans text-[#667085] mt-1">Try adjusting your search terms or filters.</p>
         </div>
       ) : (
-        <div className="bg-white border border-[#cbc0ad] rounded-sm overflow-hidden shadow-xs">
+        <div className="bg-white border border-[#10184A]/15 rounded-sm overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#181e19] text-white text-[11px] font-sans uppercase tracking-wider">
+                <tr className="bg-[#071A3D] text-white text-[11px] font-sans uppercase tracking-wider">
                   <th className="py-3.5 px-4 font-semibold">Dish Details</th>
                   <th className="py-3.5 px-4 font-semibold">Section</th>
                   <th className="py-3.5 px-4 font-semibold">Dietary</th>
@@ -324,9 +324,9 @@ export const AdminMenuView: React.FC = () => {
                   <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#cbc0ad]/30 text-xs font-sans">
+              <tbody className="divide-y divide-[#10184A]/10 text-xs font-sans">
                 {filteredItems.map((item) => (
-                  <tr key={item._id} className="hover:bg-[#f7f7f2]/80 transition-colors">
+                  <tr key={item._id} className="hover:bg-[#FAF9F6] transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
                         <span
@@ -335,11 +335,11 @@ export const AdminMenuView: React.FC = () => {
                           }`}
                         />
                         <div>
-                          <span className="font-bold text-[#333333] block text-sm font-serif">
+                          <span className="font-bold text-[#00174A] block text-sm font-serif">
                             {item.name}
                           </span>
                           {item.description && (
-                            <span className="text-[11px] text-[#666666] line-clamp-1">
+                            <span className="text-[11px] text-[#667085] line-clamp-1">
                               {item.description}
                             </span>
                           )}
@@ -348,7 +348,7 @@ export const AdminMenuView: React.FC = () => {
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-1 bg-[#0B1849]/5 border border-[#cbc0ad] rounded-sm text-[10px] uppercase font-bold text-[#333333] tracking-wider">
+                      <span className="px-2.5 py-1 bg-[#00174A]/5 border border-[#10184A]/20 rounded-sm text-[10px] uppercase font-bold text-[#00174A] tracking-wider">
                         {item.section || 'SWAAD'}
                       </span>
                     </td>
@@ -365,11 +365,11 @@ export const AdminMenuView: React.FC = () => {
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 font-bold font-serif text-[#333333] text-sm">
+                    <td className="py-3.5 px-4 font-bold font-serif text-[#00174A] text-sm">
                       ₹{item.price}
                     </td>
 
-                    <td className="py-3.5 px-4 text-[#666666]">
+                    <td className="py-3.5 px-4 text-[#667085]">
                       {item.isHalfAvailable && item.halfPrice ? (
                         <span className="font-semibold text-emerald-800">₹{item.halfPrice}</span>
                       ) : (
@@ -406,7 +406,7 @@ export const AdminMenuView: React.FC = () => {
                     <td className="py-3.5 px-4 text-right space-x-2">
                       <button
                         onClick={() => openEditModal(item)}
-                        className="p-1.5 text-[#47614d] hover:bg-[#47614d]/10 rounded-sm transition-colors cursor-pointer"
+                        className="p-1.5 text-[#00174A] hover:bg-[#00174A]/10 rounded-sm transition-colors cursor-pointer"
                         title="Edit Dish"
                       >
                         <Edit2 size={16} />
@@ -436,7 +436,7 @@ export const AdminMenuView: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#f7f7f2] border border-[#cbc0ad] text-[#333333] rounded-sm max-w-lg w-full p-6 relative shadow-2xl space-y-5"
+              className="bg-[#FAF9F6] border border-[#10184A]/15 text-[#00174A] rounded-sm max-w-lg w-full p-6 relative shadow-2xl space-y-5"
             >
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -445,11 +445,11 @@ export const AdminMenuView: React.FC = () => {
                 <X size={18} />
               </button>
 
-              <div className="border-b border-[#cbc0ad] pb-3">
-                <span className="text-[#8c764b] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
+              <div className="border-b border-[#10184A]/15 pb-3">
+                <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
                   {editingItem ? 'Edit Dish Details' : 'New Dish Entry'}
                 </span>
-                <h2 className="text-2xl font-serif text-[#333333]">
+                <h2 className="text-2xl font-serif text-[#00174A]">
                   {editingItem ? editingItem.name : 'Create New Menu Dish'}
                 </h2>
               </div>
@@ -457,7 +457,7 @@ export const AdminMenuView: React.FC = () => {
               <form onSubmit={handleFormSubmit} className="space-y-4 text-xs font-sans">
                 {/* Dish Name */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#666666] mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667085] mb-1">
                     Dish Name *
                   </label>
                   <input
@@ -466,20 +466,20 @@ export const AdminMenuView: React.FC = () => {
                     placeholder="e.g. Paneer Butter Masala"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none"
+                    className="w-full bg-white border border-[#10184A]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none"
                   />
                 </div>
 
                 {/* Section & Dietary */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#666666] mb-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667085] mb-1">
                       Restaurant Section *
                     </label>
                     <select
                       value={formData.section}
                       onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                      className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none cursor-pointer"
+                      className="w-full bg-white border border-[#10184A]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
                     >
                       <option value="SWAAD">Swaad Fine Dining</option>
                       <option value="LLB">Liquid Lounge Bar (LLB)</option>
@@ -489,13 +489,13 @@ export const AdminMenuView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#666666] mb-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667085] mb-1">
                       Dietary Type *
                     </label>
                     <select
                       value={formData.isVeg ? 'VEG' : 'NON_VEG'}
                       onChange={(e) => setFormData({ ...formData, isVeg: e.target.value === 'VEG' })}
-                      className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none cursor-pointer"
+                      className="w-full bg-white border border-[#10184A]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
                     >
                       <option value="VEG">🟢 Vegetarian</option>
                       <option value="NON_VEG">🔴 Non-Vegetarian</option>
@@ -506,7 +506,7 @@ export const AdminMenuView: React.FC = () => {
                 {/* Pricing: Full Rate & Half Rate */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#666666] mb-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667085] mb-1">
                       Full Portion Price (₹) *
                     </label>
                     <input
@@ -517,12 +517,12 @@ export const AdminMenuView: React.FC = () => {
                       placeholder="e.g. 240"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none font-bold"
+                      className="w-full bg-white border border-[#10184A]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none font-bold"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#666666] mb-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667085] mb-1">
                       Half Portion Price (₹)
                     </label>
                     <input
@@ -533,9 +533,9 @@ export const AdminMenuView: React.FC = () => {
                       disabled={!formData.isHalfAvailable}
                       value={formData.halfPrice}
                       onChange={(e) => setFormData({ ...formData, halfPrice: e.target.value })}
-                      className={`w-full border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans focus:outline-none ${
+                      className={`w-full border border-[#10184A]/20 rounded-sm px-3.5 py-2 text-xs font-sans focus:outline-none ${
                         formData.isHalfAvailable
-                          ? 'bg-white text-[#333333] focus:border-[#47614d]'
+                          ? 'bg-white text-[#00174A] focus:border-[#00174A]'
                           : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       }`}
                     />
@@ -551,16 +551,16 @@ export const AdminMenuView: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, isHalfAvailable: e.target.checked })
                     }
-                    className="rounded accent-[#47614d] cursor-pointer"
+                    className="rounded accent-[#00174A] cursor-pointer"
                   />
-                  <label htmlFor="isHalfAvailable" className="text-xs text-[#333333] cursor-pointer font-medium">
+                  <label htmlFor="isHalfAvailable" className="text-xs text-[#00174A] cursor-pointer font-medium">
                     Enable Half Portion / Half Plate Option
                   </label>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#666666] mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#667085] mb-1">
                     Dish Description
                   </label>
                   <textarea
@@ -568,30 +568,30 @@ export const AdminMenuView: React.FC = () => {
                     placeholder="Short appetizing description or key ingredients..."
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] focus:border-[#47614d] focus:outline-none"
+                    className="w-full bg-white border border-[#10184A]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none"
                   />
                 </div>
 
                 {/* Availability Checkbox */}
-                <div className="flex items-center gap-2 p-3 bg-white border border-[#cbc0ad] rounded-sm">
+                <div className="flex items-center gap-2 p-3 bg-white border border-[#10184A]/15 rounded-sm">
                   <input
                     type="checkbox"
                     id="isAvailable"
                     checked={formData.isAvailable}
                     onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
-                    className="rounded accent-[#47614d] cursor-pointer"
+                    className="rounded accent-[#00174A] cursor-pointer"
                   />
-                  <label htmlFor="isAvailable" className="text-xs text-[#333333] cursor-pointer font-semibold">
+                  <label htmlFor="isAvailable" className="text-xs text-[#00174A] cursor-pointer font-semibold">
                     In Stock (Available for ordering in Kitchen / QR menu)
                   </label>
                 </div>
 
                 {/* Submit Actions */}
-                <div className="flex justify-end gap-3 pt-3 border-t border-[#cbc0ad]">
+                <div className="flex justify-end gap-3 pt-3 border-t border-[#10184A]/15">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 rounded-sm border border-[#cbc0ad] text-xs font-sans text-[#666666] hover:bg-gray-100 transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-sm border border-[#10184A]/20 text-xs font-sans text-[#667085] hover:bg-gray-100 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -599,7 +599,7 @@ export const AdminMenuView: React.FC = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 rounded-sm bg-[#47614d] text-white font-sans text-xs font-bold uppercase tracking-wider hover:bg-[#374c3c] transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-sm bg-[#DFB000] text-[#00174A] font-sans text-xs font-bold uppercase tracking-wider hover:bg-[#E8C56A] transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? 'Saving...' : editingItem ? 'Save Changes' : 'Create Dish'}
                   </button>
@@ -618,7 +618,7 @@ export const AdminMenuView: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#f7f7f2] border border-red-300 text-[#333333] rounded-sm max-w-md w-full p-6 relative shadow-2xl space-y-4"
+              className="bg-[#FAF9F6] border border-red-300 text-[#00174A] rounded-sm max-w-md w-full p-6 relative shadow-2xl space-y-4"
             >
               <button
                 onClick={() => setDeleteTarget(null)}
@@ -628,23 +628,23 @@ export const AdminMenuView: React.FC = () => {
                 <X size={16} />
               </button>
 
-              <div className="flex items-center gap-3 text-red-700 border-b border-[#cbc0ad]/40 pb-3">
+              <div className="flex items-center gap-3 text-red-700 border-b border-[#10184A]/15 pb-3">
                 <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 border border-red-200">
                   <AlertTriangle size={22} className="text-red-700" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-serif font-bold text-[#333333]">Confirm Dish Deletion</h3>
+                  <h3 className="text-lg font-serif font-bold text-[#00174A]">Confirm Dish Deletion</h3>
                   <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-red-700 block">
                     Permanent Removal Warning
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2.5 text-xs font-sans text-[#333333]">
+              <div className="space-y-2.5 text-xs font-sans text-[#00174A]">
                 <p className="text-sm">
                   Are you sure you want to delete <span className="font-bold font-serif text-black text-base">"{deleteTarget.name}"</span>?
                 </p>
-                <div className="text-[#666666] leading-relaxed bg-red-500/10 p-3 rounded-sm border border-red-200 text-[11px] space-y-1">
+                <div className="text-[#667085] leading-relaxed bg-red-500/10 p-3 rounded-sm border border-red-200 text-[11px] space-y-1">
                   <p className="font-bold text-red-800 flex items-center gap-1">
                     ⚠️ Warning: This action cannot be undone.
                   </p>
@@ -654,12 +654,12 @@ export const AdminMenuView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-[#cbc0ad]/40">
+              <div className="flex justify-end gap-3 pt-3 border-t border-[#10184A]/15">
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(null)}
                   disabled={deleting}
-                  className="px-4 py-2 rounded-sm border border-[#cbc0ad] text-xs font-sans font-medium text-[#666666] hover:bg-gray-100 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-sm border border-[#10184A]/20 text-xs font-sans font-medium text-[#667085] hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

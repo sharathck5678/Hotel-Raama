@@ -5,38 +5,38 @@ import { ScrollReveal } from '../components/ScrollReveal';
 
 export const PrivacyPolicyPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#f7f7f2] text-[#333333] py-16 max-w-4xl mx-auto px-6 sm:px-8">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-4xl mx-auto px-6 sm:px-8">
       <ScrollReveal direction="up" duration={0.8}>
         
         {/* Top Navigation Back Link */}
         <div className="mb-8">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#47614d] hover:text-[#374c3c] transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#DFB000] transition-colors"
           >
             <ArrowLeft size={16} /> Return to Home
           </Link>
         </div>
 
         {/* Page Header */}
-        <div className="border-b border-[#cbc0ad] pb-8 mb-10">
-          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#8c764b] block mb-2">
+        <div className="border-b border-[#10184A]/15 pb-8 mb-10">
+          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#DFB000] block mb-2">
             Hotel Raama Policies
           </span>
-          <h1 className="editorial-section-title text-[#333333] flex items-center gap-3">
-            <ShieldCheck size={32} className="text-[#47614d]" /> Privacy Policy
+          <h1 className="editorial-section-title text-[#00174A] flex items-center gap-3">
+            <ShieldCheck size={32} className="text-[#00174A]" /> Privacy Policy
           </h1>
-          <p className="font-sans text-xs sm:text-sm text-[#666666] mt-3 leading-relaxed">
+          <p className="font-sans text-xs sm:text-sm text-[#667085] mt-3 leading-relaxed">
             At Hotel Raama, we respect your privacy and are committed to protecting the information you provide when using our website and services.
           </p>
         </div>
 
         {/* Policy Content Card */}
-        <div className="bg-white/80 border border-[#cbc0ad] rounded-sm p-8 sm:p-10 shadow-sm space-y-8 font-sans text-xs sm:text-sm text-[#444444] leading-relaxed">
+        <div className="bg-white/80 border border-[#10184A]/15 rounded-sm p-8 sm:p-10 shadow-sm space-y-8 font-sans text-xs sm:text-sm text-[#444444] leading-relaxed">
           
           {/* Section 1 */}
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333] border-b border-[#cbc0ad]/40 pb-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
               Information We Collect
             </h2>
             <p>
@@ -46,7 +46,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
           {/* Section 2 */}
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333] border-b border-[#cbc0ad]/40 pb-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
               How We Use Your Information
             </h2>
             <p>We use your information to:</p>
@@ -62,7 +62,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
           {/* Section 3 */}
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333] border-b border-[#cbc0ad]/40 pb-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
               Payment Information
             </h2>
             <p>
@@ -72,7 +72,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
           {/* Section 4 */}
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333] border-b border-[#cbc0ad]/40 pb-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
               Sharing of Information
             </h2>
             <p>
@@ -82,7 +82,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
           {/* Section 5 */}
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333] border-b border-[#cbc0ad]/40 pb-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
               Cookies
             </h2>
             <p>
@@ -92,7 +92,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
           {/* Section 6 */}
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333] border-b border-[#cbc0ad]/40 pb-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
               Data Security
             </h2>
             <p>
@@ -102,7 +102,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
           {/* Section 7 */}
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333] border-b border-[#cbc0ad]/40 pb-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
               Your Rights
             </h2>
             <p>
@@ -111,16 +111,16 @@ export const PrivacyPolicyPage: React.FC = () => {
           </section>
 
           {/* Section 8: Contact */}
-          <section className="space-y-3 pt-4 border-t border-[#cbc0ad]">
-            <h2 className="text-base sm:text-lg font-serif font-bold text-[#333333]">
+          <section className="space-y-3 pt-4 border-t border-[#10184A]/15">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A]">
               Contact Us
             </h2>
             <p>For privacy-related questions, please contact us at:</p>
             <div className="flex flex-wrap gap-6 pt-1 text-xs">
-              <a href="mailto:reservations@hotelraama.com" className="flex items-center gap-2 text-[#47614d] font-bold hover:underline">
+              <a href="mailto:reservations@hotelraama.com" className="flex items-center gap-2 text-[#00174A] hover:text-[#DFB000] font-bold hover:underline">
                 <Mail size={16} /> reservations@hotelraama.com
               </a>
-              <a href="tel:08172257001" className="flex items-center gap-2 text-[#47614d] font-bold hover:underline">
+              <a href="tel:08172257001" className="flex items-center gap-2 text-[#00174A] hover:text-[#DFB000] font-bold hover:underline">
                 <Phone size={16} /> 081722 57001
               </a>
             </div>
