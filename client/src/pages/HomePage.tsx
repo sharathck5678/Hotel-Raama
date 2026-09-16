@@ -39,7 +39,7 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A]">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A]">
       
       {/* 1. HERO SECTION - Editorial Luxury Full Bleed */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-20">
@@ -67,13 +67,13 @@ export const HomePage: React.FC = () => {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-4"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[#DFB000] text-[10px] font-sans font-semibold uppercase tracking-[0.2em]">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[#D6B369] text-[10px] font-sans font-semibold uppercase tracking-[0.2em]">
               Hotel Raama · Hassan
             </span>
             
             <h1 className="editorial-hero-title text-white uppercase tracking-tight">
               A Quiet Place <br />
-              <span className="italic font-light text-[#DFB000]">To Slow Down.</span>
+              <span className="italic font-light text-[#D6B369]">To Slow Down.</span>
             </h1>
             
             <p className="font-sans text-white/80 text-sm sm:text-base max-w-xl mx-auto font-normal leading-relaxed">
@@ -90,39 +90,39 @@ export const HomePage: React.FC = () => {
           >
             <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#DFB000] mb-2 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#DFB000]" /> Check-In
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#D6B369] mb-2 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#D6B369]" /> Check-In
                 </label>
                 <input
                   type="date"
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#DFB000] focus:outline-none shadow-xs"
+                  className="w-full bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#D6B369] focus:outline-none shadow-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#DFB000] mb-2 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#DFB000]" /> Check-Out
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#D6B369] mb-2 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#D6B369]" /> Check-Out
                 </label>
                 <input
                   type="date"
                   value={checkOut}
                   onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#DFB000] focus:outline-none shadow-xs"
+                  className="w-full bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#D6B369] focus:outline-none shadow-xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#DFB000] mb-2 flex items-center gap-1.5">
-                  <Users size={13} className="text-[#DFB000]" /> Guests
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#D6B369] mb-2 flex items-center gap-1.5">
+                  <Users size={13} className="text-[#D6B369]" /> Guests
                 </label>
                 <select
                   value={numGuests}
                   onChange={(e) => setNumGuests(parseInt(e.target.value))}
-                  className="w-full bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#DFB000] focus:outline-none shadow-xs"
+                  className="w-full bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#D6B369] focus:outline-none shadow-xs"
                 >
                   <option value={1}>1 Guest</option>
                   <option value={2}>2 Guests</option>
@@ -134,7 +134,7 @@ export const HomePage: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-lg bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg"
+                  className="w-full py-3 rounded-lg bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg"
                 >
                   Check Availability <ArrowRight size={14} />
                 </button>
@@ -165,7 +165,7 @@ export const HomePage: React.FC = () => {
           {roomTypes.slice(0, 3).map((room) => (
             <ScrollRevealItem key={room._id}>
               <div
-                className="bg-[#FAF9F6] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm group hover:border-[#cbc0ad] transition-all duration-300 flex flex-col h-full"
+                className="bg-[#F7F0DF] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm group hover:border-[#cbc0ad] transition-all duration-300 flex flex-col h-full"
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
@@ -173,7 +173,7 @@ export const HomePage: React.FC = () => {
                     alt={room.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
-                  <div className="absolute top-4 right-4 bg-[#DFB000] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#00174A]">
+                  <div className="absolute top-4 right-4 bg-[#D6B369] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#00174A]">
                     {room.isAc ? 'A/C Executive' : 'Non-A/C Premium'}
                   </div>
                 </div>
@@ -195,7 +195,7 @@ export const HomePage: React.FC = () => {
 
                     <Link
                       to={`/rooms?select=${room._id}`}
-                      className="px-4 py-2.5 rounded-sm bg-[#DFB000] text-[#00174A] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#E8C56A] transition-all"
+                      className="px-4 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#E8C56A] transition-all"
                     >
                       Reserve Now
                     </Link>
@@ -212,7 +212,7 @@ export const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <ScrollReveal direction="up" duration={0.8}>
             <div className="text-center max-w-2xl mx-auto mb-20">
-              <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Culinary Artistry</span>
+              <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Culinary Artistry</span>
               <h2 className="editorial-section-title text-white mt-2">Swaad, Hotel Raama & Liquid Lounge</h2>
               <p className="font-sans text-white/75 mt-4 text-xs sm:text-sm leading-relaxed">
                 Authentic South Indian vegetarian dining, signature non-veg delicacies, and executive whiskies & handcrafted cocktails. Served in ambience or directly to your room.
@@ -235,7 +235,7 @@ export const HomePage: React.FC = () => {
                     Crispy Masala Dosas, North Indian Curries, Tandoori Baskets, and traditional South & North Indian Thalis.
                   </p>
                   <div className="mt-5">
-                    <Link to="/dining?tab=SWAAD_VEG" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#DFB000] hover:text-white transition-colors">
+                    <Link to="/dining?tab=SWAAD_VEG" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#D6B369] hover:text-white transition-colors">
                       Explore Pure Veg Menu <ArrowUpRight size={14} />
                     </Link>
                   </div>
@@ -257,7 +257,7 @@ export const HomePage: React.FC = () => {
                     Signature Mutton Chops, Nati Koli Biriyani, Coastal Seafood fry, Chicken Sukka, and aromatic Tandoori kebabs.
                   </p>
                   <div className="mt-5">
-                    <Link to="/dining?tab=HOTEL_RAAMA" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#DFB000] hover:text-white transition-colors">
+                    <Link to="/dining?tab=HOTEL_RAAMA" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#D6B369] hover:text-white transition-colors">
                       Explore Non-Veg Menu <ArrowUpRight size={14} />
                     </Link>
                   </div>
@@ -279,7 +279,7 @@ export const HomePage: React.FC = () => {
                     Curated whiskies, single malts, draught beers, and handcrafted cocktails in an executive setting.
                   </p>
                   <div className="mt-5">
-                    <Link to="/dining?tab=LIQUID_LOUNGE" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#DFB000] hover:text-white transition-colors">
+                    <Link to="/dining?tab=LIQUID_LOUNGE" className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#D6B369] hover:text-white transition-colors">
                       Explore Bar Menu <ArrowUpRight size={14} />
                     </Link>
                   </div>
@@ -293,7 +293,7 @@ export const HomePage: React.FC = () => {
       {/* 3.5 TRIPADVISOR REVIEWS SPOTLIGHT */}
       <section className="py-16 max-w-7xl mx-auto px-6 lg:px-8">
         <ScrollReveal direction="up" duration={0.85}>
-          <div className="bg-[#FAF9F6] p-8 sm:p-12 rounded-sm border border-[#cbc0ad] shadow-md flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+          <div className="bg-[#F7F0DF] p-8 sm:p-12 rounded-sm border border-[#cbc0ad] shadow-md flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
             
             {/* Left: Ratings Badge matching TripAdvisor widget */}
             <div className="flex items-center gap-6 shrink-0 w-full lg:w-auto justify-center">
@@ -339,7 +339,7 @@ export const HomePage: React.FC = () => {
                 href="https://www.tripadvisor.in/Hotel_Review-g503696-d8507683-Reviews-Hotel_Raama-Hassan_Hassan_District_Karnataka.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3.5 rounded-sm bg-[#DFB000] hover:bg-[#E8C56A] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                className="px-6 py-3.5 rounded-sm bg-[#D6B369] hover:bg-[#E8C56A] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 <span>View Reviews on TripAdvisor</span>
                 <ArrowUpRight size={15} />
@@ -363,7 +363,7 @@ export const HomePage: React.FC = () => {
               />
               <div className="relative z-10 space-y-6">
                 <div>
-                  <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Banquets & Events</span>
+                  <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Banquets & Events</span>
                   <h3 className="text-3xl font-serif text-white mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">Sambhrama Party Hall</h3>
                 </div>
                 <p className="text-xs font-sans text-white leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -371,7 +371,7 @@ export const HomePage: React.FC = () => {
                 </p>
                 <Link
                   to="/party-hall"
-                  className="inline-flex items-center gap-2 w-full justify-center py-3.5 rounded-sm bg-[#FAF9F6] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#DFB000] transition-all cursor-pointer shadow-lg"
+                  className="inline-flex items-center gap-2 w-full justify-center py-3.5 rounded-sm bg-[#F7F0DF] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#D6B369] transition-all cursor-pointer shadow-lg"
                 >
                   View Party Packages
                 </Link>
@@ -389,7 +389,7 @@ export const HomePage: React.FC = () => {
             <ScrollRevealGroup staggerDelay={0.12} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {attractions.slice(0, 4).map((attraction) => (
                 <ScrollRevealItem key={attraction._id}>
-                  <div className="p-5 rounded-sm bg-[#FAF9F6] border border-[#cbc0ad] flex gap-4 items-center h-full">
+                  <div className="p-5 rounded-sm bg-[#F7F0DF] border border-[#cbc0ad] flex gap-4 items-center h-full">
                     <img
                       src={attraction.image}
                       alt={attraction.name}

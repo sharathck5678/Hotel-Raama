@@ -39,10 +39,10 @@ export const App: React.FC = () => {
     <ThemeProvider>
       <ScrollToTop />
       <Toaster position="top-right" theme="dark" richColors />
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-[#F7F0DF]">
         <Navbar />
 
-        <main className="flex-grow">
+        <main className="flex-grow bg-[#F7F0DF]">
           <Routes>
             {/* Public Guest Routes */}
             <Route path="/" element={<HomePage />} />

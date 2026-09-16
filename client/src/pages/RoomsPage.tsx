@@ -98,7 +98,7 @@ const RoomSlideshow: React.FC<{
       />
 
       {badgeText && (
-        <div className="absolute top-4 left-4 bg-[#DFB000] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#00174A] shadow-md z-10">
+        <div className="absolute top-4 left-4 bg-[#D6B369] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#00174A] shadow-md z-10">
           {badgeText}
         </div>
       )}
@@ -139,7 +139,7 @@ const RoomSlideshow: React.FC<{
               type="button"
               onClick={(e) => goToSlide(idx, e)}
               className={`h-2 rounded-full transition-all cursor-pointer ${
-                idx === currentIndex ? 'w-5 bg-[#DFB000]' : 'w-2 bg-white/60 hover:bg-white'
+                idx === currentIndex ? 'w-5 bg-[#D6B369]' : 'w-2 bg-white/60 hover:bg-white'
               }`}
             />
           ))}
@@ -371,7 +371,7 @@ export const RoomsPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8">
       {/* Header */}
       <ScrollReveal direction="up" duration={0.8}>
         <div className="text-center max-w-3xl mx-auto mb-16 border-b border-[#cbc0ad] pb-8">
@@ -389,7 +389,7 @@ export const RoomsPage: React.FC = () => {
               onClick={() => setFilterAc('all')}
               className={`px-5 py-2 rounded-sm text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${filterAc === 'all'
                 ? 'bg-[#00174A] text-white'
-                : 'bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] hover:border-[#00174A]'
+                : 'bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] hover:border-[#00174A]'
                 }`}
             >
               All Categories ({roomTypes.length})
@@ -398,7 +398,7 @@ export const RoomsPage: React.FC = () => {
               onClick={() => setFilterAc('ac')}
               className={`px-5 py-2 rounded-sm text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${filterAc === 'ac'
                 ? 'bg-[#00174A] text-white'
-                : 'bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] hover:border-[#00174A]'
+                : 'bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] hover:border-[#00174A]'
                 }`}
             >
               Air Conditioned (A/C)
@@ -407,7 +407,7 @@ export const RoomsPage: React.FC = () => {
               onClick={() => setFilterAc('nonac')}
               className={`px-5 py-2 rounded-sm text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${filterAc === 'nonac'
                 ? 'bg-[#00174A] text-white'
-                : 'bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] hover:border-[#00174A]'
+                : 'bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] hover:border-[#00174A]'
                 }`}
             >
               Non-A/C Premium
@@ -423,7 +423,7 @@ export const RoomsPage: React.FC = () => {
           <p className="text-xs font-sans text-[#666666] mt-4">Loading luxury room rates...</p>
         </div>
       ) : filteredRooms.length === 0 ? (
-        <div className="text-center py-16 bg-[#FAF9F6] rounded-sm border border-[#cbc0ad]">
+        <div className="text-center py-16 bg-[#F7F0DF] rounded-sm border border-[#cbc0ad]">
           <p className="text-xs font-sans text-[#666666]">No rooms found matching the selected filter.</p>
         </div>
       ) : (
@@ -431,7 +431,7 @@ export const RoomsPage: React.FC = () => {
           {filteredRooms.map((room, idx) => (
             <ScrollRevealItem key={room._id} delay={Math.min(idx * 0.06, 0.3)}>
               <div
-                className="bg-[#FAF9F6] rounded-sm overflow-hidden border border-[#10184A]/15 shadow-sm flex flex-col justify-between hover:border-[#DFB000]/40 transition-all duration-300 h-full"
+                className="bg-[#F7F0DF] rounded-sm overflow-hidden border border-[#10184A]/15 shadow-sm flex flex-col justify-between hover:border-[#D6B369]/40 transition-all duration-300 h-full"
               >
               <div>
                 <RoomSlideshow
@@ -486,7 +486,7 @@ export const RoomsPage: React.FC = () => {
                       const maxAllowed = room.maxOccupancy || 2;
                       setNumGuests((prev) => (prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev));
                     }}
-                    className="px-5 py-2.5 rounded-sm bg-[#DFB000] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer"
+                    className="px-5 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer"
                   >
                     Select & Book
                   </button>
@@ -504,7 +504,7 @@ export const RoomsPage: React.FC = () => {
           <motion.div
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#FAF9F6] text-[#00174A] border border-[#cbc0ad] rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl"
+            className="bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl"
           >
             <button
               onClick={() => setSelectedRoom(null)}
@@ -515,7 +515,7 @@ export const RoomsPage: React.FC = () => {
 
             <div className="mb-6 border-b border-[#cbc0ad] pb-4 space-y-4">
               <div>
-                <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
+                <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
                 <h2 className="text-3xl font-serif text-[#00174A]">{selectedRoom.name}</h2>
                 <p className="text-xs font-sans text-[#666666] mt-1">
                   Base Rate: ₹{selectedRoom.basePrice} / night · Max Occupancy: {selectedRoom.maxOccupancy || 2} {selectedRoom.maxOccupancy === 1 ? 'Guest' : 'Guests'}
@@ -571,7 +571,7 @@ export const RoomsPage: React.FC = () => {
 
               {/* CP vs EP Plan Selection */}
               <div className="p-4 bg-white/70 rounded-sm border border-[#cbc0ad] space-y-3">
-                <span className="text-[10px] font-sans font-bold text-[#DFB000] uppercase block tracking-wider">
+                <span className="text-[10px] font-sans font-bold text-[#D6B369] uppercase block tracking-wider">
                   Select Room Booking Plan *
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -594,8 +594,8 @@ export const RoomsPage: React.FC = () => {
                     type="button"
                     onClick={() => setPlanType('CP')}
                     className={`p-3.5 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${planType === 'CP'
-                      ? 'bg-[#DFB000]/15 border-[#DFB000] ring-1 ring-[#DFB000] text-[#00174A]'
-                      : 'bg-white border-[#cbc0ad] text-[#666666] hover:border-[#DFB000]/50'
+                      ? 'bg-[#D6B369]/15 border-[#D6B369] ring-1 ring-[#D6B369] text-[#00174A]'
+                      : 'bg-white border-[#cbc0ad] text-[#666666] hover:border-[#D6B369]/50'
                       }`}
                   >
                     <span className="text-xs font-sans font-bold text-[#00174A] flex items-center justify-between">
@@ -609,7 +609,7 @@ export const RoomsPage: React.FC = () => {
 
               {/* Meal Plan Addons */}
               <div className="p-4 bg-white/70 rounded-sm border border-[#cbc0ad] space-y-3">
-                <span className="text-[10px] font-sans font-bold text-[#DFB000] uppercase block tracking-wider">
+                <span className="text-[10px] font-sans font-bold text-[#D6B369] uppercase block tracking-wider">
                   Optional Dining Addons (Per Guest/Night)
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-sans text-[#333333]">
@@ -648,7 +648,7 @@ export const RoomsPage: React.FC = () => {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-sans font-bold text-[#333333]">Extra Person</span>
-                    <span className="bg-[#DFB000]/15 text-[#00174A] text-[10px] font-bold px-2 py-0.5 rounded-sm border border-[#DFB000]/40">
+                    <span className="bg-[#D6B369]/15 text-[#00174A] text-[10px] font-bold px-2 py-0.5 rounded-sm border border-[#D6B369]/40">
                       +₹600 / night
                     </span>
                   </div>
@@ -691,7 +691,7 @@ export const RoomsPage: React.FC = () => {
                         toast.error('Invalid coupon code.');
                       }
                     }}
-                    className="px-4 py-2 bg-[#DFB000] text-xs font-sans uppercase font-bold rounded-sm hover:bg-[#E8C56A] text-[#00174A] cursor-pointer transition-colors"
+                    className="px-4 py-2 bg-[#D6B369] text-xs font-sans uppercase font-bold rounded-sm hover:bg-[#E8C56A] text-[#00174A] cursor-pointer transition-colors"
                   >
                     Apply
                   </button>
@@ -713,7 +713,7 @@ export const RoomsPage: React.FC = () => {
 
               {/* Guest Details */}
               <div className="space-y-3 pt-4 border-t border-[#cbc0ad]">
-                <span className="text-[10px] font-sans font-bold text-[#DFB000] uppercase block tracking-wider">Guest Information</span>
+                <span className="text-[10px] font-sans font-bold text-[#D6B369] uppercase block tracking-wider">Guest Information</span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <input
                     type="text"
@@ -750,9 +750,9 @@ export const RoomsPage: React.FC = () => {
               </div>
 
               {/* Cancellation & Refund Policy */}
-              <div className="p-3.5 bg-[#DFB000]/10 border border-[#DFB000]/30 rounded-sm text-xs font-sans space-y-1.5">
+              <div className="p-3.5 bg-[#D6B369]/10 border border-[#D6B369]/30 rounded-sm text-xs font-sans space-y-1.5">
                 <div className="flex items-center gap-1.5 text-[#00174A] font-bold text-[10px] uppercase tracking-wider">
-                  <ShieldCheck size={14} className="text-[#DFB000]" /> Cancellation & Refund Policy
+                  <ShieldCheck size={14} className="text-[#D6B369]" /> Cancellation & Refund Policy
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-[#333333]">
                   <div className="bg-white/60 p-2 rounded border border-[#cbc0ad]/40">
@@ -810,7 +810,7 @@ export const RoomsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={submittingBooking || !calcResult?.availability?.isAvailable}
-                className="w-full py-4 rounded-sm bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                className="w-full py-4 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
               >
                 <CreditCard size={16} /> Pay Online via Razorpay (₹{calcResult?.pricing?.totalAmount || selectedRoom.basePrice})
               </button>

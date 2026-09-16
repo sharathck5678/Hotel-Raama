@@ -13,7 +13,7 @@ export const AttractionsPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
       <ScrollReveal direction="up" duration={0.8}>
         <div className="text-center max-w-3xl mx-auto border-b border-[#10184A]/15 pb-8">
           <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#667085] block mb-2">
@@ -30,12 +30,12 @@ export const AttractionsPage: React.FC = () => {
         {attractions.map((spot) => (
           <ScrollRevealItem key={spot._id}>
             <div
-              className="bg-white rounded-sm overflow-hidden border border-[#10184A]/15 hover:border-[#DFB000]/60 transition-all duration-300 flex flex-col justify-between shadow-sm h-full"
+              className="bg-white rounded-sm overflow-hidden border border-[#10184A]/15 hover:border-[#D6B369]/60 transition-all duration-300 flex flex-col justify-between shadow-sm h-full"
             >
               <div>
                 <div className="relative h-60 overflow-hidden">
                   <img src={spot.image} alt={spot.name} className="w-full h-full object-cover" />
-                  <div className="absolute top-3 right-3 bg-[#00174A] px-3 py-1 text-[10px] font-sans font-bold text-[#DFB000] flex items-center gap-1 uppercase tracking-wider">
+                  <div className="absolute top-3 right-3 bg-[#00174A] px-3 py-1 text-[10px] font-sans font-bold text-[#D6B369] flex items-center gap-1 uppercase tracking-wider">
                     <MapPin size={11} /> {spot.distance}
                   </div>
                 </div>
@@ -51,7 +51,7 @@ export const AttractionsPage: React.FC = () => {
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.name + ' Hassan')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3 bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+                  className="w-full py-3 bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-2 transition-all shadow-sm"
                 >
                   <Navigation size={13} className="text-[#00174A]" /> Open in Google Maps
                 </a>

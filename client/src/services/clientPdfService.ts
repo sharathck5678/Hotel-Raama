@@ -86,7 +86,7 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(223, 176, 0); // #DFB000 Gold
+    doc.setTextColor(214, 179, 105); // #D6B369 Gold
     doc.text('ROOM SERVICE & RESTAURANT DINING RECEIPT', 14, 19);
 
     doc.setTextColor(200, 200, 200);
@@ -260,7 +260,7 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(223, 176, 0); // #DFB000 Gold
+    doc.setTextColor(214, 179, 105); // #D6B369 Gold
     doc.text('OFFICIAL BOOKING TAX INVOICE', 14, 19);
 
     doc.setTextColor(200, 200, 200);

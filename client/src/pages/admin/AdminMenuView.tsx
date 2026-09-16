@@ -228,7 +228,7 @@ export const AdminMenuView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#10184A]/15 pb-5">
         <div>
-          <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em] block">
+          <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em] block">
             Restaurant Management
           </span>
           <h1 className="text-3xl font-serif text-[#00174A] flex items-center gap-2">
@@ -241,7 +241,7 @@ export const AdminMenuView: React.FC = () => {
 
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center justify-center gap-2 bg-[#DFB000] hover:bg-[#E8C56A] text-[#00174A] px-5 py-2.5 rounded-sm font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+          className="inline-flex items-center justify-center gap-2 bg-[#D6B369] hover:bg-[#E8C56A] text-[#00174A] px-5 py-2.5 rounded-sm font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
         >
           <Plus size={16} /> Add New Dish
         </button>
@@ -258,7 +258,7 @@ export const AdminMenuView: React.FC = () => {
               placeholder="Search dish or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 bg-[#FAF9F6] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none"
+              className="w-full pl-9 pr-3.5 py-2 bg-[#F7F0DF] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none"
             />
           </div>
 
@@ -267,7 +267,7 @@ export const AdminMenuView: React.FC = () => {
             <select
               value={selectedSection}
               onChange={(e) => setSelectedSection(e.target.value)}
-              className="w-full px-3.5 py-2 bg-[#FAF9F6] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
+              className="w-full px-3.5 py-2 bg-[#F7F0DF] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
             >
               <option value="ALL">All Restaurant Sections</option>
               <option value="SWAAD">Swaad Fine Dining</option>
@@ -282,7 +282,7 @@ export const AdminMenuView: React.FC = () => {
             <select
               value={dietaryFilter}
               onChange={(e) => setDietaryFilter(e.target.value as any)}
-              className="w-full px-3.5 py-2 bg-[#FAF9F6] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
+              className="w-full px-3.5 py-2 bg-[#F7F0DF] border border-[#10184A]/20 rounded-sm text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
             >
               <option value="ALL">All Dietary Tags</option>
               <option value="VEG">🟢 Vegetarian Only</option>
@@ -300,7 +300,7 @@ export const AdminMenuView: React.FC = () => {
       {/* Menu Table / Grid */}
       {loading ? (
         <div className="text-center py-20 bg-white border border-[#10184A]/15 rounded-sm">
-          <div className="w-8 h-8 border-3 border-[#DFB000] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-8 h-8 border-3 border-[#D6B369] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-xs font-sans text-[#667085]">Loading menu catalog...</p>
         </div>
       ) : filteredItems.length === 0 ? (
@@ -326,7 +326,7 @@ export const AdminMenuView: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-[#10184A]/10 text-xs font-sans">
                 {filteredItems.map((item) => (
-                  <tr key={item._id} className="hover:bg-[#FAF9F6] transition-colors">
+                  <tr key={item._id} className="hover:bg-[#F7F0DF] transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
                         <span
@@ -436,7 +436,7 @@ export const AdminMenuView: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#FAF9F6] border border-[#10184A]/15 text-[#00174A] rounded-sm max-w-lg w-full p-6 relative shadow-2xl space-y-5"
+              className="bg-[#F7F0DF] border border-[#10184A]/15 text-[#00174A] rounded-sm max-w-lg w-full p-6 relative shadow-2xl space-y-5"
             >
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -446,7 +446,7 @@ export const AdminMenuView: React.FC = () => {
               </button>
 
               <div className="border-b border-[#10184A]/15 pb-3">
-                <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
+                <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
                   {editingItem ? 'Edit Dish Details' : 'New Dish Entry'}
                 </span>
                 <h2 className="text-2xl font-serif text-[#00174A]">
@@ -599,7 +599,7 @@ export const AdminMenuView: React.FC = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 rounded-sm bg-[#DFB000] text-[#00174A] font-sans text-xs font-bold uppercase tracking-wider hover:bg-[#E8C56A] transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-sm bg-[#D6B369] text-[#00174A] font-sans text-xs font-bold uppercase tracking-wider hover:bg-[#E8C56A] transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? 'Saving...' : editingItem ? 'Save Changes' : 'Create Dish'}
                   </button>
@@ -618,7 +618,7 @@ export const AdminMenuView: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#FAF9F6] border border-red-300 text-[#00174A] rounded-sm max-w-md w-full p-6 relative shadow-2xl space-y-4"
+              className="bg-[#F7F0DF] border border-red-300 text-[#00174A] rounded-sm max-w-md w-full p-6 relative shadow-2xl space-y-4"
             >
               <button
                 onClick={() => setDeleteTarget(null)}

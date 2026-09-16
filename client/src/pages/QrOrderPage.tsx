@@ -249,15 +249,15 @@ export const QrOrderPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
+      <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B369]"></div>
       </div>
     );
   }
 
   if (!roomInfo) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] flex flex-col items-center justify-center p-6 text-center">
         <h2 className="text-2xl font-serif">Invalid QR Code</h2>
         <p className="text-xs font-sans text-[#667085] mt-2">Please scan the valid QR code present in your room or party hall.</p>
       </div>
@@ -287,7 +287,7 @@ export const QrOrderPage: React.FC = () => {
   const sectionCategories = categories.filter((c) => activeCategoryIds.has(c._id));
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-12 px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-12 px-6 lg:px-8 relative">
       {/* Location Banner Header */}
       <ScrollReveal direction="up" duration={0.8}>
         <div className="max-w-4xl mx-auto text-center space-y-3 mb-12 border-b border-[#10184A]/15 pb-8">
@@ -309,7 +309,7 @@ export const QrOrderPage: React.FC = () => {
               className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
                 activeSection === 'SWAAD_VEG'
                   ? 'bg-[#00174A] text-[#FAF9F6]'
-                  : 'bg-white text-[#00174A] border border-[#10184A]/20 hover:border-[#DFB000]'
+                  : 'bg-white text-[#00174A] border border-[#10184A]/20 hover:border-[#D6B369]'
               }`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
@@ -331,7 +331,7 @@ export const QrOrderPage: React.FC = () => {
               className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
                 activeSection === 'LIQUID_LOUNGE'
                   ? 'bg-[#071A3D] text-[#FAF9F6]'
-                  : 'bg-white text-[#00174A] border border-[#10184A]/20 hover:border-[#DFB000]'
+                  : 'bg-white text-[#00174A] border border-[#10184A]/20 hover:border-[#D6B369]'
               }`}
             >
               <GlassWater size={14} /> Liquid Lounge Bar
@@ -356,7 +356,7 @@ export const QrOrderPage: React.FC = () => {
                 {catItems.map((item) => (
                   <ScrollRevealItem key={item._id}>
                     <div
-                      className="bg-white rounded-sm p-6 border border-[#10184A]/15 flex flex-col justify-between hover:border-[#DFB000]/60 transition-all shadow-sm h-full"
+                      className="bg-white rounded-sm p-6 border border-[#10184A]/15 flex flex-col justify-between hover:border-[#D6B369]/60 transition-all shadow-sm h-full"
                     >
                       <div>
                         <div className="flex justify-between items-start">
@@ -409,7 +409,7 @@ export const QrOrderPage: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => addToCart(item, 'Standard')}
-                            className="px-4 py-2 rounded-sm bg-[#DFB000] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm"
+                            className="px-4 py-2 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm"
                           >
                             <Plus size={13} /> Add
                           </button>
@@ -429,7 +429,7 @@ export const QrOrderPage: React.FC = () => {
         <div className="fixed bottom-6 right-6 z-40">
           <button
             onClick={() => setCartOpen(true)}
-            className="px-6 py-3.5 rounded-sm bg-[#DFB000] text-[#00174A] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#E8C56A] transition-all cursor-pointer border border-[#00174A]/20"
+            className="px-6 py-3.5 rounded-sm bg-[#D6B369] text-[#00174A] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#E8C56A] transition-all cursor-pointer border border-[#00174A]/20"
           >
             <ShoppingBag size={16} /> Cart ({totalCartCount}) · ₹{totalCartPrice}
           </button>
@@ -448,7 +448,7 @@ export const QrOrderPage: React.FC = () => {
             </button>
 
             <div className="border-b border-white/10 pb-4">
-              <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
+              <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">
                 {locationTitle} Order Service
               </span>
               <h2 className="text-2xl font-serif text-[#FAF9F6]">Confirm Order</h2>
@@ -475,7 +475,7 @@ export const QrOrderPage: React.FC = () => {
                           <Plus size={12} />
                         </button>
                       </div>
-                      <span className="font-bold text-sm text-[#DFB000] min-w-14 text-right">₹{item.price * item.quantity}</span>
+                      <span className="font-bold text-sm text-[#D6B369] min-w-14 text-right">₹{item.price * item.quantity}</span>
                     </div>
                   </div>
                 );
@@ -484,14 +484,14 @@ export const QrOrderPage: React.FC = () => {
 
             <div className="flex justify-between items-center pt-3 border-t border-white/10 text-sm font-sans font-bold">
               <span>Total Amount:</span>
-              <span className="text-xl font-serif text-[#DFB000]">₹{totalCartPrice}</span>
+              <span className="text-xl font-serif text-[#D6B369]">₹{totalCartPrice}</span>
             </div>
 
             <form onSubmit={handleOrderSubmit} className="space-y-4 pt-2">
               {/* Auto-Fetched Verified Room Location */}
-              <div className="p-3 bg-white/10 rounded-sm border border-[#DFB000]/30 flex items-center justify-between">
+              <div className="p-3 bg-white/10 rounded-sm border border-[#D6B369]/30 flex items-center justify-between">
                 <div>
-                  <span className="text-[9px] font-sans uppercase font-bold text-[#DFB000] tracking-wider block">
+                  <span className="text-[9px] font-sans uppercase font-bold text-[#D6B369] tracking-wider block">
                     Verified Order Location
                   </span>
                   <span className="text-sm font-serif font-bold text-[#FAF9F6]">
@@ -541,13 +541,13 @@ export const QrOrderPage: React.FC = () => {
 
               {/* Payment Mode Selection */}
               <div className="space-y-2 pt-2">
-                <span className="text-[10px] font-sans uppercase tracking-wider text-[#DFB000] font-bold block">Payment Method *</span>
+                <span className="text-[10px] font-sans uppercase tracking-wider text-[#D6B369] font-bold block">Payment Method *</span>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMode('RAZORPAY')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'RAZORPAY' ? 'bg-[#FAF9F6] text-[#00174A] font-bold border-[#FAF9F6]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
+                      paymentMode === 'RAZORPAY' ? 'bg-[#F7F0DF] text-[#00174A] font-bold border-[#F7F0DF]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💳 Online (Razorpay)</span>
@@ -558,7 +558,7 @@ export const QrOrderPage: React.FC = () => {
                     type="button"
                     onClick={() => setPaymentMode('CASH')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'CASH' ? 'bg-[#FAF9F6] text-[#00174A] font-bold border-[#FAF9F6]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
+                      paymentMode === 'CASH' ? 'bg-[#F7F0DF] text-[#00174A] font-bold border-[#F7F0DF]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💵 Pay at Reception</span>
@@ -570,7 +570,7 @@ export const QrOrderPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={placingOrder}
-                className="w-full py-4 rounded-sm bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
+                className="w-full py-4 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
               >
                 <Send size={15} /> {paymentMode === 'RAZORPAY' ? 'Pay Online & Send Order' : 'Send Order to Kitchen'}
               </button>

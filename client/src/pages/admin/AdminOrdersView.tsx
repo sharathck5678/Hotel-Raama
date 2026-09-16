@@ -182,7 +182,7 @@ export const AdminOrdersView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[#00174A]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B369]"></div>
       </div>
     );
   }
@@ -205,7 +205,7 @@ export const AdminOrdersView: React.FC = () => {
       key: 'COOK_FOOD',
       title: '🍳 Cook Food (Kitchen Preparation)',
       shortTitle: '🍳 Cook Food',
-      color: 'border-[#DFB000]',
+      color: 'border-[#D6B369]',
       orders: cookOrders,
     },
     {
@@ -237,8 +237,8 @@ export const AdminOrdersView: React.FC = () => {
               onClick={() => setSoundEnabled(!soundEnabled)}
               className={`px-3.5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border transition-all cursor-pointer w-full sm:w-auto ${
                 soundEnabled
-                  ? 'bg-[#00174A] text-[#FAF9F6] border-[#DFB000]/40'
-                  : 'bg-[#FAF9F6] text-[#667085] border-[#10184A]/20'
+                  ? 'bg-[#00174A] text-[#FAF9F6] border-[#D6B369]/40'
+                  : 'bg-[#F7F0DF] text-[#667085] border-[#10184A]/20'
               }`}
             >
               {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
@@ -297,7 +297,7 @@ export const AdminOrdersView: React.FC = () => {
                     <span className="hidden sm:inline">{col.title}</span>
                     <span className="sm:hidden">{col.shortTitle}</span>
                   </h3>
-                  <span className="px-2.5 py-1 rounded-sm bg-white/10 text-xs font-sans font-bold text-[#DFB000] border border-white/15 shrink-0">
+                  <span className="px-2.5 py-1 rounded-sm bg-white/10 text-xs font-sans font-bold text-[#D6B369] border border-white/15 shrink-0">
                     {colOrders.length} {colOrders.length === 1 ? 'Order' : 'Orders'}
                   </span>
                 </div>
@@ -311,11 +311,11 @@ export const AdminOrdersView: React.FC = () => {
                     colOrders.map((ord) => (
                       <div
                         key={ord._id}
-                        className="p-4 bg-white/5 rounded-sm border border-white/10 space-y-3 shadow-inner hover:border-[#DFB000]/50 transition-all font-sans text-xs"
+                        className="p-4 bg-white/5 rounded-sm border border-white/10 space-y-3 shadow-inner hover:border-[#D6B369]/50 transition-all font-sans text-xs"
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="text-[10px] font-bold text-[#DFB000] block uppercase tracking-wider">
+                            <span className="text-[10px] font-bold text-[#D6B369] block uppercase tracking-wider">
                               {formatRoomNumber(ord.roomNumber)}
                             </span>
                             <span className="text-base font-serif font-bold text-white">
@@ -323,7 +323,7 @@ export const AdminOrdersView: React.FC = () => {
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className="text-xs font-bold text-[#DFB000] block font-serif">
+                            <span className="text-xs font-bold text-[#D6B369] block font-serif">
                               ₹{ord.totalAmount}
                             </span>
                             <span
@@ -354,7 +354,7 @@ export const AdminOrdersView: React.FC = () => {
                           {ord.items.map((item: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-start gap-2 text-[#FAF9F6]/90">
                               <span className="break-words min-w-0">
-                                <span className="font-bold text-[#DFB000] mr-1">{item.quantity}x</span>
+                                <span className="font-bold text-[#D6B369] mr-1">{item.quantity}x</span>
                                 <strong>{item.name}</strong>{' '}
                                 {item.potionSize && item.potionSize !== 'Standard' && (
                                   <span className="text-[#FAF9F6]/70 text-[11px]">({item.potionSize})</span>
@@ -367,7 +367,7 @@ export const AdminOrdersView: React.FC = () => {
 
                         {/* Instructions */}
                         {ord.specialInstructions && (
-                          <div className="text-[11px] text-[#DFB000] bg-[#DFB000]/10 p-2 rounded-sm border border-[#DFB000]/30 break-words">
+                          <div className="text-[11px] text-[#D6B369] bg-[#D6B369]/10 p-2 rounded-sm border border-[#D6B369]/30 break-words">
                             Note: {ord.specialInstructions}
                           </div>
                         )}
@@ -375,7 +375,7 @@ export const AdminOrdersView: React.FC = () => {
                         {/* Status & Payment bar */}
                         <div className="pt-2 flex flex-col gap-2.5">
                           <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold font-serif text-[#DFB000] text-sm sm:text-base">
+                            <span className="font-bold font-serif text-[#D6B369] text-sm sm:text-base">
                               Total: ₹{ord.totalAmount}
                             </span>
                             <span
@@ -394,7 +394,7 @@ export const AdminOrdersView: React.FC = () => {
                             {ord.status === 'PENDING' && (
                               <button
                                 onClick={() => handleStatusChange(ord._id, 'PREPARING')}
-                                className="w-full py-2.5 bg-[#DFB000] hover:bg-[#E8C56A] active:bg-[#DFB000]/90 text-[#00174A] font-sans font-bold rounded-sm text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                                className="w-full py-2.5 bg-[#D6B369] hover:bg-[#E8C56A] active:bg-[#D6B369]/90 text-[#00174A] font-sans font-bold rounded-sm text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5"
                               >
                                 👍 Accept & Start Cooking
                               </button>
@@ -402,7 +402,7 @@ export const AdminOrdersView: React.FC = () => {
                             {ord.status === 'CONFIRMED' && (
                               <button
                                 onClick={() => handleStatusChange(ord._id, 'PREPARING')}
-                                className="w-full py-2.5 bg-[#DFB000] hover:bg-[#E8C56A] active:bg-[#DFB000]/90 text-[#00174A] font-sans font-bold rounded-sm text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                                className="w-full py-2.5 bg-[#D6B369] hover:bg-[#E8C56A] active:bg-[#D6B369]/90 text-[#00174A] font-sans font-bold rounded-sm text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
                               >
                                 🍳 Start Cooking Food
                               </button>
@@ -410,7 +410,7 @@ export const AdminOrdersView: React.FC = () => {
                             {ord.status === 'PREPARING' && (
                               <button
                                 onClick={() => handleStatusChange(ord._id, 'READY')}
-                                className="w-full py-2.5 bg-[#FAF9F6] text-[#00174A] hover:bg-[#DFB000] active:bg-[#E8C56A] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                                className="w-full py-2.5 bg-[#F7F0DF] text-[#00174A] hover:bg-[#D6B369] active:bg-[#E8C56A] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                               >
                                 ✅ Food Cooked (Move to Serve)
                               </button>
@@ -418,7 +418,7 @@ export const AdminOrdersView: React.FC = () => {
                             {ord.status === 'READY' && (
                               <button
                                 onClick={() => handleStatusChange(ord._id, 'DELIVERED')}
-                                className="w-full py-2.5 bg-[#DFB000] hover:bg-[#E8C56A] active:bg-[#DFB000]/90 text-[#00174A] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                                className="w-full py-2.5 bg-[#D6B369] hover:bg-[#E8C56A] active:bg-[#D6B369]/90 text-[#00174A] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                               >
                                 🍽️ Serve Food to Guest
                               </button>

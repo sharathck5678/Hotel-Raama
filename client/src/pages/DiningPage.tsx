@@ -441,7 +441,7 @@ export const DiningPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 relative">
       {/* Header Banner */}
       <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 border-b border-[#10184A]/15 pb-8">
         <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#667085] block mb-1">
@@ -480,7 +480,7 @@ export const DiningPage: React.FC = () => {
               setViewerPageIndex(0);
               setViewerOpen(true);
             }}
-            className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 border border-[#10184A]/20 bg-white text-[#00174A] hover:bg-white hover:border-[#DFB000] transition-all cursor-pointer shadow-sm"
+            className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 border border-[#10184A]/20 bg-white text-[#00174A] hover:bg-white hover:border-[#D6B369] transition-all cursor-pointer shadow-sm"
           >
             <FileText size={18} className="text-[#00174A]" />
             <span>VIEW SCANNED MENU CARDS</span>
@@ -490,7 +490,7 @@ export const DiningPage: React.FC = () => {
           {totalCartCount > 0 && (
             <button
               onClick={() => setCartOpen(true)}
-              className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 bg-[#DFB000] text-[#00174A] shadow-md hover:bg-[#E8C56A] transition-all cursor-pointer"
+              className="px-6 py-3 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 bg-[#D6B369] text-[#00174A] shadow-md hover:bg-[#E8C56A] transition-all cursor-pointer"
             >
               <ShoppingBag size={16} /> View Cart ({totalCartCount}) — ₹{totalCartPrice}
             </button>
@@ -505,7 +505,7 @@ export const DiningPage: React.FC = () => {
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
               activeTab === 'SWAAD_VEG'
                 ? 'bg-[#00174A] text-white border-[#00174A] shadow-md ring-1 ring-[#00174A]'
-                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#DFB000]'
+                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#D6B369]'
             }`}
           >
             <div
@@ -558,13 +558,13 @@ export const DiningPage: React.FC = () => {
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
               activeTab === 'LIQUID_LOUNGE'
                 ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-md ring-1 ring-[#071A3D]'
-                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#DFB000]'
+                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#D6B369]'
             }`}
           >
             <div
               className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
                 activeTab === 'LIQUID_LOUNGE'
-                  ? 'bg-[#00174A] border-[#DFB000]/30 text-[#DFB000]'
+                  ? 'bg-[#00174A] border-[#D6B369]/30 text-[#D6B369]'
                   : 'bg-[#071A3D] border-[#10184A] text-white'
               }`}
             >
@@ -609,7 +609,7 @@ export const DiningPage: React.FC = () => {
             <SlidersHorizontal size={14} />
             <span>Filter</span>
             {(selectedCategoryIds.length > 0 || selectedCourse !== 'ALL') && (
-              <span className="w-5 h-5 rounded-full bg-[#DFB000] text-[#00174A] text-[10px] font-bold flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-[#D6B369] text-[#00174A] text-[10px] font-bold flex items-center justify-center">
                 {selectedCategoryIds.length + (selectedCourse !== 'ALL' ? 1 : 0)}
               </span>
             )}
@@ -638,7 +638,7 @@ export const DiningPage: React.FC = () => {
               return (
                 <span
                   key={catId}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#DFB000]/20 border border-[#DFB000]/60 text-[#00174A] text-xs font-sans font-semibold"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#D6B369]/20 border border-[#D6B369]/60 text-[#00174A] text-xs font-sans font-semibold"
                 >
                   {cat.name.split('(')[0].trim()}
                   <button onClick={() => toggleCategory(catId)} className="hover:text-[#C8102E] cursor-pointer">
@@ -710,7 +710,7 @@ export const DiningPage: React.FC = () => {
                       className={`px-3.5 py-2 rounded-sm text-xs font-sans font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSelected
                           ? 'bg-[#00174A] text-white shadow-sm ring-1 ring-[#00174A]'
-                          : 'bg-[#FAF9F6] text-[#00174A] border border-[#10184A]/20 hover:border-[#00174A]'
+                          : 'bg-[#F7F0DF] text-[#00174A] border border-[#10184A]/20 hover:border-[#00174A]'
                       }`}
                     >
                       {isSelected && <Check size={13} />}
@@ -744,7 +744,7 @@ export const DiningPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1 border border-[#10184A]/15 rounded-sm bg-[#FAF9F6]/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1 border border-[#10184A]/15 rounded-sm bg-[#F7F0DF]/50">
                 {availableSectionCategories.map((cat) => {
                   const isChecked = selectedCategoryIds.includes(cat._id);
                   const itemCount = items.filter(
@@ -796,13 +796,13 @@ export const DiningPage: React.FC = () => {
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={resetAllFilters}
-                  className="px-4 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider text-[#667085] hover:text-[#00174A] border border-[#10184A]/20 bg-[#FAF9F6] hover:bg-stone-200 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider text-[#667085] hover:text-[#00174A] border border-[#10184A]/20 bg-[#F7F0DF] hover:bg-stone-200 transition-all cursor-pointer"
                 >
                   Reset All
                 </button>
                 <button
                   onClick={() => setFilterOpen(false)}
-                  className="px-5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] transition-all cursor-pointer shadow-sm"
+                  className="px-5 py-2 rounded-sm text-xs font-sans font-bold uppercase tracking-wider bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] transition-all cursor-pointer shadow-sm"
                 >
                   Apply & View ({currentItems.length})
                 </button>
@@ -834,7 +834,7 @@ export const DiningPage: React.FC = () => {
                   {catItems.map((item) => (
                     <ScrollRevealItem key={item._id}>
                       <div
-                        className="bg-white rounded-sm p-6 border border-[#10184A]/15 flex flex-col justify-between hover:border-[#DFB000]/60 transition-all duration-300 shadow-sm h-full"
+                        className="bg-white rounded-sm p-6 border border-[#10184A]/15 flex flex-col justify-between hover:border-[#D6B369]/60 transition-all duration-300 shadow-sm h-full"
                       >
                         <div className="space-y-2">
                           <div className="flex justify-between items-start gap-2">
@@ -889,7 +889,7 @@ export const DiningPage: React.FC = () => {
                           ) : (
                             <button
                               onClick={() => addToCart(item, 'Standard')}
-                              className="px-4 py-2 rounded-sm bg-[#DFB000] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm"
+                              className="px-4 py-2 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm"
                             >
                               <Plus size={13} /> Add
                             </button>
@@ -910,7 +910,7 @@ export const DiningPage: React.FC = () => {
         <div className="fixed bottom-6 right-6 z-40">
           <button
             onClick={() => setCartOpen(true)}
-            className="px-6 py-3.5 rounded-sm bg-[#DFB000] text-[#00174A] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#E8C56A] transition-all cursor-pointer border border-[#00174A]/20"
+            className="px-6 py-3.5 rounded-sm bg-[#D6B369] text-[#00174A] shadow-2xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-3 hover:bg-[#E8C56A] transition-all cursor-pointer border border-[#00174A]/20"
           >
             <ShoppingBag size={16} /> Cart ({totalCartCount} Items) · ₹{totalCartPrice}
           </button>
@@ -929,7 +929,7 @@ export const DiningPage: React.FC = () => {
             </button>
 
             <div className="border-b border-white/10 pb-4">
-              <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Dining Cart</span>
+              <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Dining Cart</span>
               <h2 className="text-2xl font-serif text-[#FAF9F6]">Order Checkout</h2>
             </div>
 
@@ -954,7 +954,7 @@ export const DiningPage: React.FC = () => {
                           <Plus size={12} />
                         </button>
                       </div>
-                      <span className="font-bold text-sm text-[#DFB000] min-w-14 text-right">₹{item.price * item.quantity}</span>
+                      <span className="font-bold text-sm text-[#D6B369] min-w-14 text-right">₹{item.price * item.quantity}</span>
                     </div>
                   </div>
                 );
@@ -964,15 +964,15 @@ export const DiningPage: React.FC = () => {
             {/* Total Amount Summary */}
             <div className="flex justify-between items-center pt-3 border-t border-white/10 text-sm font-sans font-bold">
               <span>Total Payable Amount:</span>
-              <span className="text-xl font-serif text-[#DFB000]">₹{totalCartPrice}</span>
+              <span className="text-xl font-serif text-[#D6B369]">₹{totalCartPrice}</span>
             </div>
 
             {/* Checkout Form */}
             <form onSubmit={handleOrderSubmit} className="space-y-4 pt-2">
               {activeRoomNumber && (
-                <div className="p-3 bg-white/10 rounded-sm border border-[#DFB000]/30 flex items-center justify-between">
+                <div className="p-3 bg-white/10 rounded-sm border border-[#D6B369]/30 flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-sans uppercase font-bold text-[#DFB000] tracking-wider block">
+                    <span className="text-[9px] font-sans uppercase font-bold text-[#D6B369] tracking-wider block">
                       Auto-Fetched Verified Location
                     </span>
                     <span className="text-sm font-serif font-bold text-[#FAF9F6]">
@@ -1024,13 +1024,13 @@ export const DiningPage: React.FC = () => {
 
               {/* Payment Mode Selection */}
               <div className="space-y-2 pt-2">
-                <span className="text-[10px] font-sans uppercase tracking-wider text-[#DFB000] font-bold block">Payment Method *</span>
+                <span className="text-[10px] font-sans uppercase tracking-wider text-[#D6B369] font-bold block">Payment Method *</span>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMode('RAZORPAY')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'RAZORPAY' ? 'bg-[#FAF9F6] text-[#00174A] font-bold border-[#FAF9F6]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
+                      paymentMode === 'RAZORPAY' ? 'bg-[#F7F0DF] text-[#00174A] font-bold border-[#F7F0DF]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💳 Online (Razorpay)</span>
@@ -1041,7 +1041,7 @@ export const DiningPage: React.FC = () => {
                     type="button"
                     onClick={() => setPaymentMode('CASH')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'CASH' ? 'bg-[#FAF9F6] text-[#00174A] font-bold border-[#FAF9F6]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
+                      paymentMode === 'CASH' ? 'bg-[#F7F0DF] text-[#00174A] font-bold border-[#F7F0DF]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💵 Pay at Reception</span>
@@ -1053,7 +1053,7 @@ export const DiningPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={placingOrder}
-                className="w-full py-4 rounded-sm bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
+                className="w-full py-4 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
               >
                 <Send size={15} /> {paymentMode === 'RAZORPAY' ? 'Pay & Send Order' : 'Send Order (Pay at Reception)'}
               </button>
@@ -1066,7 +1066,7 @@ export const DiningPage: React.FC = () => {
       {viewerOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-4xl flex justify-between items-center mb-4 text-[#FAF9F6]">
-            <span className="text-xs font-sans uppercase tracking-widest text-[#DFB000] font-bold">
+            <span className="text-xs font-sans uppercase tracking-widest text-[#D6B369] font-bold">
               {activeTab !== 'LIQUID_LOUNGE' ? 'Swaad Menu Card' : 'Liquid Lounge Bar Menu'} (Page {viewerPageIndex + 1} of {currentScannedPages.length})
             </span>
             <button
@@ -1087,7 +1087,7 @@ export const DiningPage: React.FC = () => {
             {viewerPageIndex > 0 && (
               <button
                 onClick={() => setViewerPageIndex((prev) => prev - 1)}
-                className="absolute left-4 p-3 rounded-full bg-[#00174A]/80 text-[#FAF9F6] border border-white/20 hover:bg-[#DFB000] hover:text-[#00174A]"
+                className="absolute left-4 p-3 rounded-full bg-[#00174A]/80 text-[#FAF9F6] border border-white/20 hover:bg-[#D6B369] hover:text-[#00174A]"
               >
                 <ChevronLeft size={24} />
               </button>
@@ -1096,7 +1096,7 @@ export const DiningPage: React.FC = () => {
             {viewerPageIndex < currentScannedPages.length - 1 && (
               <button
                 onClick={() => setViewerPageIndex((prev) => prev + 1)}
-                className="absolute right-4 p-3 rounded-full bg-[#00174A]/80 text-[#FAF9F6] border border-white/20 hover:bg-[#DFB000] hover:text-[#00174A]"
+                className="absolute right-4 p-3 rounded-full bg-[#00174A]/80 text-[#FAF9F6] border border-white/20 hover:bg-[#D6B369] hover:text-[#00174A]"
               >
                 <ChevronRight size={24} />
               </button>

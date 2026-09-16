@@ -116,7 +116,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
       case 'CHECKED_IN':
         return 'bg-blue-950 border border-blue-600 text-blue-400';
       case 'CHECKED_OUT':
-        return 'bg-[#FAF9F6]/20 border border-white/20 text-[#FAF9F6]';
+        return 'bg-[#F7F0DF]/20 border border-white/20 text-[#FAF9F6]';
       case 'CANCELLED':
         return 'bg-red-950 border border-red-600 text-red-400';
       default:
@@ -135,12 +135,12 @@ export const MyBookingsOrdersPage: React.FC = () => {
       case 'CONFIRMED':
         return 'bg-blue-950 border border-blue-600 text-blue-400';
       default:
-        return 'bg-[#FAF9F6]/20 border border-white/20 text-[#FAF9F6]';
+        return 'bg-[#F7F0DF]/20 border border-white/20 text-[#FAF9F6]';
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
       {/* Header section */}
       <ScrollReveal direction="up" duration={0.8}>
         <div className="text-center max-w-3xl mx-auto space-y-4 border-b border-[#10184A]/15 pb-8">
@@ -159,7 +159,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
       {/* Manual Tracking Token Import Form */}
       <ScrollReveal direction="up" duration={0.8}>
         <div className="bg-[#00174A] text-[#FAF9F6] p-6 rounded-sm border border-white/15 max-w-2xl mx-auto shadow-md space-y-4">
-          <h3 className="text-xs font-sans font-bold text-[#DFB000] uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-xs font-sans font-bold text-[#D6B369] uppercase tracking-wider flex items-center gap-2">
             <Plus size={15} /> Link Booking or Order Manually
           </h3>
           <p className="text-xs font-sans text-white/70 leading-relaxed">
@@ -188,7 +188,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
             <button
               type="submit"
               disabled={importing}
-              className="px-5 py-2 bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
             >
               {importing ? 'Linking...' : 'Link Order'}
             </button>
@@ -198,7 +198,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B369]"></div>
           <span className="text-xs font-sans text-[#667085]">Fetching guest history...</span>
         </div>
       ) : (
@@ -247,7 +247,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
                                 navigator.clipboard.writeText(booking.token);
                                 toast.success('Booking token copied!');
                               }}
-                              className="text-[10px] font-sans text-[#DFB000] hover:underline cursor-pointer bg-transparent border-0 p-0"
+                              className="text-[10px] font-sans text-[#D6B369] hover:underline cursor-pointer bg-transparent border-0 p-0"
                             >
                               Copy
                             </button>
@@ -270,7 +270,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
                         </div>
                         <div className="mt-2">
                           <span className="text-[9px] text-white/50 block uppercase">Amount Paid</span>
-                          <span className="font-serif font-bold text-[#DFB000]">₹{booking.totalAmount}</span>
+                          <span className="font-serif font-bold text-[#D6B369]">₹{booking.totalAmount}</span>
                         </div>
                         <div className="mt-2">
                           <span className="text-[9px] text-white/50 block uppercase">Assigned Room</span>
@@ -282,7 +282,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => downloadBookingInvoicePdf(booking)}
-                          className="px-3.5 py-2 bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
+                          className="px-3.5 py-2 bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
                         >
                           <Download size={13} /> Tax Invoice PDF
                         </button>
@@ -347,7 +347,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
                                 navigator.clipboard.writeText(order.token);
                                 toast.success('Order token copied!');
                               }}
-                              className="text-[10px] font-sans text-[#DFB000] hover:underline cursor-pointer bg-transparent border-0 p-0"
+                              className="text-[10px] font-sans text-[#D6B369] hover:underline cursor-pointer bg-transparent border-0 p-0"
                             >
                               Copy
                             </button>
@@ -361,7 +361,7 @@ export const MyBookingsOrdersPage: React.FC = () => {
 
                       {/* Order summary list */}
                       <div className="text-xs font-sans text-white/80 bg-white/5 p-4 rounded-sm border border-white/10 space-y-2">
-                        <div className="flex justify-between border-b border-white/10 pb-1.5 font-bold text-[10px] uppercase text-[#DFB000]">
+                        <div className="flex justify-between border-b border-white/10 pb-1.5 font-bold text-[10px] uppercase text-[#D6B369]">
                           <span>Items</span>
                           <span>Total: ₹{order.totalAmount}</span>
                         </div>
@@ -378,12 +378,12 @@ export const MyBookingsOrdersPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => downloadOrderReceiptPdf(order)}
-                            className="px-3.5 py-2 bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
+                            className="px-3.5 py-2 bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] text-xs font-sans font-bold uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
                           >
                             <Download size={13} /> Receipt PDF
                           </button>
                         ) : (
-                          <span className="text-[10px] text-[#DFB000] font-sans font-semibold uppercase tracking-wider bg-white/10 px-2.5 py-1.5 rounded-sm border border-[#DFB000]/30">
+                          <span className="text-[10px] text-[#D6B369] font-sans font-semibold uppercase tracking-wider bg-white/10 px-2.5 py-1.5 rounded-sm border border-[#D6B369]/30">
                             🔒 Receipt Unlocked Upon Payment
                           </span>
                         )}

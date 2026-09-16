@@ -5,14 +5,14 @@ import { ScrollReveal } from '../components/ScrollReveal';
 
 export const TermsOfBookingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-4xl mx-auto px-6 sm:px-8">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-4xl mx-auto px-6 sm:px-8">
       <ScrollReveal direction="up" duration={0.8}>
         
         {/* Top Navigation Back Link */}
         <div className="mb-8">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#DFB000] transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#D6B369] transition-colors"
           >
             <ArrowLeft size={16} /> Return to Home
           </Link>
@@ -20,7 +20,7 @@ export const TermsOfBookingPage: React.FC = () => {
 
         {/* Page Header */}
         <div className="border-b border-[#10184A]/15 pb-8 mb-10">
-          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#DFB000] block mb-2">
+          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#D6B369] block mb-2">
             Hotel Raama Policies
           </span>
           <h1 className="editorial-section-title text-[#00174A] flex items-center gap-3">
@@ -65,7 +65,7 @@ export const TermsOfBookingPage: React.FC = () => {
           {/* Cancellation & Refund */}
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2 flex items-center gap-2">
-              <ShieldAlert size={18} className="text-[#DFB000]" /> Cancellation & Refund Policy
+              <ShieldAlert size={18} className="text-[#D6B369]" /> Cancellation & Refund Policy
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
               <div className="bg-emerald-500/10 border border-emerald-500/30 p-3.5 rounded-sm space-y-1">
@@ -130,10 +130,10 @@ export const TermsOfBookingPage: React.FC = () => {
             </h2>
             <p>For booking assistance or clarification, please contact us at:</p>
             <div className="flex flex-wrap gap-6 pt-1 text-xs">
-              <a href="mailto:reservations@hotelraama.com" className="flex items-center gap-2 text-[#00174A] hover:text-[#DFB000] font-bold hover:underline">
+              <a href="mailto:reservations@hotelraama.com" className="flex items-center gap-2 text-[#00174A] hover:text-[#D6B369] font-bold hover:underline">
                 <Mail size={16} /> reservations@hotelraama.com
               </a>
-              <a href="tel:08172257001" className="flex items-center gap-2 text-[#00174A] hover:text-[#DFB000] font-bold hover:underline">
+              <a href="tel:08172257001" className="flex items-center gap-2 text-[#00174A] hover:text-[#D6B369] font-bold hover:underline">
                 <Phone size={16} /> 081722 57001
               </a>
             </div>

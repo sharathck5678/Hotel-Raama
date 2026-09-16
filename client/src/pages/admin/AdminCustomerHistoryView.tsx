@@ -25,7 +25,7 @@ export const AdminCustomerHistoryView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[#00174A]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B369]"></div>
       </div>
     );
   }
@@ -46,7 +46,7 @@ export const AdminCustomerHistoryView: React.FC = () => {
               placeholder="Search by name or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#FAF9F6] border border-[#10184A]/20 rounded-sm pl-9 pr-3 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A]"
+              className="w-full bg-[#F7F0DF] border border-[#10184A]/20 rounded-sm pl-9 pr-3 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A]"
             />
           </div>
         </div>
@@ -56,7 +56,7 @@ export const AdminCustomerHistoryView: React.FC = () => {
         <div className="bg-[#00174A] text-[#FAF9F6] rounded-sm border border-white/15 shadow-xl font-sans text-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[620px]">
-              <thead className="bg-white/10 text-[#DFB000] uppercase font-bold border-b border-white/15 text-[10px] tracking-wider">
+              <thead className="bg-white/10 text-[#D6B369] uppercase font-bold border-b border-white/15 text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-3.5">Guest Name</th>
                   <th className="py-3 px-3.5">Phone Number</th>
@@ -79,8 +79,8 @@ export const AdminCustomerHistoryView: React.FC = () => {
                       <td className="py-3 px-3.5 font-semibold text-white whitespace-nowrap">{c.guestName}</td>
                       <td className="py-3 px-3.5 font-mono text-[11px] whitespace-nowrap">{c.guestPhone}</td>
                       <td className="py-3 px-3.5 font-bold whitespace-nowrap">{c.totalOrders} Orders</td>
-                      <td className="py-3 px-3.5 font-serif font-bold text-[#DFB000] whitespace-nowrap">₹{c.totalSpent}</td>
-                      <td className="py-3 px-3.5 font-semibold text-[#DFB000] whitespace-nowrap">Room #{c.lastOrderRoom}</td>
+                      <td className="py-3 px-3.5 font-serif font-bold text-[#D6B369] whitespace-nowrap">₹{c.totalSpent}</td>
+                      <td className="py-3 px-3.5 font-semibold text-[#D6B369] whitespace-nowrap">Room #{c.lastOrderRoom}</td>
                       <td className="py-3 px-3.5 text-[#FAF9F6]/50 text-[11px] whitespace-nowrap">{new Date(c.lastOrderDate).toLocaleString()}</td>
                     </tr>
                   ))

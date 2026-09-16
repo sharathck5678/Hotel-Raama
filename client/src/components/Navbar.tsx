@@ -74,7 +74,7 @@ export const Navbar: React.FC = () => {
                     isActive
                       ? isTransparent
                         ? 'bg-white/25 text-white font-bold shadow-sm backdrop-blur-xs'
-                        : 'bg-black/25 text-[#DFB000] font-bold border border-[#DFB000]/30 shadow-xs'
+                        : 'bg-black/25 text-[#D6B369] font-bold border border-[#D6B369]/30 shadow-xs'
                       : isTransparent
                       ? 'text-white/90 hover:text-white hover:bg-white/15'
                       : 'text-white/90 hover:text-white hover:bg-white/10'
@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center gap-3">
             <Link
               to="/rooms"
-              className="px-5 py-2.5 rounded-full bg-[#DFB000] text-[#00174A] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#E8C56A] transition-all duration-300 flex items-center gap-2 shadow-sm focus-design"
+              className="px-5 py-2.5 rounded-full bg-[#D6B369] text-[#00174A] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#E8C56A] transition-all duration-300 flex items-center gap-2 shadow-sm focus-design"
             >
               <Calendar size={13} /> Book Room
             </Link>
@@ -122,7 +122,7 @@ export const Navbar: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-2.5 rounded-full text-xs uppercase tracking-[1.6px] font-medium transition-colors ${
                   isActive 
-                    ? 'bg-[#DFB000] text-[#00174A] font-bold shadow-xs' 
+                    ? 'bg-[#D6B369] text-[#00174A] font-bold shadow-xs' 
                     : 'text-white/90 hover:text-white hover:bg-white/10'
                 }`}
               >
@@ -134,7 +134,7 @@ export const Navbar: React.FC = () => {
             <Link
               to="/rooms"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-3 rounded-full bg-[#DFB000] text-[#00174A] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#E8C56A] shadow-sm transition-colors"
+              className="w-full text-center py-3 rounded-full bg-[#D6B369] text-[#00174A] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#E8C56A] shadow-sm transition-colors"
             >
               Book Room Now
             </Link>

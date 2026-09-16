@@ -46,7 +46,7 @@ export const LocationPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
       
       {/* 1. Header & Hero */}
       <ScrollReveal direction="up" duration={0.8}>
@@ -82,7 +82,7 @@ export const LocationPage: React.FC = () => {
             {/* Card 2: Call 081722 57001 */}
             <a
               href="tel:08172257001"
-              className="flex items-center justify-between gap-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-white border border-[#10184A]/15 text-[#00174A] shadow-sm hover:bg-[#FAF9F6] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group overflow-hidden"
+              className="flex items-center justify-between gap-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-white border border-[#10184A]/15 text-[#00174A] shadow-sm hover:bg-[#F7F0DF] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group overflow-hidden"
             >
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#00174A]/10 flex items-center justify-center text-[#00174A] shrink-0 group-hover:scale-105 transition-transform">
                 <Phone size={16} className="text-[#00174A]" />
@@ -126,7 +126,7 @@ export const LocationPage: React.FC = () => {
           <div className="bg-[#00174A] text-[#FAF9F6] p-7 sm:p-9 rounded-2xl border border-white/15 flex flex-col justify-between shadow-lg space-y-8 h-full">
             <div className="space-y-6">
               <div>
-                <span className="text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-widest block mb-1">
+                <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-widest block mb-1">
                   Hotel Raama Coordinates
                 </span>
                 <h2 className="text-3xl font-serif text-[#FAF9F6]">Hotel Raama, Hassan</h2>
@@ -136,13 +136,13 @@ export const LocationPage: React.FC = () => {
               <div className="space-y-5 text-xs font-sans border-t border-white/15 pt-5">
                 {/* Address */}
                 <div className="flex items-start gap-3.5">
-                  <MapPin size={18} className="text-[#DFB000] shrink-0 mt-0.5" />
+                  <MapPin size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">Physical Address</strong>
                     <span className="text-white/90 leading-relaxed block text-xs">
                       {info?.address || 'B.M. Road, Thanneeruhalla, Opposite S.D.M. Ayurvedic Hospital & College'}, Hassan, Karnataka - 573201
                     </span>
-                    <span className="text-[#DFB000] text-[11px] block mt-1 font-medium">
+                    <span className="text-[#D6B369] text-[11px] block mt-1 font-medium">
                       Landmark: Directly opposite SDM Ayurvedic Hospital
                     </span>
                   </div>
@@ -150,10 +150,10 @@ export const LocationPage: React.FC = () => {
 
                 {/* Phone */}
                 <div className="flex items-start gap-3.5">
-                  <Phone size={18} className="text-[#DFB000] shrink-0 mt-0.5" />
+                  <Phone size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">Front Desk & Reservations</strong>
-                    <a href={`tel:${info?.phone || '08172257001'}`} className="text-[#DFB000] hover:underline font-bold text-sm tracking-wide">
+                    <a href={`tel:${info?.phone || '08172257001'}`} className="text-[#D6B369] hover:underline font-bold text-sm tracking-wide">
                       {info?.phone || '081722 57001'}
                     </a>
                     <span className="text-white/70 text-[10px] block mt-0.5">Available 24 Hours · 7 Days a Week</span>
@@ -162,10 +162,10 @@ export const LocationPage: React.FC = () => {
 
                 {/* Email */}
                 <div className="flex items-start gap-3.5">
-                  <Mail size={18} className="text-[#DFB000] shrink-0 mt-0.5" />
+                  <Mail size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">Inquiries & Corporate Bookings</strong>
-                    <a href={`mailto:${info?.email || 'reservations@hotelraama.com'}`} className="text-[#DFB000] hover:underline text-xs">
+                    <a href={`mailto:${info?.email || 'reservations@hotelraama.com'}`} className="text-[#D6B369] hover:underline text-xs">
                       {info?.email || 'reservations@hotelraama.com'}
                     </a>
                   </div>
@@ -173,14 +173,14 @@ export const LocationPage: React.FC = () => {
 
                 {/* GPS Coordinates */}
                 <div className="flex items-start gap-3.5">
-                  <Compass size={18} className="text-[#DFB000] shrink-0 mt-0.5" />
+                  <Compass size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
                   <div className="flex-grow">
                     <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">GPS Latitude & Longitude</strong>
                     <div className="flex items-center justify-between gap-2 bg-black/25 px-3 py-1.5 rounded-md border border-white/10 mt-1">
                       <span className="text-white/90 font-mono text-[11px]">12.9951° N, 76.0827° E</span>
                       <button
                         onClick={handleCopyCoords}
-                        className="text-[#DFB000] hover:text-white p-1 text-[11px] flex items-center gap-1 transition-colors"
+                        className="text-[#D6B369] hover:text-white p-1 text-[11px] flex items-center gap-1 transition-colors"
                         title="Copy Coordinates"
                       >
                         {copiedCoords ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
@@ -195,9 +195,9 @@ export const LocationPage: React.FC = () => {
             {/* Quick Details footer */}
             <div className="pt-4 border-t border-white/15 flex items-center justify-between text-[11px] text-white/80">
               <div className="flex items-center gap-1.5">
-                <Clock size={14} className="text-[#DFB000]" /> Check-in: 12 PM / Check-out: 11 AM
+                <Clock size={14} className="text-[#D6B369]" /> Check-in: 12 PM / Check-out: 11 AM
               </div>
-              <div className="flex items-center gap-1.5 text-[#DFB000]">
+              <div className="flex items-center gap-1.5 text-[#D6B369]">
                 <ShieldCheck size={14} /> 24/7 Security
               </div>
             </div>
@@ -206,7 +206,7 @@ export const LocationPage: React.FC = () => {
 
         {/* Right Column: Google Maps Interactive View (7 cols) */}
         <ScrollReveal direction="right" duration={0.85} className="lg:col-span-7 h-full">
-          <div className="bg-[#FAF9F6] rounded-2xl overflow-hidden border border-[#10184A]/15 shadow-lg flex flex-col min-h-[460px] h-full">
+          <div className="bg-[#F7F0DF] rounded-2xl overflow-hidden border border-[#10184A]/15 shadow-lg flex flex-col min-h-[460px] h-full">
             <div className="bg-[#00174A]/5 px-6 py-3.5 border-b border-[#10184A]/15 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-[#00174A]">
                 <MapPin size={15} className="text-[#00174A]" /> Live Satellite & Road Navigation
@@ -215,7 +215,7 @@ export const LocationPage: React.FC = () => {
                 href="https://maps.app.goo.gl/ytRudLDAau6mBPKH8"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#DFB000] flex items-center gap-1"
+                className="text-[11px] font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#D6B369] flex items-center gap-1"
               >
                 Full Screen Map <ArrowUpRight size={13} />
               </a>
@@ -262,7 +262,7 @@ export const LocationPage: React.FC = () => {
                   className={`p-4 rounded-xl border flex items-center justify-between transition-all h-full ${
                     item.highlight
                       ? 'bg-[#00174A]/10 border-[#00174A]/40 shadow-xs'
-                      : 'bg-[#FAF9F6] border-[#10184A]/15 hover:border-[#DFB000]/60'
+                      : 'bg-[#F7F0DF] border-[#10184A]/15 hover:border-[#D6B369]/60'
                   }`}
                 >
                   <div className="space-y-1">

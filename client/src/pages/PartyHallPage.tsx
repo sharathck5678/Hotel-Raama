@@ -59,7 +59,7 @@ export const PartyHallPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-20 relative">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-20 relative">
       {/* Hero Header */}
       <div className="relative rounded-sm overflow-hidden min-h-[440px] sm:min-h-[500px] py-14 sm:py-20 px-6 sm:px-10 flex flex-col items-center justify-center text-center border border-[#10184A]/15 shadow-md">
         <img
@@ -69,7 +69,7 @@ export const PartyHallPage: React.FC = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/45 pointer-events-none" />
         <div className="relative z-10 max-w-3xl flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-[#FAF9F6]">
-          <span className="inline-flex items-center px-4 py-1 rounded-full bg-black/40 backdrop-blur-md border border-[#FAF9F6]/20 text-[#DFB000] text-[10px] font-sans font-bold uppercase tracking-[0.2em] shadow-sm">
+          <span className="inline-flex items-center px-4 py-1 rounded-full bg-black/40 backdrop-blur-md border border-[#FAF9F6]/20 text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em] shadow-sm">
             Grand Celebrations & Banquets
           </span>
           <h1 className="editorial-hero-title text-[#FAF9F6] uppercase drop-shadow-md">Sambhrama Party Hall</h1>
@@ -83,7 +83,7 @@ export const PartyHallPage: React.FC = () => {
                 setViewerPageIndex(0);
                 setViewerOpen(true);
               }}
-              className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#DFB000] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-2 hover:bg-[#E8C56A] transition-all cursor-pointer shadow-lg active:scale-98"
+              className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-2 hover:bg-[#E8C56A] transition-all cursor-pointer shadow-lg active:scale-98"
             >
               <BookOpen size={16} /> Browse Layout & Catering Catalog
             </button>
@@ -109,7 +109,7 @@ export const PartyHallPage: React.FC = () => {
           {packages.map((pkg) => (
             <ScrollRevealItem key={pkg._id}>
               <div
-                className="bg-[#00174A] text-[#FAF9F6] p-6 sm:p-8 rounded-sm border border-white/15 hover:border-[#DFB000] transition-all duration-300 flex flex-col justify-between space-y-6 shadow-md h-full"
+                className="bg-[#00174A] text-[#FAF9F6] p-6 sm:p-8 rounded-sm border border-white/15 hover:border-[#D6B369] transition-all duration-300 flex flex-col justify-between space-y-6 shadow-md h-full"
               >
                 <div className="space-y-3">
                   <h3 className="text-2xl font-serif text-[#FAF9F6]">{pkg.name}</h3>
@@ -119,7 +119,7 @@ export const PartyHallPage: React.FC = () => {
                 <div className="pt-6 border-t border-white/10 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-sans text-white/60 uppercase block tracking-wider">Rate Per Pax</span>
-                    <span className="text-2xl font-serif font-bold text-[#DFB000]">₹{pkg.price}</span>
+                    <span className="text-2xl font-serif font-bold text-[#D6B369]">₹{pkg.price}</span>
                     <span className="text-[10px] font-sans text-white/60"> + GST</span>
                   </div>
 
@@ -127,7 +127,7 @@ export const PartyHallPage: React.FC = () => {
                     href={`https://wa.me/918172257001?text=Hi%20Hotel%20Raama,%20I%20am%20interested%20in%20the%20Sambhrama%20Party%20Hall%20${pkg.name}%20Package.`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2.5 bg-[#DFB000] hover:bg-[#E8C56A] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm"
+                    className="px-4 py-2.5 bg-[#D6B369] hover:bg-[#E8C56A] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm"
                   >
                     <MessageSquare size={13} /> Enquiry
                   </a>
@@ -195,7 +195,7 @@ export const PartyHallPage: React.FC = () => {
                   aria-label={`Go to photo ${idx + 1}`}
                   className={`transition-all duration-300 rounded-full cursor-pointer ${
                     currentSlide === idx
-                      ? 'w-7 h-2 bg-[#DFB000]'
+                      ? 'w-7 h-2 bg-[#D6B369]'
                       : 'w-2 h-2 bg-white/60 hover:bg-white'
                   }`}
                 />
@@ -211,7 +211,7 @@ export const PartyHallPage: React.FC = () => {
           {/* Viewer Header */}
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
             <div>
-              <h3 className="text-base sm:text-lg font-serif text-[#DFB000]">Sambhrama Party Hall Catalog</h3>
+              <h3 className="text-base sm:text-lg font-serif text-[#D6B369]">Sambhrama Party Hall Catalog</h3>
               <p className="text-xs font-sans text-white/70">Page {viewerPageIndex + 1} of {brochurePages.length}</p>
             </div>
             <button
@@ -227,7 +227,7 @@ export const PartyHallPage: React.FC = () => {
             <button
               onClick={() => setViewerPageIndex((prev) => Math.max(0, prev - 1))}
               disabled={viewerPageIndex === 0}
-              className="absolute left-2 z-10 p-2.5 sm:p-3 rounded-full bg-[#00174A] border border-white/20 text-white disabled:opacity-30 hover:bg-[#DFB000] hover:text-[#00174A] transition-all cursor-pointer"
+              className="absolute left-2 z-10 p-2.5 sm:p-3 rounded-full bg-[#00174A] border border-white/20 text-white disabled:opacity-30 hover:bg-[#D6B369] hover:text-[#00174A] transition-all cursor-pointer"
             >
               <ChevronLeft size={22} />
             </button>
@@ -241,7 +241,7 @@ export const PartyHallPage: React.FC = () => {
             <button
               onClick={() => setViewerPageIndex((prev) => Math.min(brochurePages.length - 1, prev + 1))}
               disabled={viewerPageIndex === brochurePages.length - 1}
-              className="absolute right-2 z-10 p-2.5 sm:p-3 rounded-full bg-[#00174A] border border-white/20 text-white disabled:opacity-30 hover:bg-[#DFB000] hover:text-[#00174A] transition-all cursor-pointer"
+              className="absolute right-2 z-10 p-2.5 sm:p-3 rounded-full bg-[#00174A] border border-white/20 text-white disabled:opacity-30 hover:bg-[#D6B369] hover:text-[#00174A] transition-all cursor-pointer"
             >
               <ChevronRight size={22} />
             </button>
@@ -255,7 +255,7 @@ export const PartyHallPage: React.FC = () => {
                 onClick={() => setViewerPageIndex(idx)}
                 className={`w-7 sm:w-8 h-7 sm:h-8 rounded-sm text-xs font-sans font-bold flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                   viewerPageIndex === idx
-                    ? 'bg-[#DFB000] text-[#00174A]'
+                    ? 'bg-[#D6B369] text-[#00174A]'
                     : 'bg-[#00174A] text-white/60 border border-white/10 hover:text-white'
                 }`}
               >

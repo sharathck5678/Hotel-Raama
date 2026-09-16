@@ -169,7 +169,7 @@ export const QrOrderingSectionPage: React.FC = () => {
 
         {/* Search & Filter Controls */}
         <ScrollReveal direction="up" duration={0.8}>
-          <div className="bg-[#FAF9F6] p-4 rounded-sm border border-[#10184A]/15 flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="bg-[#F7F0DF] p-4 rounded-sm border border-[#10184A]/15 flex flex-col lg:flex-row items-center justify-between gap-4">
             {/* Tabs */}
             <div className="flex bg-[#00174A]/5 p-1 rounded-sm border border-[#10184A]/15 w-full lg:w-auto overflow-x-auto">
               <button
@@ -224,7 +224,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                   type="button"
                   onClick={() => setIsDropdownOpen((prev) => !prev)}
                   disabled={downloading}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#DFB000] border border-[#DFB000] rounded-sm text-xs font-sans font-semibold uppercase tracking-wider shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#D6B369] border border-[#D6B369] rounded-sm text-xs font-sans font-semibold uppercase tracking-wider shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   title="Download QR Codes as high-quality PNG"
                 >
                   <Download size={14} className="text-[#00174A]" />
@@ -237,7 +237,7 @@ export const QrOrderingSectionPage: React.FC = () => {
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-[#FAF9F6] rounded-sm border border-[#10184A]/15 shadow-xl py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="absolute right-0 mt-2 w-72 bg-[#F7F0DF] rounded-sm border border-[#10184A]/15 shadow-xl py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
                     <div className="px-3 py-2 border-b border-[#10184A]/15 mb-1">
                       <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#00174A]">
                         QR PNG Export Options
@@ -254,7 +254,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                       className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#00174A] hover:bg-[#00174A] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
                     >
                       <div className="flex items-center gap-2">
-                        <Download size={13} className="text-[#00174A] group-hover:text-[#DFB000] shrink-0" />
+                        <Download size={13} className="text-[#00174A] group-hover:text-[#D6B369] shrink-0" />
                         <span className="font-semibold">Download All QR Codes</span>
                       </div>
                       <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-sm bg-[#00174A]/5 group-hover:bg-white/20 font-bold">
@@ -272,7 +272,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                       className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#00174A] hover:bg-[#00174A] hover:text-white flex items-center justify-between transition-colors cursor-pointer group"
                     >
                       <div className="flex items-center gap-2">
-                        <Download size={13} className="text-[#00174A] group-hover:text-[#DFB000] shrink-0" />
+                        <Download size={13} className="text-[#00174A] group-hover:text-[#D6B369] shrink-0" />
                         <span className="font-semibold">Download Filtered QR Codes</span>
                       </div>
                       <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-sm bg-[#00174A]/5 group-hover:bg-white/20 font-bold">
@@ -290,7 +290,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                       className="w-full px-3.5 py-2.5 text-left text-xs font-sans text-[#00174A] hover:bg-[#00174A] hover:text-white flex items-center justify-between transition-colors cursor-pointer group border-t border-[#10184A]/15 mt-1 pt-2"
                     >
                       <div className="flex items-center gap-2">
-                        <QrCode size={13} className="text-[#00174A] group-hover:text-[#DFB000] shrink-0" />
+                        <QrCode size={13} className="text-[#00174A] group-hover:text-[#D6B369] shrink-0" />
                         <span className="font-semibold">Download Individual QR Code</span>
                       </div>
                       <span className="text-[10px] text-[#667085] group-hover:text-white/80">
@@ -307,11 +307,11 @@ export const QrOrderingSectionPage: React.FC = () => {
         {/* Loading Spinner */}
         {loading ? (
           <div className="text-center py-20">
-            <div className="inline-block w-8 h-8 border-4 border-[#DFB000] border-t-transparent rounded-full animate-spin"></div>
+            <div className="inline-block w-8 h-8 border-4 border-[#D6B369] border-t-transparent rounded-full animate-spin"></div>
             <p className="text-xs font-sans text-[#667085] mt-4">Loading QR directory...</p>
           </div>
         ) : filteredRooms.length === 0 ? (
-          <div className="text-center py-16 bg-[#FAF9F6] rounded-sm border border-[#10184A]/15">
+          <div className="text-center py-16 bg-[#F7F0DF] rounded-sm border border-[#10184A]/15">
             <p className="text-xs font-sans text-[#667085]">No rooms or QR codes matched your search criteria.</p>
           </div>
         ) : (
@@ -326,15 +326,15 @@ export const QrOrderingSectionPage: React.FC = () => {
               return (
                 <ScrollRevealItem key={room._id}>
                   <div
-                    className={`bg-[#00174A] text-[#FAF9F6] rounded-sm border p-4 sm:p-6 flex flex-col justify-between hover:border-[#DFB000] transition-all duration-300 shadow-md h-full ${
-                      isVenue ? 'border-[#DFB000]' : 'border-white/15'
+                    className={`bg-[#00174A] text-[#FAF9F6] rounded-sm border p-4 sm:p-6 flex flex-col justify-between hover:border-[#D6B369] transition-all duration-300 shadow-md h-full ${
+                      isVenue ? 'border-[#D6B369]' : 'border-white/15'
                     }`}
                   >
                     <div>
                       {/* Header */}
                       <div className="flex justify-between items-start mb-3 sm:mb-4">
                         <div>
-                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-white/10 text-[#DFB000]">
+                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-white/10 text-[#D6B369]">
                             {isBoardRoom
                               ? 'Executive Meeting Venue'
                               : isVenue
@@ -346,7 +346,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                           </h3>
                         </div>
 
-                        <span className="text-[9px] font-sans text-[#DFB000] bg-white/10 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-white/15 shrink-0 ml-2">
+                        <span className="text-[9px] font-sans text-[#D6B369] bg-white/10 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-white/15 shrink-0 ml-2">
                           QR Active
                         </span>
                       </div>
@@ -382,7 +382,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                             e.stopPropagation();
                             downloadSingleQr(room);
                           }}
-                          className="mt-4 w-full py-3 px-4 rounded-sm bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#DFB000] text-xs font-sans font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer border border-[#DFB000]"
+                          className="mt-4 w-full py-3 px-4 rounded-sm bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#D6B369] text-xs font-sans font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer border border-[#D6B369]"
                           title={`Download high-quality PNG for ${isVenue ? room.roomNumber : `Room #${room.roomNumber}`}`}
                         >
                           <Download size={16} />

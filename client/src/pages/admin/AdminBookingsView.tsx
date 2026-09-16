@@ -40,7 +40,7 @@ export const AdminBookingsView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[#00174A]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B369]"></div>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export const AdminBookingsView: React.FC = () => {
         <div className="bg-[#00174A] text-[#FAF9F6] rounded-sm border border-white/15 shadow-xl font-sans text-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[780px]">
-            <thead className="bg-white/10 text-[#DFB000] uppercase font-bold border-b border-white/15 text-[10px] tracking-wider">
+            <thead className="bg-white/10 text-[#D6B369] uppercase font-bold border-b border-white/15 text-[10px] tracking-wider">
               <tr>
                 <th className="py-3 px-3.5">Booking Ref</th>
                 <th className="py-3 px-3.5">Guest Name</th>
@@ -81,7 +81,7 @@ export const AdminBookingsView: React.FC = () => {
               ) : (
                 bookings.map((b) => (
                   <tr key={b._id} className="hover:bg-white/5 transition-colors">
-                    <td className="py-3 px-3.5 font-serif font-bold text-[#DFB000] whitespace-nowrap">{b.bookingId}</td>
+                    <td className="py-3 px-3.5 font-serif font-bold text-[#D6B369] whitespace-nowrap">{b.bookingId}</td>
                     <td className="py-3 px-3.5 font-semibold text-white whitespace-nowrap">{b.guestName}</td>
                     <td className="py-3 px-3.5">
                       <div className="whitespace-nowrap">{b.guestPhone}</div>
@@ -91,7 +91,7 @@ export const AdminBookingsView: React.FC = () => {
                     <td className="py-3 px-3.5 text-[11px] whitespace-nowrap">
                       {new Date(b.checkIn).toLocaleDateString()} - {new Date(b.checkOut).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-3.5 font-serif font-bold text-[#DFB000] whitespace-nowrap">₹{b.totalAmount}</td>
+                    <td className="py-3 px-3.5 font-serif font-bold text-[#D6B369] whitespace-nowrap">₹{b.totalAmount}</td>
                     <td className="py-3 px-3.5 whitespace-nowrap">
                       <span
                         className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider ${
@@ -110,7 +110,7 @@ export const AdminBookingsView: React.FC = () => {
                       {b.bookingStatus === 'CONFIRMED' && (
                         <button
                           onClick={() => handleStatusUpdate(b._id, 'CHECKED_IN')}
-                          className="px-2.5 py-1 bg-[#DFB000] hover:bg-[#E8C56A] text-[#00174A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer inline-block"
+                          className="px-2.5 py-1 bg-[#D6B369] hover:bg-[#E8C56A] text-[#00174A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer inline-block"
                         >
                           Check In
                         </button>
@@ -118,7 +118,7 @@ export const AdminBookingsView: React.FC = () => {
                       {b.bookingStatus === 'CHECKED_IN' && (
                         <button
                           onClick={() => handleStatusUpdate(b._id, 'CHECKED_OUT')}
-                          className="px-2.5 py-1 bg-[#FAF9F6] text-[#00174A] hover:bg-[#DFB000] active:bg-[#E8C56A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer inline-block"
+                          className="px-2.5 py-1 bg-[#F7F0DF] text-[#00174A] hover:bg-[#D6B369] active:bg-[#E8C56A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer inline-block"
                         >
                           Check Out
                         </button>

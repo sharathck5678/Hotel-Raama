@@ -36,7 +36,7 @@ export const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] flex items-center justify-center p-6">
       <ScrollReveal direction="up" duration={0.85} className="w-full max-w-md">
         <div className="bg-white text-[#00174A] border border-[#10184A]/15 rounded-[20px] p-8 sm:p-10 max-w-md w-full space-y-7 shadow-xl">
           
@@ -65,7 +65,7 @@ export const AdminLoginPage: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#FAF9F6] border border-[#10184A]/20 rounded-full pl-10 pr-4 py-2.5 text-xs text-[#00174A] focus:border-[#DFB000] focus-design transition-colors"
+                  className="w-full bg-[#F7F0DF] border border-[#10184A]/20 rounded-full pl-10 pr-4 py-2.5 text-xs text-[#00174A] focus:border-[#D6B369] focus-design transition-colors"
                   required
                   placeholder=""
                   autoComplete="email"
@@ -83,7 +83,7 @@ export const AdminLoginPage: React.FC = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#FAF9F6] border border-[#10184A]/20 rounded-full pl-10 pr-4 py-2.5 text-xs text-[#00174A] focus:border-[#DFB000] focus-design transition-colors"
+                  className="w-full bg-[#F7F0DF] border border-[#10184A]/20 rounded-full pl-10 pr-4 py-2.5 text-xs text-[#00174A] focus:border-[#D6B369] focus-design transition-colors"
                   required
                   placeholder="••••••••••••"
                   autoComplete="current-password"
@@ -94,7 +94,7 @@ export const AdminLoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-full bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] font-bold text-xs uppercase tracking-[1.6px] shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 focus-design mt-2"
+              className="w-full py-3.5 rounded-full bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] font-bold text-xs uppercase tracking-[1.6px] shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 focus-design mt-2"
             >
               {loading ? 'Authenticating...' : 'Authenticate & Sign In'} <ArrowRight size={15} />
             </button>

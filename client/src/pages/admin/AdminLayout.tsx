@@ -42,7 +42,7 @@ export const AdminLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#00174A] flex flex-col lg:flex-row relative">
+    <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] flex flex-col lg:flex-row relative">
       {/* Mobile Backdrop Overlay */}
       {mobileMenuOpen && (
         <div
@@ -69,7 +69,7 @@ export const AdminLayout: React.FC = () => {
               />
               <div>
                 <span className="font-bold text-white block text-sm tracking-tight">HOTEL RAAMA</span>
-                <span className="text-[9px] text-[#DFB000] uppercase font-bold tracking-[1.6px] block">
+                <span className="text-[9px] text-[#D6B369] uppercase font-bold tracking-[1.6px] block">
                   Admin Console
                 </span>
               </div>
@@ -97,11 +97,11 @@ export const AdminLayout: React.FC = () => {
                   to={item.path}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[1.6px] transition-all ${
                     isActive
-                      ? 'bg-[#00174A] text-[#FAF9F6] shadow-sm font-bold border border-[#DFB000]/30'
+                      ? 'bg-[#00174A] text-[#FAF9F6] shadow-sm font-bold border border-[#D6B369]/30'
                       : 'text-[#FAF9F6]/70 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <Icon size={16} className={isActive ? 'text-[#DFB000]' : ''} />
+                  <Icon size={16} className={isActive ? 'text-[#D6B369]' : ''} />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -123,12 +123,12 @@ export const AdminLayout: React.FC = () => {
       {/* Main View Area - Warm Cream */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto min-h-screen">
         {/* Top Header */}
-        <header className="h-16 sm:h-20 bg-[#FAF9F6]/95 backdrop-blur-md border-b border-[#10184A]/10 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-16 sm:h-20 bg-[#F7F0DF]/95 backdrop-blur-md border-b border-[#10184A]/10 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3 min-w-0">
             {/* Hamburger button on mobile */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 -ml-1.5 text-[#00174A] hover:text-[#DFB000] hover:bg-black/5 rounded-lg transition-colors cursor-pointer shrink-0"
+              className="lg:hidden p-2 -ml-1.5 text-[#00174A] hover:text-[#D6B369] hover:bg-black/5 rounded-lg transition-colors cursor-pointer shrink-0"
               aria-label="Open navigation menu"
             >
               <Menu size={22} />
@@ -143,13 +143,13 @@ export const AdminLayout: React.FC = () => {
             <Link
               to="/"
               target="_blank"
-              className="text-[11px] sm:text-xs font-semibold text-[#00174A] hover:text-[#DFB000] hover:underline flex items-center gap-1.5 uppercase tracking-wider py-1.5 px-2.5 rounded-md hover:bg-black/5 transition-colors"
+              className="text-[11px] sm:text-xs font-semibold text-[#00174A] hover:text-[#D6B369] hover:underline flex items-center gap-1.5 uppercase tracking-wider py-1.5 px-2.5 rounded-md hover:bg-black/5 transition-colors"
             >
               <Building2 size={15} /> <span className="hidden sm:inline">Open Guest Site</span>
             </Link>
 
-            <div className="flex items-center gap-1.5 bg-[#00174A] text-[#FAF9F6] border border-[#DFB000]/30 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold tracking-wide shadow-sm">
-              <ShieldCheck size={14} className="text-[#DFB000]" /> <span className="hidden sm:inline">Active </span>Admin
+            <div className="flex items-center gap-1.5 bg-[#00174A] text-[#FAF9F6] border border-[#D6B369]/30 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold tracking-wide shadow-sm">
+              <ShieldCheck size={14} className="text-[#D6B369]" /> <span className="hidden sm:inline">Active </span>Admin
             </div>
           </div>
         </header>

@@ -19,7 +19,7 @@ export const AdminDashboardView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[#00174A]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B369]"></div>
       </div>
     );
   }
@@ -33,10 +33,10 @@ export const AdminDashboardView: React.FC = () => {
       {/* Metric Cards Grid */}
       <ScrollRevealGroup staggerDelay={0.1} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#DFB000]/40 transition-all h-full">
+          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
             <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Occupancy Rate</span>
-              <BedDouble size={18} className="text-[#DFB000]" />
+              <BedDouble size={18} className="text-[#D6B369]" />
             </div>
             <div className="text-2xl sm:text-3xl font-serif font-bold text-[#FAF9F6]">{metrics?.occupancyRate || 0}%</div>
             <p className="text-[10px] font-sans text-[#FAF9F6]/60">
@@ -46,21 +46,21 @@ export const AdminDashboardView: React.FC = () => {
         </ScrollRevealItem>
 
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#DFB000]/40 transition-all h-full">
+          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
             <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Live Kitchen Orders</span>
-              <UtensilsCrossed size={18} className="text-[#DFB000]" />
+              <UtensilsCrossed size={18} className="text-[#D6B369]" />
             </div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#DFB000]">{metrics?.pendingOrdersCount || 0}</div>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#D6B369]">{metrics?.pendingOrdersCount || 0}</div>
             <p className="text-[10px] font-sans text-[#FAF9F6]/60">Active orders on kitchen board</p>
           </div>
         </ScrollRevealItem>
 
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#DFB000]/40 transition-all h-full">
+          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
             <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Confirmed Bookings</span>
-              <CalendarCheck size={18} className="text-[#DFB000]" />
+              <CalendarCheck size={18} className="text-[#D6B369]" />
             </div>
             <div className="text-2xl sm:text-3xl font-serif font-bold text-[#FAF9F6]">{metrics?.totalConfirmedBookings || 0}</div>
             <p className="text-[10px] font-sans text-[#FAF9F6]/60">Active room reservations</p>
@@ -68,12 +68,12 @@ export const AdminDashboardView: React.FC = () => {
         </ScrollRevealItem>
 
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#DFB000]/40 transition-all h-full">
+          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
             <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Combined Revenue</span>
-              <TrendingUp size={18} className="text-[#DFB000]" />
+              <TrendingUp size={18} className="text-[#D6B369]" />
             </div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#DFB000]">
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#D6B369]">
               ₹{(metrics?.totalCombinedRevenue || 0).toLocaleString()}
             </div>
             <p className="text-[10px] font-sans text-[#FAF9F6]/60">Rooms + Food Service Payments</p>
@@ -99,18 +99,18 @@ export const AdminDashboardView: React.FC = () => {
                   <AreaChart data={revenueChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#DFB000" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#DFB000" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#D6B369" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#D6B369" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                     <XAxis dataKey="month" stroke="#FAF9F6" tick={{ fontSize: 11 }} />
                     <YAxis stroke="#FAF9F6" tick={{ fontSize: 11 }} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#071A3D', borderColor: '#DFB000', borderRadius: '4px', color: '#FAF9F6' }}
+                      contentStyle={{ backgroundColor: '#071A3D', borderColor: '#D6B369', borderRadius: '4px', color: '#FAF9F6' }}
                       formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Total Revenue']}
                     />
-                    <Area type="monotone" dataKey="revenue" stroke="#DFB000" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRev)" />
+                    <Area type="monotone" dataKey="revenue" stroke="#D6B369" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRev)" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -138,12 +138,12 @@ export const AdminDashboardView: React.FC = () => {
                     <XAxis type="number" stroke="#FAF9F6" tick={{ fontSize: 10 }} />
                     <YAxis type="category" dataKey="name" stroke="#FAF9F6" hide />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#071A3D', borderColor: '#DFB000', borderRadius: '4px', color: '#FAF9F6' }}
+                      contentStyle={{ backgroundColor: '#071A3D', borderColor: '#D6B369', borderRadius: '4px', color: '#FAF9F6' }}
                       formatter={(val: any) => [`₹${val.toLocaleString()}`, 'Revenue']}
                     />
                     <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                       {categoryData.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={entry.color || '#DFB000'} />
+                        <Cell key={`cell-${index}`} fill={entry.color || '#D6B369'} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -177,7 +177,7 @@ export const AdminDashboardView: React.FC = () => {
         <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-4 shadow-md font-sans">
           <div className="flex justify-between items-center border-b border-white/10 pb-3">
             <div className="flex items-center gap-2">
-              <Award size={20} className="text-[#DFB000] shrink-0" />
+              <Award size={20} className="text-[#D6B369] shrink-0" />
               <div>
                 <h3 className="text-lg sm:text-xl font-serif text-[#FAF9F6]">Top Ordered Menu Items</h3>
                 <p className="text-xs text-[#FAF9F6]/60">Most popular menu items ordered in Swaad & Liquid Lounge</p>
@@ -189,7 +189,7 @@ export const AdminDashboardView: React.FC = () => {
             <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
               <table className="w-full text-left text-xs border-collapse min-w-[500px]">
                 <thead>
-                  <tr className="border-b border-white/10 text-[#DFB000] uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-white/10 text-[#D6B369] uppercase tracking-wider text-[10px]">
                     <th className="py-3 px-3 sm:px-4">Item Name</th>
                     <th className="py-3 px-3 sm:px-4">Category</th>
                     <th className="py-3 px-3 sm:px-4 text-center">Orders Count</th>
@@ -205,8 +205,8 @@ export const AdminDashboardView: React.FC = () => {
                           {item.category}
                         </span>
                       </td>
-                      <td className="py-3 px-3 sm:px-4 text-center font-bold text-[#DFB000]">{item.ordersCount}</td>
-                      <td className="py-3 px-3 sm:px-4 text-right font-bold text-[#DFB000]">₹{item.revenue.toLocaleString()}</td>
+                      <td className="py-3 px-3 sm:px-4 text-center font-bold text-[#D6B369]">{item.ordersCount}</td>
+                      <td className="py-3 px-3 sm:px-4 text-right font-bold text-[#D6B369]">₹{item.revenue.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -35,7 +35,7 @@ export const AdminRoomsView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[#00174A]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#DFB000]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6B369]"></div>
       </div>
     );
   }
@@ -62,7 +62,7 @@ export const AdminRoomsView: React.FC = () => {
                   </span>
                   <span className="text-[10px] text-[#FAF9F6]/50 shrink-0">Fl {room.floor}</span>
                 </div>
-                <p className="text-[10px] text-[#DFB000] mt-0.5 truncate">{room.roomTypeId?.name || 'Executive'}</p>
+                <p className="text-[10px] text-[#D6B369] mt-0.5 truncate">{room.roomTypeId?.name || 'Executive'}</p>
               </div>
 
 
@@ -70,7 +70,7 @@ export const AdminRoomsView: React.FC = () => {
                 <select
                   value={room.status}
                   onChange={(e) => handleStatusChange(room._id, e.target.value)}
-                  className="w-full bg-white/10 text-xs font-bold text-[#FAF9F6] border border-white/20 rounded-sm p-1.5 focus:border-[#DFB000] cursor-pointer"
+                  className="w-full bg-white/10 text-xs font-bold text-[#FAF9F6] border border-white/20 rounded-sm p-1.5 focus:border-[#D6B369] cursor-pointer"
                 >
                   <option value="AVAILABLE" className="bg-[#071A3D] text-[#FAF9F6]">AVAILABLE</option>
                   <option value="OCCUPIED" className="bg-[#071A3D] text-[#FAF9F6]">OCCUPIED</option>
@@ -83,7 +83,7 @@ export const AdminRoomsView: React.FC = () => {
                   href={`/order/${room.qrToken}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-1.5 bg-[#DFB000] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#DFB000]/90 text-[10px] font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-1 transition-all"
+                  className="w-full py-1.5 bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#D6B369]/90 text-[10px] font-bold uppercase tracking-wider rounded-sm flex items-center justify-center gap-1 transition-all"
                 >
                   <QrCode size={12} /> Test QR Link
                 </a>

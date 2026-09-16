@@ -30,7 +30,7 @@ export const Footer: React.FC = () => {
             href="https://wa.me/918172257001"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[1.6px] px-4 py-2.5 rounded-full bg-[#00174A] text-[#DFB000] border border-[#DFB000]/40 hover:bg-[#DFB000] hover:text-[#00174A] transition-all duration-300"
+            className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[1.6px] px-4 py-2.5 rounded-full bg-[#00174A] text-[#D6B369] border border-[#D6B369]/40 hover:bg-[#D6B369] hover:text-[#00174A] transition-all duration-300"
           >
             <MessageSquare size={13} /> WhatsApp Reception
           </a>
@@ -92,7 +92,7 @@ export const Footer: React.FC = () => {
               href="https://maps.google.com/?q=Hotel+Raama+Hassan"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-2.5 px-4 rounded-full bg-[#DFB000] text-[#00174A] font-semibold text-[10px] uppercase tracking-[1.6px] flex items-center justify-center gap-1.5 hover:bg-[#E8C56A] transition-all duration-300 mt-2"
+              className="w-full py-2.5 px-4 rounded-full bg-[#D6B369] text-[#00174A] font-semibold text-[10px] uppercase tracking-[1.6px] flex items-center justify-center gap-1.5 hover:bg-[#E8C56A] transition-all duration-300 mt-2"
             >
               Get Directions <ArrowUpRight size={13} />
             </a>
