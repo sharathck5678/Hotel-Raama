@@ -133,11 +133,14 @@ const ensureSpecialVenues = async () => {
   }
 };
 
+import { ensureDatabaseSeeded } from './seed/seedDatabase';
+
 // 4. Connect MongoDB & Start HTTP Server
 mongoose
   .connect(MONGODB_URI)
   .then(async () => {
     console.log('[MongoDB] Connected successfully to hotel_raama database.');
+    await ensureDatabaseSeeded();
     await ensureSpecialVenues();
     await ensureCoupons();
     httpServer.listen(PORT, () => {

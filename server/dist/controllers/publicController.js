@@ -18,13 +18,18 @@ const AvailabilityEngine_1 = require("../services/AvailabilityEngine");
 const PricingEngine_1 = require("../services/PricingEngine");
 const RazorpayService_1 = require("../services/RazorpayService");
 const InvoicePdfService_1 = require("../services/InvoicePdfService");
+const seedDatabase_1 = require("../seed/seedDatabase");
 class PublicController {
     /**
      * GET /api/rooms
      */
     static async getRoomTypes(req, res) {
         try {
-            const roomTypes = await RoomType_1.RoomType.find({ isActive: true });
+            let roomTypes = await RoomType_1.RoomType.find({ isActive: true });
+            if (roomTypes.length === 0) {
+                await (0, seedDatabase_1.ensureDatabaseSeeded)();
+                roomTypes = await RoomType_1.RoomType.find({ isActive: true });
+            }
             return res.json({ success: true, data: roomTypes });
         }
         catch (error) {
@@ -204,8 +209,13 @@ class PublicController {
      */
     static async getMenu(req, res) {
         try {
-            const categories = await MenuCategory_1.MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
-            const items = await MenuItem_1.MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+            let categories = await MenuCategory_1.MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
+            let items = await MenuItem_1.MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+            if (items.length === 0) {
+                await (0, seedDatabase_1.ensureDatabaseSeeded)();
+                categories = await MenuCategory_1.MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
+                items = await MenuItem_1.MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+            }
             return res.json({ success: true, data: { categories, items } });
         }
         catch (error) {
@@ -244,8 +254,8 @@ class PublicController {
             const info = await HotelSetting_1.HotelSetting.findOne() || {
                 hotelName: 'Hotel Raama',
                 address: 'B.M. Road, Thanneeruhalla, Hassan',
-                phone: '081722 57001',
-                email: 'reservations@hotelraama.com',
+                phone: '+91 78995 11330',
+                email: 'hotelraama.hsn@gmail.com',
             };
             return res.json({ success: true, data: info });
         }

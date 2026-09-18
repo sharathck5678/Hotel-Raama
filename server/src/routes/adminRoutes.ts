@@ -41,5 +41,6 @@ router.post('/menu-items', AdminController.createMenuItem);
 router.put('/menu-items/:id', AdminController.updateMenuItem);
 router.delete('/menu-items/:id', AdminController.deleteMenuItem);
 router.patch('/menu-items/:id/availability', AdminController.toggleMenuItemAvailability);
+router.post('/seed', AdminController.triggerSeed);
 
 export default router;

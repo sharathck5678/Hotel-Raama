@@ -16,6 +16,7 @@ const MenuCategory_1 = require("../models/MenuCategory");
 const AuditLog_1 = require("../models/AuditLog");
 const SocketService_1 = require("../services/SocketService");
 const InvoicePdfService_1 = require("../services/InvoicePdfService");
+const seedDatabase_1 = require("../seed/seedDatabase");
 const JWT_SECRET = process.env.JWT_SECRET || 'raama_super_secret_jwt_key_2026_production';
 class AdminController {
     /**
@@ -446,12 +447,29 @@ class AdminController {
      */
     static async getMenuItems(req, res) {
         try {
-            const items = await MenuItem_1.MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
-            const categories = await MenuCategory_1.MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+            let items = await MenuItem_1.MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
+            let categories = await MenuCategory_1.MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+            if (items.length === 0) {
+                await (0, seedDatabase_1.ensureDatabaseSeeded)();
+                items = await MenuItem_1.MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
+                categories = await MenuCategory_1.MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+            }
             return res.json({ success: true, data: { items, categories } });
         }
         catch (error) {
             return res.status(500).json({ success: false, message: 'Failed to fetch menu items.' });
+        }
+    }
+    /**
+     * POST /api/admin/seed
+     */
+    static async triggerSeed(req, res) {
+        try {
+            await (0, seedDatabase_1.runSeedLogic)(false);
+            return res.json({ success: true, message: 'Database successfully seeded with menu and catalog data.' });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message || 'Seeding failed.' });
         }
     }
     /**

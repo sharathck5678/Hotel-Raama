@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seed = void 0;
+exports.seed = exports.ensureDatabaseSeeded = exports.runSeedLogic = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -23,49 +23,54 @@ const generateQrToken = (roomNum) => {
     const hash = crypto_1.default.createHash('sha256').update(`hotel_raama_room_${roomNum}_${Date.now()}_${Math.random()}`).digest('hex');
     return hash.substring(0, 16);
 };
-const seed = async () => {
+const runSeedLogic = async (clearExisting = false) => {
     try {
-        console.log('Connecting to MongoDB for seeding...');
-        await mongoose_1.default.connect(MONGODB_URI);
-        console.log('Connected!');
-        // 1. Clear existing data
-        console.log('Clearing existing collections...');
-        await Admin_1.Admin.deleteMany({});
-        await HotelSetting_1.HotelSetting.deleteMany({});
-        await MealPlan_1.MealPlan.deleteMany({});
-        await Coupon_1.Coupon.deleteMany({});
-        await Attraction_1.Attraction.deleteMany({});
-        await RoomType_1.RoomType.deleteMany({});
-        await Room_1.Room.deleteMany({});
-        await MenuCategory_1.MenuCategory.deleteMany({});
-        await MenuItem_1.MenuItem.deleteMany({});
+        // 1. Clear existing data if requested
+        if (clearExisting) {
+            console.log('Clearing existing collections...');
+            await Admin_1.Admin.deleteMany({});
+            await HotelSetting_1.HotelSetting.deleteMany({});
+            await MealPlan_1.MealPlan.deleteMany({});
+            await Coupon_1.Coupon.deleteMany({});
+            await Attraction_1.Attraction.deleteMany({});
+            await RoomType_1.RoomType.deleteMany({});
+            await Room_1.Room.deleteMany({});
+            await MenuCategory_1.MenuCategory.deleteMany({});
+            await MenuItem_1.MenuItem.deleteMany({});
+        }
         // 2. Admin User
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@hotelraama.com';
-        const adminPassword = process.env.ADMIN_PASSWORD || 'AdminRaama@2026';
-        const passwordHash = await bcryptjs_1.default.hash(adminPassword, 10);
-        await Admin_1.Admin.create({
-            email: adminEmail,
-            passwordHash,
-            name: 'Hotel Raama Admin',
-            role: 'ADMIN',
-        });
-        console.log(`✓ Admin user created: ${adminEmail}`);
+        const existingAdmin = await Admin_1.Admin.findOne({ email: adminEmail });
+        if (!existingAdmin) {
+            const adminPassword = process.env.ADMIN_PASSWORD || 'AdminRaama@2026';
+            const passwordHash = await bcryptjs_1.default.hash(adminPassword, 10);
+            await Admin_1.Admin.create({
+                email: adminEmail,
+                passwordHash,
+                name: 'Hotel Raama Admin',
+                role: 'ADMIN',
+            });
+            console.log(`✓ Admin user created: ${adminEmail}`);
+        }
         // 3. Hotel Settings
-        await HotelSetting_1.HotelSetting.create({
-            hotelName: 'Hotel Raama',
-            tagline: 'Hospitality That Feels Like Home',
-            address: 'B.M. Road, Thanneeruhalla, Opposite S.D.M. Ayurvedic Hospital & College',
-            city: 'Hassan',
-            state: 'Karnataka',
-            pincode: '573201',
-            phone: '081722 57001',
-            email: 'reservations@hotelraama.com',
-            receptionWhatsapp: '918172257001',
-            notificationEmail: 'admin@hotelraama.com',
-            taxPercentage: 12,
-            bookingHoldMinutes: 15,
-        });
-        console.log('✓ Hotel settings created');
+        const existingSetting = await HotelSetting_1.HotelSetting.findOne();
+        if (!existingSetting) {
+            await HotelSetting_1.HotelSetting.create({
+                hotelName: 'Hotel Raama',
+                tagline: 'Hospitality That Feels Like Home',
+                address: 'B.M. Road, Thanneeruhalla, Opposite S.D.M. Ayurvedic Hospital & College',
+                city: 'Hassan',
+                state: 'Karnataka',
+                pincode: '573201',
+                phone: '+91 78995 11330',
+                email: 'hotelraama.hsn@gmail.com',
+                receptionWhatsapp: '917899511330',
+                notificationEmail: 'hotelraama.hsn@gmail.com',
+                taxPercentage: 12,
+                bookingHoldMinutes: 15,
+            });
+            console.log('✓ Hotel settings created');
+        }
         // 4. Meal Plans
         await MealPlan_1.MealPlan.create([
             { name: 'Buffet Breakfast', type: 'BREAKFAST', pricePerPersonPerNight: 150, description: 'Fresh South Indian & Continental breakfast spread' },
@@ -883,6 +888,34 @@ const seed = async () => {
         console.log('\n========================================');
         console.log(' DATABASE SEEDING COMPLETED SUCCESSFULLY!');
         console.log('========================================\n');
+    }
+    catch (error) {
+        console.error('Error during database seeding:', error);
+        throw error;
+    }
+};
+exports.runSeedLogic = runSeedLogic;
+const ensureDatabaseSeeded = async () => {
+    try {
+        const itemCount = await MenuItem_1.MenuItem.countDocuments();
+        const roomTypeCount = await RoomType_1.RoomType.countDocuments();
+        if (itemCount === 0 || roomTypeCount === 0) {
+            console.log(`[AutoSeed] Missing data detected (MenuItems: ${itemCount}, RoomTypes: ${roomTypeCount}). Auto-seeding database now...`);
+            await (0, exports.runSeedLogic)(false);
+            console.log('[AutoSeed] Auto-seeding finished.');
+        }
+    }
+    catch (err) {
+        console.error('[AutoSeed Error]:', err);
+    }
+};
+exports.ensureDatabaseSeeded = ensureDatabaseSeeded;
+const seed = async () => {
+    try {
+        console.log('Connecting to MongoDB for seeding...');
+        await mongoose_1.default.connect(MONGODB_URI);
+        console.log('Connected!');
+        await (0, exports.runSeedLogic)(true);
     }
     catch (error) {
         console.error('Error during database seeding:', error);

@@ -16,6 +16,7 @@ import { AuditLog } from '../models/AuditLog';
 import { HotelSetting } from '../models/HotelSetting';
 import { SocketService } from '../services/SocketService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
+import { ensureDatabaseSeeded, runSeedLogic } from '../seed/seedDatabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'raama_super_secret_jwt_key_2026_production';
 
@@ -489,11 +490,30 @@ export class AdminController {
    */
   static async getMenuItems(req: AuthRequest, res: Response) {
     try {
-      const items = await MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
-      const categories = await MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+      let items = await MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
+      let categories = await MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+
+      if (items.length === 0) {
+        await ensureDatabaseSeeded();
+        items = await MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
+        categories = await MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+      }
+
       return res.json({ success: true, data: { items, categories } });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch menu items.' });
+    }
+  }
+
+  /**
+   * POST /api/admin/seed
+   */
+  static async triggerSeed(req: AuthRequest, res: Response) {
+    try {
+      await runSeedLogic(false);
+      return res.json({ success: true, message: 'Database successfully seeded with menu and catalog data.' });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message || 'Seeding failed.' });
     }
   }
 

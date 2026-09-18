@@ -1,6 +1,8 @@
 import {
   FALLBACK_ROOMS,
   FALLBACK_ROOM_TYPES,
+  FALLBACK_MENU_ITEMS,
+  FALLBACK_MENU_CATEGORIES,
   mockAdminMetrics,
 } from '../data/mockData';
 import { cloudRelay } from './cloudRelayService';
@@ -9,6 +11,8 @@ const ORDERS_KEY = 'raama_local_orders';
 const BOOKINGS_KEY = 'raama_local_bookings';
 const ROOMS_KEY = 'raama_local_rooms';
 const AUDIT_LOGS_KEY = 'raama_local_audit_logs';
+const MENU_ITEMS_KEY = 'raama_local_menu_items';
+const MENU_CATEGORIES_KEY = 'raama_local_menu_categories';
 
 const SEED_ORDERS = [
   {
@@ -467,3 +471,49 @@ export const getLocalMetrics = () => {
     totalCombinedRevenue: ordersRevenue + bookingsRevenue,
   };
 };
+
+// --- MENU ITEMS & CATEGORIES STORE ---
+export const getLocalMenuItems = () => getStored(MENU_ITEMS_KEY, FALLBACK_MENU_ITEMS);
+export const getLocalMenuCategories = () => getStored(MENU_CATEGORIES_KEY, FALLBACK_MENU_CATEGORIES);
+
+export const saveLocalMenuItems = (items: any[]) => setStored(MENU_ITEMS_KEY, items);
+export const saveLocalMenuCategories = (categories: any[]) => setStored(MENU_CATEGORIES_KEY, categories);
+
+export const toggleLocalMenuItemAvailability = (id: string) => {
+  const items = getLocalMenuItems();
+  const updated = items.map((i: any) => {
+    if (i._id === id) {
+      return { ...i, isAvailable: i.isAvailable === false ? true : false };
+    }
+    return i;
+  });
+  saveLocalMenuItems(updated);
+  return updated.find((i: any) => i._id === id);
+};
+
+export const updateLocalMenuItem = (id: string, payload: any) => {
+  const items = getLocalMenuItems();
+  const updated = items.map((i: any) => (i._id === id ? { ...i, ...payload } : i));
+  saveLocalMenuItems(updated);
+  return updated.find((i: any) => i._id === id);
+};
+
+export const createLocalMenuItem = (payload: any) => {
+  const items = getLocalMenuItems();
+  const newItem = {
+    _id: `menu_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    ...payload,
+    createdAt: new Date().toISOString(),
+  };
+  items.unshift(newItem);
+  saveLocalMenuItems(items);
+  return newItem;
+};
+
+export const deleteLocalMenuItem = (id: string) => {
+  const items = getLocalMenuItems();
+  const filtered = items.filter((i: any) => i._id !== id);
+  saveLocalMenuItems(filtered);
+  return true;
+};
+

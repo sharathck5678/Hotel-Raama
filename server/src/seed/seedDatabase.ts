@@ -21,13 +21,10 @@ const generateQrToken = (roomNum: string) => {
   return hash.substring(0, 16);
 };
 
-export const seed = async () => {
+export const runSeedLogic = async (clearExisting = false) => {
   try {
-    console.log('Connecting to MongoDB for seeding...');
-    await mongoose.connect(MONGODB_URI);
-    console.log('Connected!');
-
-    // 1. Clear existing data
+    // 1. Clear existing data if requested
+    if (clearExisting) {
     console.log('Clearing existing collections...');
     await Admin.deleteMany({});
     await HotelSetting.deleteMany({});
@@ -38,9 +35,12 @@ export const seed = async () => {
     await Room.deleteMany({});
     await MenuCategory.deleteMany({});
     await MenuItem.deleteMany({});
+  }
 
-    // 2. Admin User
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@hotelraama.com';
+  // 2. Admin User
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@hotelraama.com';
+  const existingAdmin = await Admin.findOne({ email: adminEmail });
+  if (!existingAdmin) {
     const adminPassword = process.env.ADMIN_PASSWORD || 'AdminRaama@2026';
     const passwordHash = await bcrypt.hash(adminPassword, 10);
     
@@ -51,8 +51,11 @@ export const seed = async () => {
       role: 'ADMIN',
     });
     console.log(`✓ Admin user created: ${adminEmail}`);
+  }
 
-    // 3. Hotel Settings
+  // 3. Hotel Settings
+  const existingSetting = await HotelSetting.findOne();
+  if (!existingSetting) {
     await HotelSetting.create({
       hotelName: 'Hotel Raama',
       tagline: 'Hospitality That Feels Like Home',
@@ -63,11 +66,12 @@ export const seed = async () => {
       phone: '+91 78995 11330',
       email: 'hotelraama.hsn@gmail.com',
       receptionWhatsapp: '917899511330',
-      notificationEmail: 'admin@hotelraama.com',
+      notificationEmail: 'hotelraama.hsn@gmail.com',
       taxPercentage: 12,
       bookingHoldMinutes: 15,
     });
     console.log('✓ Hotel settings created');
+  }
 
     // 4. Meal Plans
     await MealPlan.create([
@@ -965,6 +969,32 @@ export const seed = async () => {
     console.log('========================================\n');
   } catch (error) {
     console.error('Error during database seeding:', error);
+    throw error;
+  }
+};
+
+export const ensureDatabaseSeeded = async () => {
+  try {
+    const itemCount = await MenuItem.countDocuments();
+    const roomTypeCount = await RoomType.countDocuments();
+    if (itemCount === 0 || roomTypeCount === 0) {
+      console.log(`[AutoSeed] Missing data detected (MenuItems: ${itemCount}, RoomTypes: ${roomTypeCount}). Auto-seeding database now...`);
+      await runSeedLogic(false);
+      console.log('[AutoSeed] Auto-seeding finished.');
+    }
+  } catch (err) {
+    console.error('[AutoSeed Error]:', err);
+  }
+};
+
+export const seed = async () => {
+  try {
+    console.log('Connecting to MongoDB for seeding...');
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected!');
+    await runSeedLogic(true);
+  } catch (error) {
+    console.error('Error during database seeding:', error);
     process.exit(1);
   } finally {
     await mongoose.disconnect();
@@ -974,3 +1004,4 @@ export const seed = async () => {
 if (require.main === module) {
   seed();
 }
+

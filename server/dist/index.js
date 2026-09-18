@@ -83,6 +83,7 @@ const ensureSpecialVenues = async () => {
     try {
         const existingPartyHall = await Room_1.Room.findOne({
             $or: [
+                { roomNumber: 'Sambhrama Banquet Hall' },
                 { roomNumber: 'Sambhrama Party Hall' },
                 { roomNumber: { $regex: /party|hall|sambhrama/i } },
                 { qrToken: 'qr_token_party_hall' },
@@ -92,14 +93,14 @@ const ensureSpecialVenues = async () => {
             const roomType = (await RoomType_1.RoomType.findOne({ code: 'SUITE_ROOM' })) || (await RoomType_1.RoomType.findOne());
             if (roomType) {
                 await Room_1.Room.create({
-                    roomNumber: 'Sambhrama Party Hall',
+                    roomNumber: 'Sambhrama Banquet Hall',
                     roomTypeId: roomType._id,
                     floor: 1,
                     status: 'AVAILABLE',
                     qrToken: 'qr_token_party_hall',
                     isActive: true,
                 });
-                console.log('[Setup] Created Sambhrama Party Hall QR code entry.');
+                console.log('[Setup] Created Sambhrama Banquet Hall QR code entry.');
             }
         }
         const existingBoardRoom = await Room_1.Room.findOne({
@@ -128,11 +129,13 @@ const ensureSpecialVenues = async () => {
         console.warn('[Setup] Special venue check warning:', err);
     }
 };
+const seedDatabase_1 = require("./seed/seedDatabase");
 // 4. Connect MongoDB & Start HTTP Server
 mongoose_1.default
     .connect(MONGODB_URI)
     .then(async () => {
     console.log('[MongoDB] Connected successfully to hotel_raama database.');
+    await (0, seedDatabase_1.ensureDatabaseSeeded)();
     await ensureSpecialVenues();
     await ensureCoupons();
     httpServer.listen(PORT, () => {

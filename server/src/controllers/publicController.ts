@@ -13,6 +13,7 @@ import { AvailabilityEngine } from '../services/AvailabilityEngine';
 import { PricingEngine } from '../services/PricingEngine';
 import { RazorpayService } from '../services/RazorpayService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
+import { ensureDatabaseSeeded } from '../seed/seedDatabase';
 
 export class PublicController {
   /**
@@ -20,7 +21,11 @@ export class PublicController {
    */
   static async getRoomTypes(req: Request, res: Response) {
     try {
-      const roomTypes = await RoomType.find({ isActive: true });
+      let roomTypes = await RoomType.find({ isActive: true });
+      if (roomTypes.length === 0) {
+        await ensureDatabaseSeeded();
+        roomTypes = await RoomType.find({ isActive: true });
+      }
       return res.json({ success: true, data: roomTypes });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch rooms.' });
@@ -258,8 +263,15 @@ export class PublicController {
    */
   static async getMenu(req: Request, res: Response) {
     try {
-      const categories = await MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
-      const items = await MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+      let categories = await MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
+      let items = await MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+
+      if (items.length === 0) {
+        await ensureDatabaseSeeded();
+        categories = await MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
+        items = await MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+      }
+
       return res.json({ success: true, data: { categories, items } });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch menu.' });

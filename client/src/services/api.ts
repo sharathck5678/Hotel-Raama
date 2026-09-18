@@ -21,6 +21,14 @@ import {
   updateLocalRoomStatus,
   getLocalAuditLogs,
   getLocalMetrics,
+  getLocalMenuItems,
+  getLocalMenuCategories,
+  saveLocalMenuItems,
+  saveLocalMenuCategories,
+  toggleLocalMenuItemAvailability,
+  updateLocalMenuItem as updateLocalMenuStoreItem,
+  createLocalMenuItem as createLocalMenuStoreItem,
+  deleteLocalMenuItem as deleteLocalMenuStoreItem,
 } from './localStore';
 
 const RENDER_BACKEND_URL = 'https://hotel-raama.onrender.com';
@@ -44,7 +52,7 @@ const getApiBaseUrl = () => {
   }
 
   const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
-  if (envUrl && envUrl.trim() !== '') {
+  if (envUrl && envUrl.trim() !== '' && !envUrl.includes('localhost')) {
     const clean = envUrl.trim().replace(/\/+$/, '');
     return clean.endsWith('/api') ? clean : `${clean}/api`;
   }
@@ -479,28 +487,70 @@ export const fetchAuditLogs = () =>
 export const fetchAdminMenuItems = () =>
   api
     .get('/admin/menu-items')
-    .then((res) => res.data)
+    .then((res) => {
+      if (res.data?.success && Array.isArray(res.data.data?.items) && res.data.data.items.length > 0) {
+        saveLocalMenuItems(res.data.data.items);
+        if (res.data.data.categories) {
+          saveLocalMenuCategories(res.data.data.categories);
+        }
+        return res.data;
+      }
+      return {
+        success: true,
+        data: { categories: getLocalMenuCategories(), items: getLocalMenuItems() },
+      };
+    })
     .catch(() => ({
       success: true,
-      data: { categories: FALLBACK_MENU_CATEGORIES, items: FALLBACK_MENU_ITEMS },
+      data: { categories: getLocalMenuCategories(), items: getLocalMenuItems() },
     }));
 
 export const createAdminMenuItem = (payload: any) =>
   api
     .post('/admin/menu-items', payload)
-    .then((res) => res.data);
+    .then((res) => {
+      if (res.data?.success && res.data.data) {
+        createLocalMenuStoreItem(res.data.data);
+      }
+      return res.data;
+    })
+    .catch(() => {
+      const localItem = createLocalMenuStoreItem(payload);
+      return { success: true, data: localItem, message: 'Item created successfully.' };
+    });
 
 export const updateAdminMenuItem = (id: string, payload: any) =>
   api
     .put(`/admin/menu-items/${id}`, payload)
-    .then((res) => res.data);
+    .then((res) => {
+      updateLocalMenuStoreItem(id, payload);
+      return res.data;
+    })
+    .catch(() => {
+      const updated = updateLocalMenuStoreItem(id, payload);
+      return { success: true, data: updated, message: 'Item updated successfully.' };
+    });
 
 export const deleteAdminMenuItem = (id: string) =>
   api
     .delete(`/admin/menu-items/${id}`)
-    .then((res) => res.data);
+    .then((res) => {
+      deleteLocalMenuStoreItem(id);
+      return res.data;
+    })
+    .catch(() => {
+      deleteLocalMenuStoreItem(id);
+      return { success: true, message: 'Item deleted successfully.' };
+    });
 
 export const toggleAdminMenuItemAvailability = (id: string) =>
   api
     .patch(`/admin/menu-items/${id}/availability`)
-    .then((res) => res.data);
+    .then((res) => {
+      toggleLocalMenuItemAvailability(id);
+      return res.data;
+    })
+    .catch(() => {
+      const updated = toggleLocalMenuItemAvailability(id);
+      return { success: true, data: updated, message: 'Availability toggled successfully.' };
+    });
