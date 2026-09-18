@@ -31,8 +31,8 @@ export const Navbar: React.FC = () => {
     { name: 'Home', path: '/' },
     { name: 'Rooms & Rates', path: '/rooms' },
     { name: 'Dining & Bar', path: '/dining' },
-    { name: 'Sambhrama Party Hall', path: '/party-hall' },
-    { name: 'Local Sightseeing', path: '/attractions' },
+    { name: 'Sambhrama Banquet Hall', path: '/party-hall' },
+    { name: 'Things to Do', path: '/attractions' },
     { name: 'Location & Directions', path: '/location' },
     { name: 'My Bookings & Orders', path: '/my-bookings-orders' },
   ];

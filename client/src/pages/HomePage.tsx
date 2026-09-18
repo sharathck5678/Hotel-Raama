@@ -349,7 +349,7 @@ export const HomePage: React.FC = () => {
         </ScrollReveal>
       </section>
 
-      {/* 4. SAMBHRAMA PARTY HALL & ATTRACTIONS */}
+      {/* 4. SAMBHRAMA BANQUET HALL & ATTRACTIONS */}
       <section className="py-24 max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
           
@@ -358,13 +358,13 @@ export const HomePage: React.FC = () => {
             <div className="relative rounded-sm overflow-hidden p-8 text-white space-y-6 border border-[#cbc0ad] shadow-md group h-full">
               <img
                 src="/sambhrama-party-hall.png"
-                alt="Sambhrama Party Hall"
+                alt="Sambhrama Banquet Hall"
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="relative z-10 space-y-6">
                 <div>
                   <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Banquets & Events</span>
-                  <h3 className="text-3xl font-serif text-white mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">Sambhrama Party Hall</h3>
+                  <h3 className="text-3xl font-serif text-white mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">Sambhrama Banquet Hall</h3>
                 </div>
                 <p className="text-xs font-sans text-white leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                   Host grand weddings, corporate banquets, and celebrations. Custom vegetarian & non-veg catering packages starting at ₹450 / pax + GST.
@@ -373,7 +373,7 @@ export const HomePage: React.FC = () => {
                   to="/party-hall"
                   className="inline-flex items-center gap-2 w-full justify-center py-3.5 rounded-sm bg-[#F7F0DF] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#D6B369] transition-all cursor-pointer shadow-lg"
                 >
-                  View Party Packages
+                  View Banquet Packages
                 </Link>
               </div>
             </div>
@@ -407,7 +407,7 @@ export const HomePage: React.FC = () => {
 
             <div className="text-right">
               <Link to="/attractions" className="text-xs font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#667085] inline-flex items-center gap-1.5">
-                Explore All Sightseeing Spots <ArrowRight size={14} />
+                Explore All Things to Do <ArrowRight size={14} />
               </Link>
             </div>
           </ScrollReveal>

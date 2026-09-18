@@ -290,47 +290,47 @@ export const AdminOrdersView: React.FC = () => {
           return (
             <ScrollReveal key={col.key} direction={idx === 0 ? 'left' : 'right'} duration={0.85} className="h-full">
               <div
-                className={`bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border-t-4 ${col.color} border border-white/15 space-y-4 shadow-xl h-full`}
+                className={`bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border-t-4 ${col.color} border border-[#10184A]/25 space-y-4 shadow-sm h-full`}
               >
-                <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                  <h3 className="font-serif font-bold text-base sm:text-lg text-[#FAF9F6] truncate mr-2">
+                <div className="flex justify-between items-center pb-3 border-b border-[#10184A]/15">
+                  <h3 className="font-serif font-bold text-base sm:text-lg text-[#00174A] truncate mr-2">
                     <span className="hidden sm:inline">{col.title}</span>
                     <span className="sm:hidden">{col.shortTitle}</span>
                   </h3>
-                  <span className="px-2.5 py-1 rounded-sm bg-white/10 text-xs font-sans font-bold text-[#D6B369] border border-white/15 shrink-0">
+                  <span className="px-2.5 py-1 rounded-sm bg-[#00174A]/10 text-xs font-sans font-bold text-[#00174A] border border-[#10184A]/15 shrink-0">
                     {colOrders.length} {colOrders.length === 1 ? 'Order' : 'Orders'}
                   </span>
                 </div>
 
                 <div className="space-y-4 md:max-h-[75vh] md:overflow-y-auto pr-0 md:pr-1">
                   {colOrders.length === 0 ? (
-                    <div className="py-12 text-center text-[#FAF9F6]/40 text-xs font-sans">
+                    <div className="py-12 text-center text-[#00174A]/50 text-xs font-sans">
                       No orders in this stage.
                     </div>
                   ) : (
                     colOrders.map((ord) => (
                       <div
                         key={ord._id}
-                        className="p-4 bg-white/5 rounded-sm border border-white/10 space-y-3 shadow-inner hover:border-[#D6B369]/50 transition-all font-sans text-xs"
+                        className="p-4 bg-white rounded-sm border border-[#10184A]/20 space-y-3 shadow-xs hover:border-[#D6B369] transition-all font-sans text-xs"
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="text-[10px] font-bold text-[#D6B369] block uppercase tracking-wider">
+                            <span className="text-[10px] font-bold text-[#00174A] block uppercase tracking-wider">
                               {formatRoomNumber(ord.roomNumber)}
                             </span>
-                            <span className="text-base font-serif font-bold text-white">
+                            <span className="text-base font-serif font-bold text-[#00174A]">
                               Order #{ord.orderId}
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className="text-xs font-bold text-[#D6B369] block font-serif">
+                            <span className="text-xs font-bold text-[#00174A] block font-serif">
                               ₹{ord.totalAmount}
                             </span>
                             <span
                               className={`text-[9px] px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider ${
                                 ord.paymentMethod === 'CASH'
-                                  ? 'bg-amber-900/60 text-amber-300 border border-amber-700/60'
-                                  : 'bg-indigo-900/60 text-indigo-300 border border-indigo-700/60'
+                                  ? 'bg-amber-50 text-amber-800 border border-amber-300'
+                                  : 'bg-blue-50 text-blue-800 border border-blue-300'
                               }`}
                             >
                               {ord.paymentMethod === 'CASH' ? 'PAY AT RECEPTION' : 'RAZORPAY ONLINE'}
@@ -339,35 +339,35 @@ export const AdminOrdersView: React.FC = () => {
                         </div>
 
                         {/* Guest info */}
-                        <div className="text-xs text-[#FAF9F6]/80 flex flex-wrap items-center justify-between gap-1">
+                        <div className="text-xs text-[#00174A]/80 flex flex-wrap items-center justify-between gap-1">
                           <div>
-                            <span>Guest: <strong className="text-white">{ord.guestName}</strong></span>
-                            <span className="text-[#FAF9F6]/60 ml-1">({ord.guestPhone})</span>
+                            <span>Guest: <strong className="text-[#00174A]">{ord.guestName}</strong></span>
+                            <span className="text-[#00174A]/60 ml-1">({ord.guestPhone})</span>
                           </div>
-                          <span className="text-[10px] text-[#FAF9F6]/60 shrink-0 whitespace-nowrap">
+                          <span className="text-[10px] text-[#00174A]/60 shrink-0 whitespace-nowrap">
                             {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
 
                         {/* Items */}
-                        <div className="space-y-1.5 py-2.5 border-y border-white/10 text-xs">
+                        <div className="space-y-1.5 py-2.5 border-y border-[#10184A]/15 text-xs">
                           {ord.items.map((item: any, idx: number) => (
-                            <div key={idx} className="flex justify-between items-start gap-2 text-[#FAF9F6]/90">
+                            <div key={idx} className="flex justify-between items-start gap-2 text-[#00174A]">
                               <span className="break-words min-w-0">
-                                <span className="font-bold text-[#D6B369] mr-1">{item.quantity}x</span>
+                                <span className="font-bold text-[#00174A] mr-1">{item.quantity}x</span>
                                 <strong>{item.name}</strong>{' '}
                                 {item.potionSize && item.potionSize !== 'Standard' && (
-                                  <span className="text-[#FAF9F6]/70 text-[11px]">({item.potionSize})</span>
+                                  <span className="text-[#00174A]/70 text-[11px]">({item.potionSize})</span>
                                 )}
                               </span>
-                              <span className="text-[#FAF9F6]/70 shrink-0 font-medium">₹{item.price * item.quantity}</span>
+                              <span className="text-[#00174A]/80 shrink-0 font-medium">₹{item.price * item.quantity}</span>
                             </div>
                           ))}
                         </div>
 
                         {/* Instructions */}
                         {ord.specialInstructions && (
-                          <div className="text-[11px] text-[#D6B369] bg-[#D6B369]/10 p-2 rounded-sm border border-[#D6B369]/30 break-words">
+                          <div className="text-[11px] text-[#00174A] bg-[#D6B369]/15 p-2 rounded-sm border border-[#D6B369]/40 break-words font-medium">
                             Note: {ord.specialInstructions}
                           </div>
                         )}
@@ -375,14 +375,14 @@ export const AdminOrdersView: React.FC = () => {
                         {/* Status & Payment bar */}
                         <div className="pt-2 flex flex-col gap-2.5">
                           <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold font-serif text-[#D6B369] text-sm sm:text-base">
+                            <span className="font-bold font-serif text-[#00174A] text-sm sm:text-base">
                               Total: ₹{ord.totalAmount}
                             </span>
                             <span
                               className={`px-2.5 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider ${
                                 ord.paymentStatus === 'PAID'
-                                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                                  : 'bg-red-950 text-red-300 border border-red-800'
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                                  : 'bg-red-50 text-red-800 border border-red-300'
                               }`}
                             >
                               {ord.paymentStatus}
@@ -410,7 +410,7 @@ export const AdminOrdersView: React.FC = () => {
                             {ord.status === 'PREPARING' && (
                               <button
                                 onClick={() => handleStatusChange(ord._id, 'READY')}
-                                className="w-full py-2.5 bg-[#F7F0DF] text-[#00174A] hover:bg-[#D6B369] active:bg-[#E8C56A] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                                className="w-full py-2.5 bg-[#00174A] text-[#FAF9F6] hover:bg-[#10184A] rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                               >
                                 ✅ Food Cooked (Move to Serve)
                               </button>
@@ -424,7 +424,7 @@ export const AdminOrdersView: React.FC = () => {
                               </button>
                             )}
                             {ord.status === 'DELIVERED' && (
-                              <div className="text-center py-2 bg-emerald-950/60 text-emerald-300 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-800">
+                              <div className="text-center py-2 bg-emerald-50 text-emerald-800 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-300">
                                 ✓ Served & Delivered
                               </div>
                             )}
@@ -432,7 +432,7 @@ export const AdminOrdersView: React.FC = () => {
                             {ord.paymentStatus === 'UNPAID' && (
                               <button
                                 onClick={() => handleSettlePayment(ord._id, 'CASH')}
-                                className="w-full py-2 bg-emerald-900/80 text-emerald-200 hover:bg-emerald-800 active:bg-emerald-950 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-700 transition-all cursor-pointer"
+                                className="w-full py-2 bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 rounded-sm text-xs font-bold uppercase tracking-wider border border-emerald-600 transition-all cursor-pointer shadow-sm"
                               >
                                 💵 Settle Cash / UPI Payment
                               </button>
@@ -441,7 +441,7 @@ export const AdminOrdersView: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => downloadOrderReceiptPdf(ord)}
-                              className="w-full py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-[#FAF9F6] font-bold uppercase tracking-wider rounded-sm text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                              className="w-full py-2 bg-[#00174A]/10 hover:bg-[#00174A]/20 active:bg-[#00174A]/30 text-[#00174A] font-bold uppercase tracking-wider rounded-sm text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                             >
                               <Download size={13} /> PDF Receipt
                             </button>

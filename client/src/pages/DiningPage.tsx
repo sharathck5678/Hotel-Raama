@@ -119,6 +119,7 @@ export const DiningPage: React.FC = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [guestRoom, setGuestRoom] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [placingOrder, setPlacingOrder] = useState(false);
   const [paymentMode, setPaymentMode] = useState<'RAZORPAY' | 'CASH'>('RAZORPAY');
@@ -156,6 +157,10 @@ export const DiningPage: React.FC = () => {
     script.async = true;
     document.body.appendChild(script);
   }, [urlRoom, urlToken]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     if (urlTab === 'HOTEL_RAAMA' || urlTab === 'LIQUID_LOUNGE' || urlTab === 'SWAAD_VEG') {
@@ -249,11 +254,6 @@ export const DiningPage: React.FC = () => {
   const currentCategories = categories.filter((c) => activeCategoryIds.has(c._id));
 
   const addToCart = (item: any, potionSize: string = 'Standard') => {
-    if (!isQrScanned) {
-      toast.error('QR Scan Required: Please scan the QR code in your room or table to enable food ordering.');
-      return;
-    }
-
     const key = `${item._id}_${potionSize}`;
     const unitPrice = potionSize === '60ML' && item.price60ml ? item.price60ml : item.price;
 
@@ -299,8 +299,9 @@ export const DiningPage: React.FC = () => {
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isQrScanned) {
-      toast.error('QR Scan Required: You must scan a QR code to place an order.');
+    const orderRoom = activeRoomNumber || guestRoom.trim();
+    if (!orderRoom) {
+      toast.error('Please specify your room or table number.');
       return;
     }
 
@@ -321,7 +322,7 @@ export const DiningPage: React.FC = () => {
       const res = await createFoodOrder({
         guestName,
         guestPhone,
-        roomNumber: activeRoomNumber || '',
+        roomNumber: orderRoom,
         deliveryOption: 'ROOM_SERVICE',
         items: cartList,
         specialInstructions,
@@ -502,43 +503,31 @@ export const DiningPage: React.FC = () => {
           {/* SWAAD PURE VEG */}
           <button
             onClick={() => handleTabChange('SWAAD_VEG')}
-            className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${
               activeTab === 'SWAAD_VEG'
-                ? 'bg-[#00174A] text-white border-[#00174A] shadow-md ring-1 ring-[#00174A]'
-                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#D6B369]'
+                ? 'border-2 border-[#D6B369] shadow-[0_0_16px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
+                : 'border border-[#10184A]/15 hover:border-[#D6B369]/60 shadow-xs'
             }`}
           >
-            <div
-              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
-                activeTab === 'SWAAD_VEG'
-                  ? 'bg-[#10184A] border-emerald-500/30 text-emerald-400'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-              }`}
-            >
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border bg-emerald-50 border-emerald-200 text-emerald-700">
               <Leaf size={20} />
             </div>
-            <div className="h-7 w-[1px] bg-current opacity-20 shrink-0" />
-            <span className="font-sans font-bold text-xs uppercase tracking-wider">
+            <div className="h-7 w-[1px] bg-[#10184A]/15 shrink-0" />
+            <span className="font-sans font-bold text-xs uppercase tracking-wider text-[#00174A]">
               SWAAD PURE VEG
             </span>
           </button>
 
-          {/* HOTEL RAAMA (Crimson Red for Non-Veg restaurant branding) */}
+          {/* HOTEL RAAMA (Non-Veg restaurant branding) */}
           <button
             onClick={() => handleTabChange('HOTEL_RAAMA')}
-            className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${
               activeTab === 'HOTEL_RAAMA'
-                ? 'bg-[#C8102E] text-white border-[#C8102E] shadow-md ring-1 ring-[#C8102E]'
-                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#C8102E]'
+                ? 'border-2 border-[#D6B369] shadow-[0_0_16px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
+                : 'border border-[#10184A]/15 hover:border-[#D6B369]/60 shadow-xs'
             }`}
           >
-            <div
-              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
-                activeTab === 'HOTEL_RAAMA'
-                  ? 'bg-[#A00D24] border-[#C8102E]/50 text-white'
-                  : 'bg-[#C8102E] border-[#A00D24] text-white'
-              }`}
-            >
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border bg-[#C8102E] border-[#A00D24] text-white">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                 <path d="M4 18h16" />
                 <path d="M12 5v1" />
@@ -546,8 +535,8 @@ export const DiningPage: React.FC = () => {
                 <circle cx="12" cy="5" r="1.2" fill="currentColor" />
               </svg>
             </div>
-            <div className="h-7 w-[1px] bg-current opacity-20 shrink-0" />
-            <span className="font-sans font-bold text-xs uppercase tracking-wider">
+            <div className="h-7 w-[1px] bg-[#10184A]/15 shrink-0" />
+            <span className="font-sans font-bold text-xs uppercase tracking-wider text-[#00174A]">
               HOTEL RAAMA
             </span>
           </button>
@@ -555,23 +544,17 @@ export const DiningPage: React.FC = () => {
           {/* LIQUID LOUNGE BAR */}
           <button
             onClick={() => handleTabChange('LIQUID_LOUNGE')}
-            className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer shadow-sm text-left ${
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${
               activeTab === 'LIQUID_LOUNGE'
-                ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-md ring-1 ring-[#071A3D]'
-                : 'bg-white text-[#00174A] border-[#10184A]/20 hover:border-[#D6B369]'
+                ? 'border-2 border-[#D6B369] shadow-[0_0_16px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
+                : 'border border-[#10184A]/15 hover:border-[#D6B369]/60 shadow-xs'
             }`}
           >
-            <div
-              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 border ${
-                activeTab === 'LIQUID_LOUNGE'
-                  ? 'bg-[#00174A] border-[#D6B369]/30 text-[#D6B369]'
-                  : 'bg-[#071A3D] border-[#10184A] text-white'
-              }`}
-            >
+            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border bg-[#071A3D] border-[#10184A] text-white">
               <Martini size={19} />
             </div>
-            <div className="h-7 w-[1px] bg-current opacity-20 shrink-0" />
-            <span className="font-sans font-bold text-xs uppercase tracking-wider">
+            <div className="h-7 w-[1px] bg-[#10184A]/15 shrink-0" />
+            <span className="font-sans font-bold text-xs uppercase tracking-wider text-[#00174A]">
               LIQUID LOUNGE BAR
             </span>
           </button>
@@ -871,29 +854,119 @@ export const DiningPage: React.FC = () => {
                             )}
                           </div>
 
-                          {item.price60ml ? (
-                            <div className="flex gap-1.5">
+                          {item.price60ml ? (() => {
+                            const key30 = `${item._id}_30ML`;
+                            const key60 = `${item._id}_60ML`;
+                            const qty30 = cart[key30]?.quantity || 0;
+                            const qty60 = cart[key60]?.quantity || 0;
+
+                            return (
+                              <div className="flex gap-1.5 items-center">
+                                {qty30 > 0 ? (
+                                  <div className="flex items-center rounded-sm bg-[#00174A] text-[#FAF9F6] shadow-sm overflow-hidden border border-[#00174A]">
+                                    <button
+                                      type="button"
+                                      onClick={() => updateQuantity(key30, -1)}
+                                      className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                      aria-label="Decrease 30ML quantity"
+                                    >
+                                      <Minus size={11} className="stroke-[2.5]" />
+                                    </button>
+                                    <span className="px-1 text-[10px] font-sans font-bold select-none min-w-[32px] text-center">
+                                      30M·{qty30}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => updateQuantity(key30, 1)}
+                                      className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                      aria-label="Increase 30ML quantity"
+                                    >
+                                      <Plus size={11} className="stroke-[2.5]" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => addToCart(item, '30ML')}
+                                    className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
+                                  >
+                                    + 30ML
+                                  </button>
+                                )}
+
+                                {qty60 > 0 ? (
+                                  <div className="flex items-center rounded-sm bg-[#00174A] text-[#FAF9F6] shadow-sm overflow-hidden border border-[#00174A]">
+                                    <button
+                                      type="button"
+                                      onClick={() => updateQuantity(key60, -1)}
+                                      className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                      aria-label="Decrease 60ML quantity"
+                                    >
+                                      <Minus size={11} className="stroke-[2.5]" />
+                                    </button>
+                                    <span className="px-1 text-[10px] font-sans font-bold select-none min-w-[32px] text-center">
+                                      60M·{qty60}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => updateQuantity(key60, 1)}
+                                      className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                      aria-label="Increase 60ML quantity"
+                                    >
+                                      <Plus size={11} className="stroke-[2.5]" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => addToCart(item, '60ML')}
+                                    className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
+                                  >
+                                    + 60ML
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })() : (() => {
+                            const standardKey = `${item._id}_Standard`;
+                            const standardQty = cart[standardKey]?.quantity || 0;
+
+                            if (standardQty > 0) {
+                              return (
+                                <div className="flex items-center rounded-sm bg-[#D6B369] text-[#00174A] shadow-sm overflow-hidden border border-[#D6B369]">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(standardKey, -1)}
+                                    className="w-8 h-8 flex items-center justify-center hover:bg-[#C4A259] active:bg-[#B39148] transition-colors cursor-pointer"
+                                    aria-label="Decrease quantity"
+                                  >
+                                    <Minus size={13} className="stroke-[2.5]" />
+                                  </button>
+                                  <span className="w-8 text-center text-xs font-sans font-bold select-none text-[#00174A]">
+                                    {standardQty}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(standardKey, 1)}
+                                    className="w-8 h-8 flex items-center justify-center hover:bg-[#C4A259] active:bg-[#B39148] transition-colors cursor-pointer"
+                                    aria-label="Increase quantity"
+                                  >
+                                    <Plus size={13} className="stroke-[2.5]" />
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            return (
                               <button
-                                onClick={() => addToCart(item, '30ML')}
-                                className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
+                                type="button"
+                                onClick={() => addToCart(item, 'Standard')}
+                                className="px-4 py-2 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm transition-all"
                               >
-                                + 30ML
+                                <Plus size={13} /> Add
                               </button>
-                              <button
-                                onClick={() => addToCart(item, '60ML')}
-                                className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
-                              >
-                                + 60ML
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => addToCart(item, 'Standard')}
-                              className="px-4 py-2 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm"
-                            >
-                              <Plus size={13} /> Add
-                            </button>
-                          )}
+                            );
+                          })()}
                         </div>
                       </div>
                     </ScrollRevealItem>
@@ -969,7 +1042,7 @@ export const DiningPage: React.FC = () => {
 
             {/* Checkout Form */}
             <form onSubmit={handleOrderSubmit} className="space-y-4 pt-2">
-              {activeRoomNumber && (
+              {activeRoomNumber ? (
                 <div className="p-3 bg-white/10 rounded-sm border border-[#D6B369]/30 flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-sans uppercase font-bold text-[#D6B369] tracking-wider block">
@@ -982,6 +1055,20 @@ export const DiningPage: React.FC = () => {
                   <span className="px-2 py-1 rounded-sm bg-emerald-500/20 text-emerald-300 text-[9px] font-sans font-bold uppercase tracking-wider border border-emerald-500/30">
                     ✓ Scanned from QR
                   </span>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">
+                    Room / Table Number *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Room 204 or Table 5"
+                    value={guestRoom}
+                    onChange={(e) => setGuestRoom(e.target.value)}
+                    className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
+                    required
+                  />
                 </div>
               )}
 

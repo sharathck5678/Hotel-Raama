@@ -161,7 +161,7 @@ export const QrOrderingSectionPage: React.FC = () => {
               QR Ordering Directory & Room Cards
             </h1>
             <p className="font-sans text-xs sm:text-sm text-[#667085] leading-relaxed">
-              Manage static QR codes for Rooms 1 through 40, Sambhrama Party Hall, and Board Room. Click or scan any card to launch guest ordering for <strong className="text-[#00174A]">Swaad Pure Veg</strong>, <strong className="text-[#00174A]">Non-Veg Specialities</strong>, and <strong className="text-[#00174A]">Liquid Lounge Bar</strong>.
+              Manage static QR codes for Rooms 1 through 40, Sambhrama Banquet Hall, and Board Room. Click or scan any card to launch guest ordering for <strong className="text-[#00174A]">Swaad Pure Veg</strong>, <strong className="text-[#00174A]">Non-Veg Specialities</strong>, and <strong className="text-[#00174A]">Liquid Lounge Bar</strong>.
             </p>
           </div>
         </ScrollReveal>
@@ -326,42 +326,42 @@ export const QrOrderingSectionPage: React.FC = () => {
               return (
                 <ScrollRevealItem key={room._id}>
                   <div
-                    className={`bg-[#00174A] text-[#FAF9F6] rounded-sm border p-4 sm:p-6 flex flex-col justify-between hover:border-[#D6B369] transition-all duration-300 shadow-md h-full ${
-                      isVenue ? 'border-[#D6B369]' : 'border-white/15'
+                    className={`bg-[#F7F0DF] text-[#00174A] rounded-sm border p-4 sm:p-6 flex flex-col justify-between hover:border-[#D6B369] transition-all duration-300 shadow-sm h-full ${
+                      isVenue ? 'border-[#D6B369] ring-1 ring-[#D6B369]' : 'border-[#10184A]/25'
                     }`}
                   >
                     <div>
                       {/* Header */}
                       <div className="flex justify-between items-start mb-3 sm:mb-4">
                         <div>
-                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-white/10 text-[#D6B369]">
+                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-[#00174A]/10 text-[#00174A] border border-[#10184A]/15">
                             {isBoardRoom
                               ? 'Executive Meeting Venue'
                               : isVenue
                               ? 'Special Event Venue'
                               : `Floor ${room.floor}`}
                           </span>
-                          <h3 className="text-xl sm:text-2xl font-serif text-[#FAF9F6] mt-1.5 truncate">
+                          <h3 className="text-xl sm:text-2xl font-serif text-[#00174A] font-bold mt-1.5 truncate">
                             {isVenue ? room.roomNumber : `Room #${room.roomNumber}`}
                           </h3>
                         </div>
 
-                        <span className="text-[9px] font-sans text-[#D6B369] bg-white/10 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-white/15 shrink-0 ml-2">
+                        <span className="text-[9px] font-sans text-emerald-800 bg-emerald-100/80 px-2 py-1 rounded-sm uppercase tracking-widest font-semibold border border-emerald-300 shrink-0 ml-2">
                           QR Active
                         </span>
                       </div>
 
-                      <p className="text-xs font-sans text-white/70 mb-5 line-clamp-1">
+                      <p className="text-xs font-sans text-[#00174A]/70 mb-5 line-clamp-1">
                         {room.roomTypeId?.name ||
                           (isBoardRoom
                             ? 'Executive Board Room'
                             : isVenue
-                            ? 'Grand Sambhrama Party Hall'
+                            ? 'Grand Sambhrama Banquet Hall'
                             : 'Standard Room')}
                       </p>
 
                       {/* QR Code Visual Container */}
-                      <div className="bg-white p-5 rounded-sm flex flex-col items-center justify-center border border-[#10184A]/15 shadow-md transition-all duration-300">
+                      <div className="bg-white p-5 rounded-sm flex flex-col items-center justify-center border border-[#10184A]/20 shadow-sm transition-all duration-300">
                         <div
                           onClick={() => navigate(`/order/${room.qrToken}`)}
                           className="cursor-pointer group flex flex-col items-center"

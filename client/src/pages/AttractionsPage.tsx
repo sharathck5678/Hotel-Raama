@@ -17,7 +17,7 @@ export const AttractionsPage: React.FC = () => {
       <ScrollReveal direction="up" duration={0.8}>
         <div className="text-center max-w-3xl mx-auto border-b border-[#10184A]/15 pb-8">
           <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#667085] block mb-2">
-            Hassan Sightseeing & Heritage
+            Things to Do in Hassan
           </span>
           <h1 className="editorial-section-title text-[#00174A]">Nearby Heritage Attractions</h1>
           <p className="font-sans text-xs sm:text-sm text-[#667085] mt-3 max-w-xl mx-auto leading-relaxed">

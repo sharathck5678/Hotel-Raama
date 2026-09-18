@@ -18,7 +18,7 @@ export class InvoicePdfService {
         // Header
         doc.fillColor('#07111F').fontSize(22).font('Helvetica-Bold').text('HOTEL RAAMA', { align: 'left' });
         doc.fillColor('#666666').fontSize(9).font('Helvetica').text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201');
-        doc.text('Phone: 081722 57001 | Email: reservations@hotelraama.com');
+        doc.text('Phone: +91 78995 11330 | Email: hotelraama.hsn@gmail.com');
         doc.moveDown();
 
         // Title

@@ -79,16 +79,16 @@ export const LocationPage: React.FC = () => {
               </div>
             </a>
 
-            {/* Card 2: Call 081722 57001 */}
+            {/* Card 2: Call +91 78995 11330 */}
             <a
-              href="tel:08172257001"
+              href="tel:7899511330"
               className="flex items-center justify-between gap-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-white border border-[#10184A]/15 text-[#00174A] shadow-sm hover:bg-[#F7F0DF] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group overflow-hidden"
             >
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#00174A]/10 flex items-center justify-center text-[#00174A] shrink-0 group-hover:scale-105 transition-transform">
                 <Phone size={16} className="text-[#00174A]" />
               </div>
               <span className="flex-1 text-center font-sans font-bold text-[10.5px] sm:text-[11.5px] uppercase tracking-wider text-[#00174A] whitespace-nowrap px-1">
-                Call 081722 57001
+                Call +91 78995 11330
               </span>
               <div className="w-5 flex justify-end shrink-0">
                 <ArrowRight size={17} className="text-[#00174A]/70 group-hover:text-[#00174A] group-hover:translate-x-0.5 transition-all" />
@@ -97,7 +97,7 @@ export const LocationPage: React.FC = () => {
 
             {/* Card 3: WhatsApp Concierge */}
             <a
-              href="https://wa.me/918172257001?text=Hi%20Hotel%20Raama,%20I%20need%20directions%20to%20reach%20the%20hotel."
+              href="https://wa.me/917899511330?text=Hi%20Hotel%20Raama,%20I%20need%20directions%20to%20reach%20the%20hotel."
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between gap-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-[#eef7f2] border border-[#d2edd9] text-[#1c7a52] shadow-sm hover:bg-[#e4f3eb] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group overflow-hidden"
@@ -123,26 +123,26 @@ export const LocationPage: React.FC = () => {
         
         {/* Left Column: Comprehensive Hotel Coordinates Card (5 cols) */}
         <ScrollReveal direction="left" duration={0.85} className="lg:col-span-5 h-full">
-          <div className="bg-[#00174A] text-[#FAF9F6] p-7 sm:p-9 rounded-2xl border border-white/15 flex flex-col justify-between shadow-lg space-y-8 h-full">
+          <div className="bg-[#F7F0DF] text-[#00174A] p-7 sm:p-9 rounded-2xl border border-[#10184A]/25 flex flex-col justify-between shadow-md space-y-8 h-full">
             <div className="space-y-6">
               <div>
-                <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-widest block mb-1">
+                <span className="text-[#00174A] text-[10px] font-sans font-bold uppercase tracking-widest block mb-1">
                   Hotel Raama Coordinates
                 </span>
-                <h2 className="text-3xl font-serif text-[#FAF9F6]">Hotel Raama, Hassan</h2>
-                <p className="text-xs text-white/80 mt-1">Hospitality That Feels Like Home</p>
+                <h2 className="text-3xl font-serif font-bold text-[#00174A]">Hotel Raama, Hassan</h2>
+                <p className="text-xs text-[#00174A]/80 mt-1">Hospitality That Feels Like Home</p>
               </div>
 
-              <div className="space-y-5 text-xs font-sans border-t border-white/15 pt-5">
+              <div className="space-y-5 text-xs font-sans border-t border-[#10184A]/15 pt-5">
                 {/* Address */}
                 <div className="flex items-start gap-3.5">
-                  <MapPin size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
+                  <MapPin size={18} className="text-[#00174A] shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">Physical Address</strong>
-                    <span className="text-white/90 leading-relaxed block text-xs">
+                    <strong className="block text-[#00174A] text-[11px] uppercase tracking-wider font-bold mb-0.5">Physical Address</strong>
+                    <span className="text-[#00174A]/90 leading-relaxed block text-xs">
                       {info?.address || 'B.M. Road, Thanneeruhalla, Opposite S.D.M. Ayurvedic Hospital & College'}, Hassan, Karnataka - 573201
                     </span>
-                    <span className="text-[#D6B369] text-[11px] block mt-1 font-medium">
+                    <span className="text-[#00174A] text-[11px] block mt-1 font-semibold">
                       Landmark: Directly opposite SDM Ayurvedic Hospital
                     </span>
                   </div>
@@ -150,40 +150,40 @@ export const LocationPage: React.FC = () => {
 
                 {/* Phone */}
                 <div className="flex items-start gap-3.5">
-                  <Phone size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
+                  <Phone size={18} className="text-[#00174A] shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">Front Desk & Reservations</strong>
-                    <a href={`tel:${info?.phone || '08172257001'}`} className="text-[#D6B369] hover:underline font-bold text-sm tracking-wide">
-                      {info?.phone || '081722 57001'}
+                    <strong className="block text-[#00174A] text-[11px] uppercase tracking-wider font-bold mb-0.5">Front Desk & Reservations</strong>
+                    <a href={`tel:${info?.phone?.replace(/\s+/g, '') || '7899511330'}`} className="text-[#00174A] hover:text-[#D6B369] font-bold text-sm tracking-wide">
+                      {info?.phone || '+91 78995 11330'}
                     </a>
-                    <span className="text-white/70 text-[10px] block mt-0.5">Available 24 Hours · 7 Days a Week</span>
+                    <span className="text-[#00174A]/70 text-[10px] block mt-0.5">Available 24 Hours · 7 Days a Week</span>
                   </div>
                 </div>
 
                 {/* Email */}
                 <div className="flex items-start gap-3.5">
-                  <Mail size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
+                  <Mail size={18} className="text-[#00174A] shrink-0 mt-0.5" />
                   <div>
-                    <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">Inquiries & Corporate Bookings</strong>
-                    <a href={`mailto:${info?.email || 'reservations@hotelraama.com'}`} className="text-[#D6B369] hover:underline text-xs">
-                      {info?.email || 'reservations@hotelraama.com'}
+                    <strong className="block text-[#00174A] text-[11px] uppercase tracking-wider font-bold mb-0.5">Inquiries & Corporate Bookings</strong>
+                    <a href={`mailto:${info?.email || 'hotelraama.hsn@gmail.com'}`} className="text-[#00174A] hover:text-[#D6B369] text-xs font-semibold">
+                      {info?.email || 'hotelraama.hsn@gmail.com'}
                     </a>
                   </div>
                 </div>
 
                 {/* GPS Coordinates */}
                 <div className="flex items-start gap-3.5">
-                  <Compass size={18} className="text-[#D6B369] shrink-0 mt-0.5" />
+                  <Compass size={18} className="text-[#00174A] shrink-0 mt-0.5" />
                   <div className="flex-grow">
-                    <strong className="block text-[#FAF9F6] text-[11px] uppercase tracking-wider font-bold mb-0.5">GPS Latitude & Longitude</strong>
-                    <div className="flex items-center justify-between gap-2 bg-black/25 px-3 py-1.5 rounded-md border border-white/10 mt-1">
-                      <span className="text-white/90 font-mono text-[11px]">12.9951° N, 76.0827° E</span>
+                    <strong className="block text-[#00174A] text-[11px] uppercase tracking-wider font-bold mb-0.5">GPS Latitude & Longitude</strong>
+                    <div className="flex items-center justify-between gap-2 bg-[#00174A]/5 px-3 py-1.5 rounded-md border border-[#10184A]/15 mt-1">
+                      <span className="text-[#00174A] font-mono text-[11px] font-semibold">12.9951° N, 76.0827° E</span>
                       <button
                         onClick={handleCopyCoords}
-                        className="text-[#D6B369] hover:text-white p-1 text-[11px] flex items-center gap-1 transition-colors"
+                        className="text-[#00174A] hover:text-[#D6B369] p-1 text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
                         title="Copy Coordinates"
                       >
-                        {copiedCoords ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+                        {copiedCoords ? <Check size={13} className="text-green-600" /> : <Copy size={13} />}
                         <span>{copiedCoords ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
@@ -193,11 +193,11 @@ export const LocationPage: React.FC = () => {
             </div>
 
             {/* Quick Details footer */}
-            <div className="pt-4 border-t border-white/15 flex items-center justify-between text-[11px] text-white/80">
+            <div className="pt-4 border-t border-[#10184A]/15 flex items-center justify-between text-[11px] text-[#00174A]/80">
               <div className="flex items-center gap-1.5">
-                <Clock size={14} className="text-[#D6B369]" /> Check-in: 12 PM / Check-out: 11 AM
+                <Clock size={14} className="text-[#00174A]" /> Check-in: 12 PM / Check-out: 11 AM
               </div>
-              <div className="flex items-center gap-1.5 text-[#D6B369]">
+              <div className="flex items-center gap-1.5 text-[#00174A] font-semibold">
                 <ShieldCheck size={14} /> 24/7 Security
               </div>
             </div>

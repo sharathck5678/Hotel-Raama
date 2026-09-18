@@ -26,22 +26,27 @@ import {
 const RENDER_BACKEND_URL = 'https://hotel-raama.onrender.com';
 
 const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
-  if (envUrl && envUrl.trim() !== '') {
-    const clean = envUrl.trim().replace(/\/+$/, '');
-    return clean.endsWith('/api') ? clean : `${clean}/api`;
-  }
-
   const isBrowser = typeof window !== 'undefined';
   if (isBrowser) {
     const hostname = window.location.hostname;
     const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+      if (envUrl && envUrl.includes('localhost')) {
+        const clean = envUrl.trim().replace(/\/+$/, '');
+        return clean.endsWith('/api') ? clean : `${clean}/api`;
+      }
       return 'http://localhost:5000/api';
     }
     if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
       return `${protocol}//${hostname}:5000/api`;
     }
+  }
+
+  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  if (envUrl && envUrl.trim() !== '') {
+    const clean = envUrl.trim().replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
   }
 
   return `${RENDER_BACKEND_URL}/api`;

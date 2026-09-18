@@ -55,10 +55,10 @@ export const AdminBookingsView: React.FC = () => {
       </ScrollReveal>
 
       <ScrollReveal direction="up" duration={0.85}>
-        <div className="bg-[#00174A] text-[#FAF9F6] rounded-sm border border-white/15 shadow-xl font-sans text-xs overflow-hidden">
+        <div className="bg-[#F7F0DF] text-[#00174A] rounded-sm border border-[#10184A]/25 shadow-sm font-sans text-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[780px]">
-            <thead className="bg-white/10 text-[#D6B369] uppercase font-bold border-b border-white/15 text-[10px] tracking-wider">
+            <thead className="bg-[#00174A]/10 text-[#00174A] uppercase font-bold border-b border-[#10184A]/15 text-[10px] tracking-wider">
               <tr>
                 <th className="py-3 px-3.5">Booking Ref</th>
                 <th className="py-3 px-3.5">Guest Name</th>
@@ -71,40 +71,40 @@ export const AdminBookingsView: React.FC = () => {
                 <th className="py-3 px-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10 text-[#FAF9F6]/80">
+            <tbody className="divide-y divide-[#10184A]/10 text-[#00174A]">
               {bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-[#FAF9F6]/50 text-xs">
+                  <td colSpan={9} className="py-12 text-center text-[#00174A]/50 text-xs">
                     No bookings found.
                   </td>
                 </tr>
               ) : (
                 bookings.map((b) => (
-                  <tr key={b._id} className="hover:bg-white/5 transition-colors">
-                    <td className="py-3 px-3.5 font-serif font-bold text-[#D6B369] whitespace-nowrap">{b.bookingId}</td>
-                    <td className="py-3 px-3.5 font-semibold text-white whitespace-nowrap">{b.guestName}</td>
+                  <tr key={b._id} className="hover:bg-[#00174A]/5 transition-colors">
+                    <td className="py-3 px-3.5 font-serif font-bold text-[#00174A] whitespace-nowrap">{b.bookingId}</td>
+                    <td className="py-3 px-3.5 font-semibold text-[#00174A] whitespace-nowrap">{b.guestName}</td>
                     <td className="py-3 px-3.5">
-                      <div className="whitespace-nowrap">{b.guestPhone}</div>
-                      <div className="text-[10px] text-[#FAF9F6]/50 truncate max-w-[150px]">{b.guestEmail}</div>
+                      <div className="whitespace-nowrap font-medium text-[#00174A]">{b.guestPhone}</div>
+                      <div className="text-[10px] text-[#00174A]/60 truncate max-w-[150px]">{b.guestEmail}</div>
                     </td>
-                    <td className="py-3 px-3.5 font-medium text-[#FAF9F6] whitespace-nowrap">{b.roomTypeId?.name || 'Executive'}</td>
-                    <td className="py-3 px-3.5 text-[11px] whitespace-nowrap">
+                    <td className="py-3 px-3.5 font-medium text-[#00174A] whitespace-nowrap">{b.roomTypeId?.name || 'Executive'}</td>
+                    <td className="py-3 px-3.5 text-[11px] text-[#00174A]/80 whitespace-nowrap">
                       {new Date(b.checkIn).toLocaleDateString()} - {new Date(b.checkOut).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-3.5 font-serif font-bold text-[#D6B369] whitespace-nowrap">₹{b.totalAmount}</td>
+                    <td className="py-3 px-3.5 font-serif font-bold text-[#00174A] whitespace-nowrap">₹{b.totalAmount}</td>
                     <td className="py-3 px-3.5 whitespace-nowrap">
                       <span
                         className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider ${
                           b.paymentStatus === 'PAID'
-                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                            : 'bg-amber-950 text-amber-300 border border-amber-800'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                            : 'bg-amber-50 text-amber-800 border border-amber-300'
                         }`}
                       >
                         {b.paymentStatus}
                       </span>
                     </td>
                     <td className="py-3 px-3.5 whitespace-nowrap">
-                      <span className="font-bold text-white uppercase text-[10px] tracking-wider">{b.bookingStatus}</span>
+                      <span className="font-bold text-[#00174A] uppercase text-[10px] tracking-wider">{b.bookingStatus}</span>
                     </td>
                     <td className="py-3 px-3.5 text-right whitespace-nowrap space-x-1.5">
                       {b.bookingStatus === 'CONFIRMED' && (
@@ -118,7 +118,7 @@ export const AdminBookingsView: React.FC = () => {
                       {b.bookingStatus === 'CHECKED_IN' && (
                         <button
                           onClick={() => handleStatusUpdate(b._id, 'CHECKED_OUT')}
-                          className="px-2.5 py-1 bg-[#F7F0DF] text-[#00174A] hover:bg-[#D6B369] active:bg-[#E8C56A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer inline-block"
+                          className="px-2.5 py-1 bg-[#00174A] text-white hover:bg-[#10184A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer inline-block"
                         >
                           Check Out
                         </button>
@@ -126,7 +126,7 @@ export const AdminBookingsView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => downloadBookingInvoicePdf(b)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white/20 active:bg-white/30 text-[#FAF9F6] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#00174A]/10 hover:bg-[#00174A]/20 active:bg-[#00174A]/30 text-[#00174A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
                       >
                         <Download size={11} /> Invoice
                       </button>

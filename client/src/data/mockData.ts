@@ -5,9 +5,9 @@ export const FALLBACK_HOTEL_INFO = {
   city: 'Hassan',
   state: 'Karnataka',
   pincode: '573201',
-  phone: '081722 57001',
-  email: 'reservations@hotelraama.com',
-  receptionWhatsapp: '918172257001',
+  phone: '+91 78995 11330',
+  email: 'hotelraama.hsn@gmail.com',
+  receptionWhatsapp: '917899511330',
   notificationEmail: 'admin@hotelraama.com',
   taxPercentage: 12,
   bookingHoldMinutes: 15,
@@ -132,13 +132,13 @@ export const FALLBACK_ROOMS = (() => {
 
   rooms.push({
     _id: 'room_party_hall',
-    roomNumber: 'Sambhrama Party Hall',
+    roomNumber: 'Sambhrama Banquet Hall',
     floor: 1,
     status: 'AVAILABLE',
     qrToken: 'qr_token_party_hall',
     roomTypeId: {
       _id: 'rt_7',
-      name: 'Grand Sambhrama Party Hall',
+      name: 'Grand Sambhrama Banquet Hall',
     },
   });
 

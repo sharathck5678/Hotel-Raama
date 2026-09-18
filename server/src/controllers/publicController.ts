@@ -298,8 +298,8 @@ export class PublicController {
       const info = await HotelSetting.findOne() || {
         hotelName: 'Hotel Raama',
         address: 'B.M. Road, Thanneeruhalla, Hassan',
-        phone: '081722 57001',
-        email: 'reservations@hotelraama.com',
+        phone: '+91 78995 11330',
+        email: 'hotelraama.hsn@gmail.com',
       };
       return res.json({ success: true, data: info });
     } catch (error) {

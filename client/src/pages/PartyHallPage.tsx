@@ -64,17 +64,14 @@ export const PartyHallPage: React.FC = () => {
       <div className="relative rounded-sm overflow-hidden min-h-[440px] sm:min-h-[500px] py-14 sm:py-20 px-6 sm:px-10 flex flex-col items-center justify-center text-center border border-[#10184A]/15 shadow-md">
         <img
           src="/sambhrama-party-hall.png"
-          alt="Sambhrama Party Hall"
+          alt="Sambhrama Banquet Hall"
           className="absolute inset-0 w-full h-full object-cover brightness-[0.70]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/45 pointer-events-none" />
         <div className="relative z-10 max-w-3xl flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-[#FAF9F6]">
-          <span className="inline-flex items-center px-4 py-1 rounded-full bg-black/40 backdrop-blur-md border border-[#FAF9F6]/20 text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em] shadow-sm">
-            Grand Celebrations & Banquets
-          </span>
-          <h1 className="editorial-hero-title text-[#FAF9F6] uppercase drop-shadow-md">Sambhrama Party Hall</h1>
+          <h1 className="editorial-hero-title text-[#FAF9F6] uppercase drop-shadow-md">Sambhrama Banquet Hall</h1>
           <p className="font-sans text-xs sm:text-sm text-[#FAF9F6]/95 max-w-xl mx-auto leading-relaxed drop-shadow-sm px-2">
-            Accommodating up to 300 guests with central climate control, audio-visual setups, and custom traditional catering.
+            Accommodating 300+ guests with central climate control, audio-visual setups, and custom traditional catering.
           </p>
 
           <div className="flex justify-center pt-4 sm:pt-6">
@@ -95,10 +92,7 @@ export const PartyHallPage: React.FC = () => {
       <div>
         <ScrollReveal direction="up" duration={0.8}>
           <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 border-b border-[#10184A]/15 pb-8">
-            <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#667085] block mb-1">
-              Bespoke Catering & Events
-            </span>
-            <h2 className="editorial-section-title text-[#00174A]">Pure Veg Catering Packages</h2>
+            <h2 className="editorial-section-title text-[#00174A]">Veg and Non Veg Catering Packages</h2>
             <p className="font-sans text-xs sm:text-sm text-[#667085] mt-2">
               Tailor-made menus from Swaad Restaurant for weddings, engagements, birthdays, and corporate galas.
             </p>
@@ -109,22 +103,24 @@ export const PartyHallPage: React.FC = () => {
           {packages.map((pkg) => (
             <ScrollRevealItem key={pkg._id}>
               <div
-                className="bg-[#00174A] text-[#FAF9F6] p-6 sm:p-8 rounded-sm border border-white/15 hover:border-[#D6B369] transition-all duration-300 flex flex-col justify-between space-y-6 shadow-md h-full"
+                className="bg-[#F7F0DF] text-[#00174A] p-6 sm:p-8 rounded-sm border border-[#10184A]/25 hover:border-[#D6B369] transition-all duration-300 flex flex-col justify-between space-y-6 shadow-sm h-full"
               >
                 <div className="space-y-3">
-                  <h3 className="text-2xl font-serif text-[#FAF9F6]">{pkg.name}</h3>
-                  <p className="text-xs font-sans text-white/80 leading-relaxed">{pkg.description}</p>
+                  <h3 className="text-2xl font-serif font-bold text-[#00174A]">{pkg.name}</h3>
+                  <p className="text-xs font-sans text-[#10184A]/80 leading-relaxed">{pkg.description}</p>
                 </div>
 
-                <div className="pt-6 border-t border-white/10 flex items-center justify-between">
+                <div className="pt-6 border-t border-[#10184A]/15 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] font-sans text-white/60 uppercase block tracking-wider">Rate Per Pax</span>
-                    <span className="text-2xl font-serif font-bold text-[#D6B369]">₹{pkg.price}</span>
-                    <span className="text-[10px] font-sans text-white/60"> + GST</span>
+                    <span className="text-[10px] font-sans text-[#00174A]/70 uppercase block tracking-wider font-semibold">
+                      Rate Per Pax
+                    </span>
+                    <span className="text-2xl font-serif font-bold text-[#00174A]">₹{pkg.price}</span>
+                    <span className="text-[10px] font-sans text-[#00174A]/70 font-semibold"> + GST</span>
                   </div>
 
                   <a
-                    href={`https://wa.me/918172257001?text=Hi%20Hotel%20Raama,%20I%20am%20interested%20in%20the%20Sambhrama%20Party%20Hall%20${pkg.name}%20Package.`}
+                    href={`https://wa.me/917899511330?text=Hi%20Hotel%20Raama,%20I%20am%20interested%20in%20the%20Sambhrama%20Banquet%20Hall%20${pkg.name}%20Package.`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-2.5 bg-[#D6B369] hover:bg-[#E8C56A] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider rounded-sm flex items-center gap-1.5 transition-all shadow-sm"
@@ -211,7 +207,7 @@ export const PartyHallPage: React.FC = () => {
           {/* Viewer Header */}
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
             <div>
-              <h3 className="text-base sm:text-lg font-serif text-[#D6B369]">Sambhrama Party Hall Catalog</h3>
+              <h3 className="text-base sm:text-lg font-serif text-[#D6B369]">Sambhrama Banquet Hall Catalog</h3>
               <p className="text-xs font-sans text-white/70">Page {viewerPageIndex + 1} of {brochurePages.length}</p>
             </div>
             <button

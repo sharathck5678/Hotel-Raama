@@ -106,7 +106,7 @@ export const BookingConfirmationPage: React.FC = () => {
             </button>
 
             <a
-              href={`https://wa.me/918172257001?text=${whatsappMessage}`}
+              href={`https://wa.me/917899511330?text=${whatsappMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-4 rounded-sm bg-emerald-700 hover:bg-emerald-600 text-white font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
@@ -116,7 +116,7 @@ export const BookingConfirmationPage: React.FC = () => {
           </div>
 
           <div className="text-center pt-4 border-t border-white/10 text-[10px] font-sans text-white/50">
-            Hotel Raama • B.M. Road, Thanneeruhalla, Hassan • Phone: 081722 57001
+            Hotel Raama • B.M. Road, Thanneeruhalla, Hassan • Phone: +91 78995 11330
           </div>
 
         </div>

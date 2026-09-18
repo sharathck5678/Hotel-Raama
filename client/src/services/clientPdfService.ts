@@ -91,7 +91,7 @@ export const downloadOrderReceiptPdf = (order: OrderPdfData) => {
 
     doc.setTextColor(200, 200, 200);
     doc.setFontSize(7.5);
-    doc.text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201 | Phone: 081722 57001', 14, 25);
+    doc.text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201 | Phone: +91 78995 11330', 14, 25);
 
     // Right Header Tag
     doc.setFillColor(0, 23, 74); // #00174A Primary Navy
@@ -265,7 +265,7 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
 
     doc.setTextColor(200, 200, 200);
     doc.setFontSize(7.5);
-    doc.text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201 | Phone: 081722 57001', 14, 26);
+    doc.text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201 | Phone: +91 78995 11330', 14, 26);
 
     // Right Header Tag
     doc.setFillColor(0, 23, 74); // #00174A Primary Navy

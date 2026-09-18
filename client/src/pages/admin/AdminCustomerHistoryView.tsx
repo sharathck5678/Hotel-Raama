@@ -53,10 +53,10 @@ export const AdminCustomerHistoryView: React.FC = () => {
       </ScrollReveal>
 
       <ScrollReveal direction="up" duration={0.85}>
-        <div className="bg-[#00174A] text-[#FAF9F6] rounded-sm border border-white/15 shadow-xl font-sans text-xs overflow-hidden">
+        <div className="bg-[#F7F0DF] text-[#00174A] rounded-sm border border-[#10184A]/25 shadow-sm font-sans text-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[620px]">
-              <thead className="bg-white/10 text-[#D6B369] uppercase font-bold border-b border-white/15 text-[10px] tracking-wider">
+              <thead className="bg-[#00174A]/10 text-[#00174A] uppercase font-bold border-b border-[#10184A]/15 text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-3.5">Guest Name</th>
                   <th className="py-3 px-3.5">Phone Number</th>
@@ -66,22 +66,22 @@ export const AdminCustomerHistoryView: React.FC = () => {
                   <th className="py-3 px-3.5">Last Order Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10 text-[#FAF9F6]/80">
+              <tbody className="divide-y divide-[#10184A]/10 text-[#00174A]">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-[#FAF9F6]/50 text-xs">
+                    <td colSpan={6} className="py-12 text-center text-[#00174A]/50 text-xs">
                       {search ? 'No matching customer records found.' : 'No customer history yet.'}
                     </td>
                   </tr>
                 ) : (
                   filtered.map((c, idx) => (
-                    <tr key={idx} className="hover:bg-white/5 transition-colors">
-                      <td className="py-3 px-3.5 font-semibold text-white whitespace-nowrap">{c.guestName}</td>
+                    <tr key={idx} className="hover:bg-[#00174A]/5 transition-colors">
+                      <td className="py-3 px-3.5 font-semibold text-[#00174A] whitespace-nowrap">{c.guestName}</td>
                       <td className="py-3 px-3.5 font-mono text-[11px] whitespace-nowrap">{c.guestPhone}</td>
                       <td className="py-3 px-3.5 font-bold whitespace-nowrap">{c.totalOrders} Orders</td>
-                      <td className="py-3 px-3.5 font-serif font-bold text-[#D6B369] whitespace-nowrap">₹{c.totalSpent}</td>
-                      <td className="py-3 px-3.5 font-semibold text-[#D6B369] whitespace-nowrap">Room #{c.lastOrderRoom}</td>
-                      <td className="py-3 px-3.5 text-[#FAF9F6]/50 text-[11px] whitespace-nowrap">{new Date(c.lastOrderDate).toLocaleString()}</td>
+                      <td className="py-3 px-3.5 font-serif font-bold text-[#00174A] whitespace-nowrap">₹{c.totalSpent}</td>
+                      <td className="py-3 px-3.5 font-semibold text-[#00174A] whitespace-nowrap">Room #{c.lastOrderRoom}</td>
+                      <td className="py-3 px-3.5 text-[#00174A]/60 text-[11px] whitespace-nowrap">{new Date(c.lastOrderDate).toLocaleString()}</td>
                     </tr>
                   ))
                 )}

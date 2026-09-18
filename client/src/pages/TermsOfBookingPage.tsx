@@ -130,11 +130,11 @@ export const TermsOfBookingPage: React.FC = () => {
             </h2>
             <p>For booking assistance or clarification, please contact us at:</p>
             <div className="flex flex-wrap gap-6 pt-1 text-xs">
-              <a href="mailto:reservations@hotelraama.com" className="flex items-center gap-2 text-[#00174A] hover:text-[#D6B369] font-bold hover:underline">
-                <Mail size={16} /> reservations@hotelraama.com
+              <a href="mailto:hotelraama.hsn@gmail.com" className="flex items-center gap-2 text-[#00174A] hover:text-[#D6B369] font-bold hover:underline">
+                <Mail size={16} /> hotelraama.hsn@gmail.com
               </a>
-              <a href="tel:08172257001" className="flex items-center gap-2 text-[#00174A] hover:text-[#D6B369] font-bold hover:underline">
-                <Phone size={16} /> 081722 57001
+              <a href="tel:7899511330" className="flex items-center gap-2 text-[#00174A] hover:text-[#D6B369] font-bold hover:underline">
+                <Phone size={16} /> +91 78995 11330
               </a>
             </div>
           </section>

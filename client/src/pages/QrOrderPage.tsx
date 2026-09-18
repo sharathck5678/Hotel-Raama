@@ -306,10 +306,10 @@ export const QrOrderPage: React.FC = () => {
           <div className="flex flex-wrap justify-center gap-3 pt-6">
             <button
               onClick={() => setActiveSection('SWAAD_VEG')}
-              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer bg-white text-[#00174A] ${
                 activeSection === 'SWAAD_VEG'
-                  ? 'bg-[#00174A] text-[#FAF9F6]'
-                  : 'bg-white text-[#00174A] border border-[#10184A]/20 hover:border-[#D6B369]'
+                  ? 'border-2 border-[#D6B369] shadow-[0_0_14px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
+                  : 'border border-[#10184A]/15 hover:border-[#D6B369]/60'
               }`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
@@ -317,10 +317,10 @@ export const QrOrderPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveSection('HOTEL_RAAMA')}
-              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer bg-white text-[#00174A] ${
                 activeSection === 'HOTEL_RAAMA'
-                  ? 'bg-[#C8102E] text-white'
-                  : 'bg-white text-[#00174A] border border-[#10184A]/20 hover:border-[#C8102E]'
+                  ? 'border-2 border-[#D6B369] shadow-[0_0_14px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
+                  : 'border border-[#10184A]/15 hover:border-[#D6B369]/60'
               }`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-[#C8102E] inline-block"></span>
@@ -328,10 +328,10 @@ export const QrOrderPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveSection('LIQUID_LOUNGE')}
-              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+              className={`px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer bg-white text-[#00174A] ${
                 activeSection === 'LIQUID_LOUNGE'
-                  ? 'bg-[#071A3D] text-[#FAF9F6]'
-                  : 'bg-white text-[#00174A] border border-[#10184A]/20 hover:border-[#D6B369]'
+                  ? 'border-2 border-[#D6B369] shadow-[0_0_14px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
+                  : 'border border-[#10184A]/15 hover:border-[#D6B369]/60'
               }`}
             >
               <GlassWater size={14} /> Liquid Lounge Bar
@@ -391,29 +391,119 @@ export const QrOrderPage: React.FC = () => {
                           )}
                         </div>
 
-                        {item.price60ml ? (
-                          <div className="flex gap-1.5">
+                        {item.price60ml ? (() => {
+                          const key30 = `${item._id}_30ML`;
+                          const key60 = `${item._id}_60ML`;
+                          const qty30 = cart[key30]?.quantity || 0;
+                          const qty60 = cart[key60]?.quantity || 0;
+
+                          return (
+                            <div className="flex gap-1.5 items-center">
+                              {qty30 > 0 ? (
+                                <div className="flex items-center rounded-sm bg-[#00174A] text-[#FAF9F6] shadow-sm overflow-hidden border border-[#00174A]">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(key30, -1)}
+                                    className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                    aria-label="Decrease 30ML quantity"
+                                  >
+                                    <Minus size={11} className="stroke-[2.5]" />
+                                  </button>
+                                  <span className="px-1 text-[10px] font-sans font-bold select-none min-w-[32px] text-center">
+                                    30M·{qty30}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(key30, 1)}
+                                    className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                    aria-label="Increase 30ML quantity"
+                                  >
+                                    <Plus size={11} className="stroke-[2.5]" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => addToCart(item, '30ML')}
+                                  className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
+                                >
+                                  + 30ML
+                                </button>
+                              )}
+
+                              {qty60 > 0 ? (
+                                <div className="flex items-center rounded-sm bg-[#00174A] text-[#FAF9F6] shadow-sm overflow-hidden border border-[#00174A]">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(key60, -1)}
+                                    className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                    aria-label="Decrease 60ML quantity"
+                                  >
+                                    <Minus size={11} className="stroke-[2.5]" />
+                                  </button>
+                                  <span className="px-1 text-[10px] font-sans font-bold select-none min-w-[32px] text-center">
+                                    60M·{qty60}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQuantity(key60, 1)}
+                                    className="w-7 h-7 flex items-center justify-center hover:bg-[#152554] active:bg-[#1e326b] transition-colors cursor-pointer"
+                                    aria-label="Increase 60ML quantity"
+                                  >
+                                    <Plus size={11} className="stroke-[2.5]" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => addToCart(item, '60ML')}
+                                  className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
+                                >
+                                  + 60ML
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })() : (() => {
+                          const standardKey = `${item._id}_Standard`;
+                          const standardQty = cart[standardKey]?.quantity || 0;
+
+                          if (standardQty > 0) {
+                            return (
+                              <div className="flex items-center rounded-sm bg-[#D6B369] text-[#00174A] shadow-sm overflow-hidden border border-[#D6B369]">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(standardKey, -1)}
+                                  className="w-8 h-8 flex items-center justify-center hover:bg-[#C4A259] active:bg-[#B39148] transition-colors cursor-pointer"
+                                  aria-label="Decrease quantity"
+                                >
+                                  <Minus size={13} className="stroke-[2.5]" />
+                                </button>
+                                <span className="w-8 text-center text-xs font-sans font-bold select-none text-[#00174A]">
+                                  {standardQty}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(standardKey, 1)}
+                                  className="w-8 h-8 flex items-center justify-center hover:bg-[#C4A259] active:bg-[#B39148] transition-colors cursor-pointer"
+                                  aria-label="Increase quantity"
+                                >
+                                  <Plus size={13} className="stroke-[2.5]" />
+                                </button>
+                              </div>
+                            );
+                          }
+
+                          return (
                             <button
-                              onClick={() => addToCart(item, '30ML')}
-                              className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
+                              type="button"
+                              onClick={() => addToCart(item, 'Standard')}
+                              className="px-4 py-2 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm transition-all"
                             >
-                              + 30ML
+                              <Plus size={13} /> Add
                             </button>
-                            <button
-                              onClick={() => addToCart(item, '60ML')}
-                              className="px-2.5 py-1 rounded-sm bg-[#00174A] text-[#FAF9F6] text-[10px] font-sans font-semibold uppercase hover:bg-[#10184A] cursor-pointer"
-                            >
-                              + 60ML
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => addToCart(item, 'Standard')}
-                            className="px-4 py-2 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-bold uppercase hover:bg-[#E8C56A] cursor-pointer flex items-center gap-1 shadow-sm"
-                          >
-                            <Plus size={13} /> Add
-                          </button>
-                        )}
+                          );
+                        })()}
                       </div>
                     </div>
                   </ScrollRevealItem>

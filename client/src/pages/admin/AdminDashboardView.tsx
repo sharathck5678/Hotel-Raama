@@ -33,50 +33,50 @@ export const AdminDashboardView: React.FC = () => {
       {/* Metric Cards Grid */}
       <ScrollRevealGroup staggerDelay={0.1} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
-            <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
+          <div className="bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border border-[#10184A]/25 space-y-2.5 sm:space-y-3 shadow-sm hover:border-[#D6B369] transition-all h-full">
+            <div className="flex justify-between items-center text-[#00174A]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Occupancy Rate</span>
-              <BedDouble size={18} className="text-[#D6B369]" />
+              <BedDouble size={18} className="text-[#00174A]" />
             </div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#FAF9F6]">{metrics?.occupancyRate || 0}%</div>
-            <p className="text-[10px] font-sans text-[#FAF9F6]/60">
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#00174A]">{metrics?.occupancyRate || 0}%</div>
+            <p className="text-[10px] font-sans text-[#00174A]/60 font-medium">
               {metrics?.occupiedRooms || 0} of {metrics?.totalRooms || 0} Rooms Occupied
             </p>
           </div>
         </ScrollRevealItem>
 
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
-            <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
+          <div className="bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border border-[#10184A]/25 space-y-2.5 sm:space-y-3 shadow-sm hover:border-[#D6B369] transition-all h-full">
+            <div className="flex justify-between items-center text-[#00174A]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Live Kitchen Orders</span>
-              <UtensilsCrossed size={18} className="text-[#D6B369]" />
+              <UtensilsCrossed size={18} className="text-[#00174A]" />
             </div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#D6B369]">{metrics?.pendingOrdersCount || 0}</div>
-            <p className="text-[10px] font-sans text-[#FAF9F6]/60">Active orders on kitchen board</p>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#00174A]">{metrics?.pendingOrdersCount || 0}</div>
+            <p className="text-[10px] font-sans text-[#00174A]/60 font-medium">Active orders on kitchen board</p>
           </div>
         </ScrollRevealItem>
 
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
-            <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
+          <div className="bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border border-[#10184A]/25 space-y-2.5 sm:space-y-3 shadow-sm hover:border-[#D6B369] transition-all h-full">
+            <div className="flex justify-between items-center text-[#00174A]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Confirmed Bookings</span>
-              <CalendarCheck size={18} className="text-[#D6B369]" />
+              <CalendarCheck size={18} className="text-[#00174A]" />
             </div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#FAF9F6]">{metrics?.totalConfirmedBookings || 0}</div>
-            <p className="text-[10px] font-sans text-[#FAF9F6]/60">Active room reservations</p>
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#00174A]">{metrics?.totalConfirmedBookings || 0}</div>
+            <p className="text-[10px] font-sans text-[#00174A]/60 font-medium">Active room reservations</p>
           </div>
         </ScrollRevealItem>
 
         <ScrollRevealItem>
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-2.5 sm:space-y-3 shadow-md hover:border-[#D6B369]/40 transition-all h-full">
-            <div className="flex justify-between items-center text-[#FAF9F6]/70 text-xs font-sans font-bold uppercase tracking-wider">
+          <div className="bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border border-[#10184A]/25 space-y-2.5 sm:space-y-3 shadow-sm hover:border-[#D6B369] transition-all h-full">
+            <div className="flex justify-between items-center text-[#00174A]/70 text-xs font-sans font-bold uppercase tracking-wider">
               <span>Combined Revenue</span>
-              <TrendingUp size={18} className="text-[#D6B369]" />
+              <TrendingUp size={18} className="text-[#00174A]" />
             </div>
-            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#D6B369]">
+            <div className="text-2xl sm:text-3xl font-serif font-bold text-[#00174A]">
               ₹{(metrics?.totalCombinedRevenue || 0).toLocaleString()}
             </div>
-            <p className="text-[10px] font-sans text-[#FAF9F6]/60">Rooms + Food Service Payments</p>
+            <p className="text-[10px] font-sans text-[#00174A]/60 font-medium">Rooms + Food Service Payments</p>
           </div>
         </ScrollRevealItem>
       </ScrollRevealGroup>
@@ -85,11 +85,11 @@ export const AdminDashboardView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Revenue Growth Trend Chart (Spans 2 columns) */}
         <ScrollReveal direction="left" duration={0.85} className="lg:col-span-2 h-full">
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-4 shadow-md h-full">
-            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+          <div className="bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border border-[#10184A]/25 space-y-4 shadow-sm h-full">
+            <div className="flex justify-between items-center border-b border-[#10184A]/15 pb-3">
               <div>
-                <h3 className="text-lg sm:text-xl font-serif text-[#FAF9F6]">Revenue Analytics</h3>
-                <p className="text-xs font-sans text-[#FAF9F6]/60">Monthly room bookings & culinary dining performance</p>
+                <h3 className="text-lg sm:text-xl font-serif font-bold text-[#00174A]">Revenue Analytics</h3>
+                <p className="text-xs font-sans text-[#00174A]/70">Monthly room bookings & culinary dining performance</p>
               </div>
             </div>
 
@@ -103,18 +103,18 @@ export const AdminDashboardView: React.FC = () => {
                         <stop offset="95%" stopColor="#D6B369" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis dataKey="month" stroke="#FAF9F6" tick={{ fontSize: 11 }} />
-                    <YAxis stroke="#FAF9F6" tick={{ fontSize: 11 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,23,74,0.1)" />
+                    <XAxis dataKey="month" stroke="#00174A" tick={{ fontSize: 11 }} />
+                    <YAxis stroke="#00174A" tick={{ fontSize: 11 }} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#071A3D', borderColor: '#D6B369', borderRadius: '4px', color: '#FAF9F6' }}
+                      contentStyle={{ backgroundColor: '#FAF9F6', borderColor: '#D6B369', borderRadius: '4px', color: '#00174A' }}
                       formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Total Revenue']}
                     />
                     <Area type="monotone" dataKey="revenue" stroke="#D6B369" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRev)" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-[#FAF9F6]/50 text-xs font-sans text-center px-4">
+                <div className="h-full flex items-center justify-center text-[#00174A]/50 text-xs font-sans text-center px-4">
                   No revenue recorded yet. Placed food orders & bookings will automatically populate real-time analytics.
                 </div>
               )}
@@ -124,21 +124,21 @@ export const AdminDashboardView: React.FC = () => {
 
         {/* Category Breakdown (1 column) */}
         <ScrollReveal direction="right" duration={0.85} className="h-full">
-          <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-4 shadow-md h-full">
-            <div className="border-b border-white/10 pb-3">
-              <h3 className="text-lg sm:text-xl font-serif text-[#FAF9F6]">Revenue Distribution</h3>
-              <p className="text-xs font-sans text-[#FAF9F6]/60">Sales breakdown by category</p>
+          <div className="bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border border-[#10184A]/25 space-y-4 shadow-sm h-full">
+            <div className="border-b border-[#10184A]/15 pb-3">
+              <h3 className="text-lg sm:text-xl font-serif font-bold text-[#00174A]">Revenue Distribution</h3>
+              <p className="text-xs font-sans text-[#00174A]/70">Sales breakdown by category</p>
             </div>
 
             <div className="h-48 sm:h-56 w-full pt-2">
               {categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={categoryData} layout="vertical" margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis type="number" stroke="#FAF9F6" tick={{ fontSize: 10 }} />
-                    <YAxis type="category" dataKey="name" stroke="#FAF9F6" hide />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,23,74,0.1)" />
+                    <XAxis type="number" stroke="#00174A" tick={{ fontSize: 10 }} />
+                    <YAxis type="category" dataKey="name" stroke="#00174A" hide />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#071A3D', borderColor: '#D6B369', borderRadius: '4px', color: '#FAF9F6' }}
+                      contentStyle={{ backgroundColor: '#FAF9F6', borderColor: '#D6B369', borderRadius: '4px', color: '#00174A' }}
                       formatter={(val: any) => [`₹${val.toLocaleString()}`, 'Revenue']}
                     />
                     <Bar dataKey="value" radius={[0, 4, 4, 0]}>
@@ -149,21 +149,21 @@ export const AdminDashboardView: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-[#FAF9F6]/50 text-xs font-sans text-center px-4">
+                <div className="h-full flex items-center justify-center text-[#00174A]/50 text-xs font-sans text-center px-4">
                   No category sales recorded yet.
                 </div>
               )}
             </div>
 
             {categoryData.length > 0 && (
-              <div className="space-y-2 pt-2 border-t border-white/10 max-h-40 overflow-y-auto">
+              <div className="space-y-2 pt-2 border-t border-[#10184A]/15 max-h-40 overflow-y-auto">
                 {categoryData.map((cat: any, idx: number) => (
                   <div key={idx} className="flex justify-between items-center text-xs font-sans">
                     <div className="flex items-center gap-2 truncate mr-2">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }}></span>
-                      <span className="text-[#FAF9F6]/80 truncate">{cat.name}</span>
+                      <span className="text-[#00174A]/80 truncate">{cat.name}</span>
                     </div>
-                    <span className="font-bold text-[#FAF9F6] shrink-0">₹{cat.value.toLocaleString()}</span>
+                    <span className="font-bold text-[#00174A] shrink-0">₹{cat.value.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -174,13 +174,13 @@ export const AdminDashboardView: React.FC = () => {
 
       {/* Top Performing Menu Items Section */}
       <ScrollReveal direction="up" duration={0.85}>
-        <div className="bg-[#00174A] text-[#FAF9F6] p-4 sm:p-6 rounded-sm border border-white/15 space-y-4 shadow-md font-sans">
-          <div className="flex justify-between items-center border-b border-white/10 pb-3">
+        <div className="bg-[#F7F0DF] text-[#00174A] p-4 sm:p-6 rounded-sm border border-[#10184A]/25 space-y-4 shadow-sm font-sans">
+          <div className="flex justify-between items-center border-b border-[#10184A]/15 pb-3">
             <div className="flex items-center gap-2">
-              <Award size={20} className="text-[#D6B369] shrink-0" />
+              <Award size={20} className="text-[#00174A] shrink-0" />
               <div>
-                <h3 className="text-lg sm:text-xl font-serif text-[#FAF9F6]">Top Ordered Menu Items</h3>
-                <p className="text-xs text-[#FAF9F6]/60">Most popular menu items ordered in Swaad & Liquid Lounge</p>
+                <h3 className="text-lg sm:text-xl font-serif font-bold text-[#00174A]">Top Ordered Menu Items</h3>
+                <p className="text-xs text-[#00174A]/70">Most popular menu items ordered in Swaad & Liquid Lounge</p>
               </div>
             </div>
           </div>
@@ -189,31 +189,31 @@ export const AdminDashboardView: React.FC = () => {
             <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
               <table className="w-full text-left text-xs border-collapse min-w-[500px]">
                 <thead>
-                  <tr className="border-b border-white/10 text-[#D6B369] uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-[#10184A]/15 text-[#00174A] uppercase font-bold tracking-wider text-[10px]">
                     <th className="py-3 px-3 sm:px-4">Item Name</th>
                     <th className="py-3 px-3 sm:px-4">Category</th>
                     <th className="py-3 px-3 sm:px-4 text-center">Orders Count</th>
                     <th className="py-3 px-3 sm:px-4 text-right">Total Revenue</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-[#10184A]/10">
                   {topItems.map((item: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-white/5 transition-all">
-                      <td className="py-3 px-3 sm:px-4 font-bold text-white">{item.name}</td>
+                    <tr key={idx} className="hover:bg-[#00174A]/5 transition-all">
+                      <td className="py-3 px-3 sm:px-4 font-bold text-[#00174A]">{item.name}</td>
                       <td className="py-3 px-3 sm:px-4">
-                        <span className="px-2 py-0.5 rounded-sm bg-white/10 text-[#FAF9F6]/80 text-[10px]">
+                        <span className="px-2 py-0.5 rounded-sm bg-[#00174A]/10 text-[#00174A] text-[10px] font-semibold">
                           {item.category}
                         </span>
                       </td>
-                      <td className="py-3 px-3 sm:px-4 text-center font-bold text-[#D6B369]">{item.ordersCount}</td>
-                      <td className="py-3 px-3 sm:px-4 text-right font-bold text-[#D6B369]">₹{item.revenue.toLocaleString()}</td>
+                      <td className="py-3 px-3 sm:px-4 text-center font-bold text-[#00174A]">{item.ordersCount}</td>
+                      <td className="py-3 px-3 sm:px-4 text-right font-bold text-[#00174A]">₹{item.revenue.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div className="py-8 text-center text-[#FAF9F6]/50 text-xs font-sans">
+            <div className="py-8 text-center text-[#00174A]/50 text-xs font-sans">
               No item sales data recorded yet.
             </div>
           )}
