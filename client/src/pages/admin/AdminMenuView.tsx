@@ -107,7 +107,7 @@ export const AdminMenuView: React.FC = () => {
       halfPrice: item.halfPrice !== undefined && item.halfPrice !== null ? String(item.halfPrice) : '',
       isHalfAvailable: !!item.isHalfAvailable,
       isVeg: item.isVeg !== undefined ? !!item.isVeg : true,
-      section: item.section || 'SWAAD',
+      section: item.section === 'LLB' ? 'LIQUID_LOUNGE' : item.section || 'SWAAD',
       categoryId: item.categoryId || '',
       isAvailable: item.isAvailable !== false,
     });
@@ -211,7 +211,11 @@ export const AdminMenuView: React.FC = () => {
       item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.code?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesSection = selectedSection === 'ALL' || item.section === selectedSection;
+    const matchesSection =
+      selectedSection === 'ALL' ||
+      item.section === selectedSection ||
+      ((selectedSection === 'LLB' || selectedSection === 'LIQUID_LOUNGE') &&
+        (item.section === 'LIQUID_LOUNGE' || item.section === 'LLB'));
 
     const matchesDiet =
       dietaryFilter === 'ALL'
@@ -271,7 +275,7 @@ export const AdminMenuView: React.FC = () => {
             >
               <option value="ALL">All Restaurant Sections</option>
               <option value="SWAAD">Swaad Fine Dining</option>
-              <option value="LLB">Liquid Lounge Bar (LLB)</option>
+              <option value="LIQUID_LOUNGE">Liquid Lounge Bar (LLB)</option>
               <option value="HOTEL_RAAMA">Hotel Raama Room Service</option>
               <option value="SAMBHRAMA">Sambhrama Banquet</option>
             </select>
@@ -349,7 +353,13 @@ export const AdminMenuView: React.FC = () => {
 
                     <td className="py-3.5 px-4">
                       <span className="px-2.5 py-1 bg-[#00174A]/5 border border-[#10184A]/20 rounded-sm text-[10px] uppercase font-bold text-[#00174A] tracking-wider">
-                        {item.section || 'SWAAD'}
+                        {item.section === 'LIQUID_LOUNGE' || item.section === 'LLB'
+                          ? 'Liquid Lounge Bar'
+                          : item.section === 'HOTEL_RAAMA'
+                          ? 'Room Service'
+                          : item.section === 'SAMBHRAMA'
+                          ? 'Sambhrama'
+                          : 'Swaad Dining'}
                       </span>
                     </td>
 
@@ -482,7 +492,7 @@ export const AdminMenuView: React.FC = () => {
                       className="w-full bg-white border border-[#10184A]/20 rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] focus:border-[#00174A] focus:outline-none cursor-pointer"
                     >
                       <option value="SWAAD">Swaad Fine Dining</option>
-                      <option value="LLB">Liquid Lounge Bar (LLB)</option>
+                      <option value="LIQUID_LOUNGE">Liquid Lounge Bar (LLB)</option>
                       <option value="HOTEL_RAAMA">Hotel Raama Room Service</option>
                       <option value="SAMBHRAMA">Sambhrama Banquet</option>
                     </select>

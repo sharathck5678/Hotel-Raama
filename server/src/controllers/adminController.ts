@@ -536,7 +536,7 @@ export class AdminController {
         halfPrice: halfPrice !== undefined && halfPrice !== null && halfPrice !== '' ? Number(halfPrice) : undefined,
         isHalfAvailable: !!isHalfAvailable,
         isVeg: isVeg !== undefined ? !!isVeg : true,
-        section: section || 'SWAAD',
+        section: section === 'LLB' ? 'LIQUID_LOUNGE' : section || 'SWAAD',
         isAvailable: isAvailable !== undefined ? !!isAvailable : true,
       });
 
@@ -564,7 +564,7 @@ export class AdminController {
       if (halfPrice !== undefined) updateData.halfPrice = halfPrice ? Number(halfPrice) : null;
       if (isHalfAvailable !== undefined) updateData.isHalfAvailable = !!isHalfAvailable;
       if (isVeg !== undefined) updateData.isVeg = !!isVeg;
-      if (section !== undefined) updateData.section = section;
+      if (section !== undefined) updateData.section = section === 'LLB' ? 'LIQUID_LOUNGE' : section;
       if (isAvailable !== undefined) updateData.isAvailable = !!isAvailable;
 
       const updated = await MenuItem.findByIdAndUpdate(id, updateData, { new: true });
