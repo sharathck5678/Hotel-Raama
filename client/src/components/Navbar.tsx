@@ -30,7 +30,7 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Rooms & Rates', path: '/rooms' },
-    { name: 'Dining & Bar', path: '/dining' },
+    { name: 'Restaurant & Menu', path: '/dining' },
     { name: 'Sambhrama Banquet Hall', path: '/party-hall' },
     { name: 'Things to Do', path: '/attractions' },
     { name: 'Location & Directions', path: '/location' },
@@ -70,7 +70,7 @@ export const Navbar: React.FC = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-[10px] xl:text-[11px] font-medium uppercase tracking-[1.2px] xl:tracking-[1.6px] px-2.5 xl:px-3 py-2 rounded-full transition-all duration-300 whitespace-nowrap ${
+                  className={`text-[10px] xl:text-[11px] font-medium uppercase tracking-[1px] xl:tracking-[1.6px] px-2 xl:px-3 py-2 rounded-full transition-all duration-300 whitespace-nowrap shrink-0 ${
                     isActive
                       ? isTransparent
                         ? 'bg-white/25 text-white font-bold shadow-sm backdrop-blur-xs'
@@ -87,12 +87,13 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* Right Actions */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
             <Link
               to="/rooms"
-              className="px-5 py-2.5 rounded-full bg-[#D6B369] text-[#00174A] font-bold text-xs uppercase tracking-[1.6px] hover:bg-[#E8C56A] transition-all duration-300 flex items-center gap-2 shadow-sm focus-design"
+              className="px-4 xl:px-5 py-2.5 rounded-full bg-[#D6B369] text-[#00174A] font-bold text-xs uppercase tracking-[1.2px] xl:tracking-[1.6px] hover:bg-[#E8C56A] transition-all duration-300 inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 shadow-sm focus-design"
             >
-              <Calendar size={13} /> Book Room
+              <Calendar size={14} className="shrink-0" />
+              <span>Book Room</span>
             </Link>
           </div>
 

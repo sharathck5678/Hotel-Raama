@@ -45,8 +45,8 @@ export const Footer: React.FC = () => {
             <li><Link to="/" className="hover:text-[#00174A] hover:font-medium transition-colors">Home Portal</Link></li>
             <li><Link to="/rooms" className="hover:text-[#00174A] hover:font-medium transition-colors">Room Tariffs & Booking</Link></li>
             <li><Link to="/dining" className="hover:text-[#00174A] hover:font-medium transition-colors">Swaad Pure Veg Restaurant</Link></li>
-            <li><Link to="/dining" className="hover:text-[#00174A] hover:font-medium transition-colors">Hotel Raama (Non-Veg)</Link></li>
-            <li><Link to="/dining" className="hover:text-[#00174A] hover:font-medium transition-colors">Liquid Lounge Bar (LLB)</Link></li>
+            <li><Link to="/dining" className="hover:text-[#00174A] hover:font-medium transition-colors">Hotel Raama</Link></li>
+            <li><Link to="/dining" className="hover:text-[#00174A] hover:font-medium transition-colors">Liquid Lounge Bar</Link></li>
             <li><Link to="/party-hall" className="hover:text-[#00174A] hover:font-medium transition-colors">Sambhrama Banquet Hall</Link></li>
             <li><Link to="/attractions" className="hover:text-[#00174A] hover:font-medium transition-colors">Things to Do</Link></li>
           </ul>
@@ -117,7 +117,7 @@ export const Footer: React.FC = () => {
             <ul className="text-[#00174A]/80 space-y-0.5 text-[10.5px]">
               <li>• 7+ days before check-in date: <strong className="text-[#00174A] font-bold">100% Refund</strong></li>
               <li>• 3–6 days before check-in date: <strong className="text-[#00174A] font-bold">50% Refund</strong></li>
-              <li>• Under 3 days of check-in date / No-show: <strong className="text-[#00174A] font-bold">No Refund</strong></li>
+              <li>• Under 3 days of check-in date: <strong className="text-[#00174A] font-bold">No Refund</strong></li>
             </ul>
           </div>
         </div>

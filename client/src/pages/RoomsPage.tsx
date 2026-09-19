@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Check, X, CreditCard, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, X, CreditCard, ChevronLeft, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchRoomTypes, checkAvailability, createBookingHold, verifyBookingPayment } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
+import { formatAadharInput, validateAadhar } from '../utils/aadharValidator';
 
 declare global {
   interface Window {
@@ -171,7 +172,11 @@ export const RoomsPage: React.FC = () => {
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [guestAadhar, setGuestAadhar] = useState('');
+  const [aadharError, setAadharError] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
+  const [showTerms, setShowTerms] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Price Calculation State
   const [calcResult, setCalcResult] = useState<any | null>(null);
@@ -208,11 +213,13 @@ export const RoomsPage: React.FC = () => {
     document.body.appendChild(script);
   }, []);
 
-  // Ensure numGuests stays within maxOccupancy of the selected room
+  // Ensure numGuests stays within maxOccupancy of the selected room & reset terms agreement on room select
   useEffect(() => {
     if (selectedRoom) {
       const maxAllowed = selectedRoom.maxOccupancy || 2;
       setNumGuests((prev) => (prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev));
+      setShowTerms(false);
+      setTermsAccepted(false);
     }
   }, [selectedRoom]);
 
@@ -241,11 +248,40 @@ export const RoomsPage: React.FC = () => {
       });
   }, [selectedRoom, checkIn, checkOut, numGuests, breakfast, lunch, dinner, couponCode, planType, extraPerson]);
 
+  const handleAadharChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawDigits = e.target.value.replace(/\D/g, '').slice(0, 12);
+    const formatted = formatAadharInput(rawDigits);
+    setGuestAadhar(formatted);
+    if (rawDigits.length === 0) {
+      setAadharError('');
+    } else if (rawDigits.length < 12) {
+      setAadharError(`Aadhaar must be 12 digits (${rawDigits.length}/12 entered)`);
+    } else {
+      const check = validateAadhar(formatted);
+      setAadharError(check.isValid ? '' : check.message || 'Invalid Aadhaar number');
+    }
+  };
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!guestName || !guestEmail || !guestPhone) {
-      toast.error('Please enter your full name, email, and phone number.');
+    if (!guestName || !guestEmail || !guestPhone || !guestAadhar) {
+      toast.error('Please enter your full name, email, phone, and Aadhaar number.');
+      if (!guestAadhar) {
+        setAadharError('Aadhaar number is mandatory for hotel registration.');
+      }
+      return;
+    }
+
+    const aadharCheck = validateAadhar(guestAadhar);
+    if (!aadharCheck.isValid) {
+      setAadharError(aadharCheck.message || 'Please enter a valid 12-digit Aadhaar number.');
+      toast.error(aadharCheck.message || 'Please enter a valid 12-digit Aadhaar number.');
+      return;
+    }
+
+    if (!termsAccepted) {
+      toast.error('Please read and agree to the Terms & Conditions and Cancellation & Refund Policy.');
       return;
     }
 
@@ -268,6 +304,7 @@ export const RoomsPage: React.FC = () => {
         guestName,
         guestEmail,
         guestPhone,
+        guestAadhar,
         specialRequests,
         planType,
         extraPerson,
@@ -713,32 +750,81 @@ export const RoomsPage: React.FC = () => {
 
               {/* Guest Details */}
               <div className="space-y-3 pt-4 border-t border-[#cbc0ad]">
-                <span className="text-[10px] font-sans font-bold text-[#D6B369] uppercase block tracking-wider">Guest Information</span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Full Name *"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    className="bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] placeholder-[#999999] focus:border-[#00174A] focus:outline-none"
-                    required
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email Address *"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    className="bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] placeholder-[#999999] focus:border-[#00174A] focus:outline-none"
-                    required
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone Number *"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    className="bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] placeholder-[#999999] focus:border-[#00174A] focus:outline-none"
-                    required
-                  />
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-sans font-bold text-[#D6B369] uppercase block tracking-wider">
+                    Guest Information & ID Verification
+                  </span>
+                  <span className="text-[10px] text-[#666666] font-sans">
+                    * Govt ID required for check-in
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Full Name *"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] placeholder-[#999999] focus:border-[#00174A] focus:outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="email"
+                      placeholder="Email Address *"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] placeholder-[#999999] focus:border-[#00174A] focus:outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="tel"
+                      placeholder="Phone Number *"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] placeholder-[#999999] focus:border-[#00174A] focus:outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Aadhaar Number (12 Digits) *"
+                        value={guestAadhar}
+                        onChange={handleAadharChange}
+                        maxLength={14}
+                        className={`w-full bg-white border rounded-sm px-3.5 py-2 pr-8 text-xs font-sans text-[#333333] placeholder-[#999999] tracking-wider focus:outline-none transition-colors ${
+                          aadharError
+                            ? 'border-rose-500 focus:border-rose-500'
+                            : guestAadhar.replace(/\s/g, '').length === 12
+                            ? 'border-emerald-600 focus:border-emerald-600'
+                            : 'border-[#cbc0ad] focus:border-[#00174A]'
+                        }`}
+                        required
+                      />
+                      {guestAadhar.replace(/\s/g, '').length === 12 && !aadharError && (
+                        <Check size={14} className="absolute right-2.5 top-2.5 text-emerald-600" />
+                      )}
+                    </div>
+                    {aadharError ? (
+                      <span className="text-[10px] text-rose-600 mt-1 block font-medium">
+                        {aadharError}
+                      </span>
+                    ) : guestAadhar.replace(/\s/g, '').length === 12 ? (
+                      <span className="text-[10px] text-emerald-700 mt-0.5 block font-medium">
+                        ✓ Valid 12-digit Aadhaar Number
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-[#666666] mt-0.5 block">
+                        Format: XXXX XXXX XXXX (e.g. 2345 6789 0124)
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <input
                   type="text"
@@ -749,26 +835,7 @@ export const RoomsPage: React.FC = () => {
                 />
               </div>
 
-              {/* Cancellation & Refund Policy */}
-              <div className="p-3.5 bg-[#D6B369]/10 border border-[#D6B369]/30 rounded-sm text-xs font-sans space-y-1.5">
-                <div className="flex items-center gap-1.5 text-[#00174A] font-bold text-[10px] uppercase tracking-wider">
-                  <ShieldCheck size={14} className="text-[#D6B369]" /> Cancellation & Refund Policy
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-[#333333]">
-                  <div className="bg-white/60 p-2 rounded border border-[#cbc0ad]/40">
-                    <span className="font-bold block text-emerald-800">7+ Days Before Check-In Date</span>
-                    <span className="text-[#555555]">100% Full Refund</span>
-                  </div>
-                  <div className="bg-white/60 p-2 rounded border border-[#cbc0ad]/40">
-                    <span className="font-bold block text-amber-800">3–6 Days Before Check-In Date</span>
-                    <span className="text-[#555555]">50% Partial Refund</span>
-                  </div>
-                  <div className="bg-white/60 p-2 rounded border border-[#cbc0ad]/40">
-                    <span className="font-bold block text-rose-800">Under 3 Days of Check-In Date</span>
-                    <span className="text-[#555555]">No Refund</span>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Price Breakdown Calculation */}
               {calcResult && (
@@ -806,11 +873,142 @@ export const RoomsPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Collapsible Terms & Conditions */}
+              <div className="border border-[#cbc0ad] rounded-sm bg-white/70 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowTerms((prev) => !prev)}
+                  aria-expanded={showTerms}
+                  aria-controls="terms-and-conditions-content"
+                  className="w-full px-4 py-3 flex items-center justify-between text-left text-xs font-sans font-bold text-[#00174A] hover:bg-white transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileText size={15} className="text-[#D6B369]" />
+                    <span>Terms & Conditions</span>
+                  </span>
+                  <motion.span
+                    animate={{ rotate: showTerms ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-[#00174A]/70 flex items-center"
+                  >
+                    <ChevronDown size={16} />
+                  </motion.span>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {showTerms && (
+                    <motion.div
+                      id="terms-and-conditions-content"
+                      key="terms-content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: 'easeInOut' }}
+                      className="overflow-hidden border-t border-[#cbc0ad]"
+                    >
+                      <div className="p-4 bg-white/95 text-xs font-sans text-[#333333] max-h-64 sm:max-h-72 overflow-y-auto space-y-3.5 pr-3">
+                        <div className="font-bold text-[11px] uppercase tracking-wider text-[#00174A] border-b border-[#cbc0ad]/60 pb-1.5">
+                          TERMS & CONDITIONS
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">1. Additional Hours</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Any extension beyond the scheduled check-out time will be subject to additional charges as applicable.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">2. Damage to Property</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Guests will be held responsible for any damage, loss, or breakage caused to the hotel premises, furniture, fixtures, equipment, or other property during their stay. The full cost of the damage shall be payable by the guest.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">3. Visitor Policy</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Guests are not permitted on the property after 9:00 PM.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">4. Food Delivery</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Food delivery personnel, including delivery agents from platforms such as Zomato and Swiggy, are not permitted inside guest rooms. Guests must collect all food deliveries from the reception area.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">5. Valid ID at Check-in</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Guests must present a valid government-issued identification document at the time of check-in.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">6. Accepted ID Proofs</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            The hotel accepts Passport, Aadhaar Card, Driving Licence, and other valid Government-issued ID proofs for verification.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">7. Pets</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Pets are not permitted anywhere on the hotel premises.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">8. Outside Visitors</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Guests are requested not to invite or accommodate outside visitors in their rooms during their stay without prior permission from hotel management.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">9. Cancellation & Refund Policy</span>
+                          <ul className="text-[#555555] list-disc list-inside space-y-0.5 pl-1 leading-relaxed">
+                            <li>7 or more days before check-in: 100% refund</li>
+                            <li>3–6 days before check-in: 50% refund</li>
+                            <li>Less than 3 days before check-in: No refund</li>
+                            <li>Any approved refund will be processed within 7 business days from the date of management approval.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">10. Management Rights</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Hotel management reserves the right to cancel or terminate a guest's stay in cases of misconduct, inappropriate behaviour, violation of hotel rules, or activities considered suspicious or contrary to hotel policies, subject to applicable laws and regulations.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Agreement Checkbox */}
+              <label htmlFor="terms-agreement-checkbox" className="flex items-start gap-2.5 cursor-pointer pt-1 group select-none">
+                <input
+                  type="checkbox"
+                  id="terms-agreement-checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded-sm border border-[#cbc0ad] text-[#00174A] focus:ring-2 focus:ring-[#D6B369] focus:ring-offset-0 cursor-pointer accent-[#00174A]"
+                  required
+                />
+                <span className="text-xs font-sans text-[#333333] leading-snug group-hover:text-[#00174A] transition-colors">
+                  I have read and agree to the <span className="font-semibold text-[#00174A]">Terms & Conditions</span> and <span className="font-semibold text-[#00174A]">Cancellation & Refund Policy</span>.
+                </span>
+              </label>
+
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={submittingBooking || !calcResult?.availability?.isAvailable}
-                className="w-full py-4 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                disabled={submittingBooking || !calcResult?.availability?.isAvailable || !termsAccepted}
+                className="w-full py-4 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-bold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <CreditCard size={16} /> Pay Online via Razorpay (₹{calcResult?.pricing?.totalAmount || selectedRoom.basePrice})
               </button>

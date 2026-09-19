@@ -339,6 +339,7 @@ export const saveLocalBooking = (bookingData: any) => {
     guestName: bookingData.guestName || 'Valued Guest',
     guestEmail: bookingData.guestEmail || 'guest@hotelraama.com',
     guestPhone: bookingData.guestPhone || '9876543210',
+    guestAadhar: bookingData.guestAadhar || '',
     checkIn: bookingData.checkIn || new Date().toISOString().split('T')[0],
     checkOut: bookingData.checkOut || new Date(Date.now() + 86400000).toISOString().split('T')[0],
     roomTypeId: bookingData.roomTypeId || FALLBACK_ROOM_TYPES[3],

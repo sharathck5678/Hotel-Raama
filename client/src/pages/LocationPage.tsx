@@ -195,7 +195,7 @@ export const LocationPage: React.FC = () => {
             {/* Quick Details footer */}
             <div className="pt-4 border-t border-[#10184A]/15 flex items-center justify-between text-[11px] text-[#00174A]/80">
               <div className="flex items-center gap-1.5">
-                <Clock size={14} className="text-[#00174A]" /> Check-in: 12 PM / Check-out: 11 AM
+                <Clock size={14} className="text-[#00174A]" /> Check-in: 12 PM / Check-out: 12 PM
               </div>
               <div className="flex items-center gap-1.5 text-[#00174A] font-semibold">
                 <ShieldCheck size={14} /> 24/7 Security

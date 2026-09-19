@@ -173,69 +173,69 @@ export const FALLBACK_MENU_CATEGORIES = [
     "sortOrder": 2
   },
   {
-    "_id": "cat_3",
-    "name": "Meals (ಮೀಲ್ಸ್)",
-    "section": "SWAAD",
-    "description": "South Indian & North Indian Meals",
-    "sortOrder": 3
-  },
-  {
-    "_id": "cat_4",
-    "name": "North Pulav & Biriyani (ನಾರ್ತ್ ಪಲಾವ್ & ಬಿರಿಯಾನಿ)",
+    "_id": "cat_6",
+    "name": "Soups (ಸೂಪ್)",
     "section": "SWAAD",
     "description": "Timings: 12:00 Noon to 3:30 PM & 7:00 PM to 10:00 PM",
-    "sortOrder": 4
+    "sortOrder": 3
   },
   {
     "_id": "cat_5",
     "name": "Starters (ಸ್ಟಾರ್ಟರ್ಸ್)",
     "section": "SWAAD",
     "description": "Timings: 12:00 Noon to 3:30 PM & 7:00 PM to 10:00 PM",
-    "sortOrder": 5
-  },
-  {
-    "_id": "cat_6",
-    "name": "Soups (ಸೂಪ್)",
-    "section": "SWAAD",
-    "description": "Timings: 12:00 Noon to 3:30 PM & 7:00 PM to 10:00 PM",
-    "sortOrder": 6
+    "sortOrder": 4
   },
   {
     "_id": "cat_7",
     "name": "Salad (ಸಲಾಡ್)",
     "section": "SWAAD",
-    "sortOrder": 7
+    "sortOrder": 5
   },
   {
     "_id": "cat_8",
     "name": "Tandoor Bread (ತಂದೂರ್ ಬ್ರೆಡ್)",
     "section": "SWAAD",
     "description": "Timings: 12:00 Noon to 3:30 PM & 7:00 PM to 10:00 PM",
-    "sortOrder": 8
+    "sortOrder": 6
   },
   {
     "_id": "cat_9",
     "name": "Vegetable Curry (ವೆಜಿಟೆಬಲ್ ಕರಿ)",
     "section": "SWAAD",
     "description": "Timings: 12:00 Noon to 3:30 PM & 7:00 PM to 10:00 PM",
-    "sortOrder": 9
+    "sortOrder": 7
   },
   {
     "_id": "cat_10",
     "name": "Kadai Special (ಕಡೈ ಸ್ಪೆಷಲ್)",
     "section": "SWAAD",
-    "sortOrder": 10
+    "sortOrder": 8
   },
   {
     "_id": "cat_11",
     "name": "Kofta & Stuffed (ಕೋಫ್ತಾ & ಸ್ಟಫ್ಡ್)",
     "section": "SWAAD",
-    "sortOrder": 11
+    "sortOrder": 9
   },
   {
     "_id": "cat_12",
     "name": "Dal & Palak (ದಾಲ್ ಪಾಲಕ್)",
     "section": "SWAAD",
+    "sortOrder": 10
+  },
+  {
+    "_id": "cat_3",
+    "name": "Meals (ಮೀಲ್ಸ್)",
+    "section": "SWAAD",
+    "description": "South Indian & North Indian Meals",
+    "sortOrder": 11
+  },
+  {
+    "_id": "cat_4",
+    "name": "North Pulav & Biriyani (ನಾರ್ತ್ ಪಲಾವ್ & ಬಿರಿಯಾನಿ)",
+    "section": "SWAAD",
+    "description": "Timings: 12:00 Noon to 3:30 PM & 7:00 PM to 10:00 PM",
     "sortOrder": 12
   },
   {
@@ -258,33 +258,33 @@ export const FALLBACK_MENU_CATEGORIES = [
     "sortOrder": 15
   },
   {
-    "_id": "cat_16",
-    "name": "Fresh Fruit Juice (ಫ್ರೆಶ್ ಫ್ರೂಟ್ ಜ್ಯೂಸ್)",
-    "section": "SWAAD",
-    "description": "Timings: 11:30 AM to 10:00 PM",
-    "sortOrder": 16
-  },
-  {
-    "_id": "cat_17",
-    "name": "Milkshakes & Lassi (ಮಿಲ್ಕ್ ಶೇಕ್ & ಲಸಿ)",
-    "section": "SWAAD",
-    "sortOrder": 17
-  },
-  {
     "_id": "cat_18",
     "name": "Fruit Salad (ಫ್ರೂಟ್ ಸಲಾಡ್)",
     "section": "SWAAD",
-    "sortOrder": 18
+    "sortOrder": 16
   },
   {
     "_id": "cat_19",
     "name": "Ice Cream Scoop & Cone (ಐಸ್ ಕ್ರೀಮ್ ಸ್ಕೂಪ್ & ಕೋನ್)",
     "section": "SWAAD",
-    "sortOrder": 19
+    "sortOrder": 17
   },
   {
     "_id": "cat_20",
     "name": "Special Ice Cream (ಸ್ಪೆಷಲ್ ಐಸ್ ಕ್ರೀಮ್)",
+    "section": "SWAAD",
+    "sortOrder": 18
+  },
+  {
+    "_id": "cat_16",
+    "name": "Fresh Fruit Juice (ಫ್ರೆಶ್ ಫ್ರೂಟ್ ಜ್ಯೂಸ್)",
+    "section": "SWAAD",
+    "description": "Timings: 11:30 AM to 10:00 PM",
+    "sortOrder": 19
+  },
+  {
+    "_id": "cat_17",
+    "name": "Milkshakes & Lassi (ಮಿಲ್ಕ್ ಶೇಕ್ & ಲಸಿ)",
     "section": "SWAAD",
     "sortOrder": 20
   },

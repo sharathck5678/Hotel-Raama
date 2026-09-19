@@ -252,7 +252,7 @@ export const HomePage: React.FC = () => {
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
-                  <h3 className="text-2xl font-serif text-white">Hotel Raama (Non-Veg)</h3>
+                  <h3 className="text-2xl font-serif text-white">Hotel Raama</h3>
                   <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
                     Signature Mutton Chops, Nati Koli Biriyani, Coastal Seafood fry, Chicken Sukka, and aromatic Tandoori kebabs.
                   </p>
@@ -274,7 +274,7 @@ export const HomePage: React.FC = () => {
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
-                  <h3 className="text-2xl font-serif text-white">Liquid Lounge Bar (LLB)</h3>
+                  <h3 className="text-2xl font-serif text-white">Liquid Lounge Bar</h3>
                   <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
                     Curated whiskies, single malts, draught beers, and handcrafted cocktails in an executive setting.
                   </p>

@@ -86,6 +86,9 @@ export const AdminBookingsView: React.FC = () => {
                     <td className="py-3 px-3.5">
                       <div className="whitespace-nowrap font-medium text-[#00174A]">{b.guestPhone}</div>
                       <div className="text-[10px] text-[#00174A]/60 truncate max-w-[150px]">{b.guestEmail}</div>
+                      {b.guestAadhar && (
+                        <div className="text-[10px] text-[#00174A]/80 font-mono">Aadhaar: {b.guestAadhar}</div>
+                      )}
                     </td>
                     <td className="py-3 px-3.5 font-medium text-[#00174A] whitespace-nowrap">{b.roomTypeId?.name || 'Executive'}</td>
                     <td className="py-3 px-3.5 text-[11px] text-[#00174A]/80 whitespace-nowrap">

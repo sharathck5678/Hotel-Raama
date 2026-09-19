@@ -39,6 +39,9 @@ export class InvoicePdfService {
         doc.font('Helvetica').text(`Name: ${booking.guestName}`, 320);
         doc.text(`Email: ${booking.guestEmail}`);
         doc.text(`Phone: ${booking.guestPhone}`);
+        if (booking.guestAadhar) {
+          doc.text(`Aadhaar: ${booking.guestAadhar}`);
+        }
 
         doc.moveDown(2);
 
@@ -139,7 +142,9 @@ export class InvoicePdfService {
         doc.fillColor('#333333').font('Helvetica');
 
         for (const item of order.items) {
-          doc.text(item.name, 50, rowTop);
+          // PDFKit Helvetica standard font only supports Latin-1; sanitize any characters outside Latin-1
+          const safeName = item.name.replace(/[^\x20-\x7E\xA0-\xFF]/g, '').replace(/\(\s*-\s*/, '(').trim() || item.name;
+          doc.text(safeName, 50, rowTop);
           doc.text(`Rs. ${item.price.toFixed(2)}`, 320, rowTop);
           doc.text(`${item.quantity}`, 425, rowTop);
           doc.text(`Rs. ${(item.price * item.quantity).toFixed(2)}`, 480, rowTop);

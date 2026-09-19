@@ -7,6 +7,7 @@ const BookingSchema = new mongoose_1.Schema({
     guestName: { type: String, required: true, trim: true },
     guestEmail: { type: String, required: true, lowercase: true, trim: true },
     guestPhone: { type: String, required: true, trim: true },
+    guestAadhar: { type: String, trim: true },
     roomTypeId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'RoomType', required: true },
     assignedRoomId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Room' },
     checkIn: { type: Date, required: true },

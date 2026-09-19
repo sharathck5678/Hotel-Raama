@@ -19,6 +19,7 @@ const PricingEngine_1 = require("../services/PricingEngine");
 const RazorpayService_1 = require("../services/RazorpayService");
 const InvoicePdfService_1 = require("../services/InvoicePdfService");
 const seedDatabase_1 = require("../seed/seedDatabase");
+const aadharValidator_1 = require("../utils/aadharValidator");
 class PublicController {
     /**
      * GET /api/rooms
@@ -74,9 +75,15 @@ class PublicController {
      */
     static async createBooking(req, res) {
         try {
-            const { guestName, guestEmail, guestPhone, roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, specialRequests, planType, extraPerson, } = req.body;
+            const { guestName, guestEmail, guestPhone, guestAadhar, roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, specialRequests, planType, extraPerson, } = req.body;
             if (!guestName || !guestEmail || !guestPhone || !roomTypeId || !checkIn || !checkOut) {
                 return res.status(400).json({ success: false, message: 'Missing required booking fields.' });
+            }
+            if (guestAadhar) {
+                const aadharCheck = (0, aadharValidator_1.validateAadhar)(guestAadhar);
+                if (!aadharCheck.isValid) {
+                    return res.status(400).json({ success: false, message: aadharCheck.message || 'Invalid Aadhaar number.' });
+                }
             }
             const checkInDate = new Date(checkIn);
             const checkOutDate = new Date(checkOut);
@@ -99,6 +106,7 @@ class PublicController {
                 guestName,
                 guestEmail,
                 guestPhone,
+                guestAadhar: guestAadhar ? guestAadhar.trim() : undefined,
                 roomTypeId,
                 assignedRoomId: availability.assignedRoomId,
                 checkIn: checkInDate,

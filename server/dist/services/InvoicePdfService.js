@@ -36,6 +36,9 @@ class InvoicePdfService {
                 doc.font('Helvetica').text(`Name: ${booking.guestName}`, 320);
                 doc.text(`Email: ${booking.guestEmail}`);
                 doc.text(`Phone: ${booking.guestPhone}`);
+                if (booking.guestAadhar) {
+                    doc.text(`Aadhaar: ${booking.guestAadhar}`);
+                }
                 doc.moveDown(2);
                 // Table Header
                 const tableTop = doc.y + 10;

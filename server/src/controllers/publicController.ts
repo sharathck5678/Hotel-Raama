@@ -14,6 +14,7 @@ import { PricingEngine } from '../services/PricingEngine';
 import { RazorpayService } from '../services/RazorpayService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
 import { ensureDatabaseSeeded } from '../seed/seedDatabase';
+import { validateAadhar } from '../utils/aadharValidator';
 
 export class PublicController {
   /**
@@ -90,6 +91,7 @@ export class PublicController {
         guestName,
         guestEmail,
         guestPhone,
+        guestAadhar,
         roomTypeId,
         checkIn,
         checkOut,
@@ -103,6 +105,13 @@ export class PublicController {
 
       if (!guestName || !guestEmail || !guestPhone || !roomTypeId || !checkIn || !checkOut) {
         return res.status(400).json({ success: false, message: 'Missing required booking fields.' });
+      }
+
+      if (guestAadhar) {
+        const aadharCheck = validateAadhar(guestAadhar);
+        if (!aadharCheck.isValid) {
+          return res.status(400).json({ success: false, message: aadharCheck.message || 'Invalid Aadhaar number.' });
+        }
       }
 
       const checkInDate = new Date(checkIn);
@@ -140,6 +149,7 @@ export class PublicController {
         guestName,
         guestEmail,
         guestPhone,
+        guestAadhar: guestAadhar ? guestAadhar.trim() : undefined,
         roomTypeId,
         assignedRoomId: availability.assignedRoomId,
         checkIn: checkInDate,

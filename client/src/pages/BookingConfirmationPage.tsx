@@ -92,6 +92,12 @@ export const BookingConfirmationPage: React.FC = () => {
                 <span className="text-[10px] text-white/60 block uppercase tracking-wider">Total Amount Paid</span>
                 <span className="font-serif font-bold text-[#D6B369]">₹{booking.totalAmount}</span>
               </div>
+              {booking.guestAadhar && (
+                <div>
+                  <span className="text-[10px] text-white/60 block uppercase tracking-wider">Aadhaar ID (Verified)</span>
+                  <span className="font-semibold text-white font-mono">{booking.guestAadhar}</span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -41,7 +41,6 @@ const getCourseForCategory = (catName: string): CourseType => {
     lower.includes('south indian') ||
     lower.includes('dosa') ||
     lower.includes('sandwich') ||
-    lower.includes('tandoor bread') ||
     lower.includes('little bite')
   ) {
     return 'BREAKFAST';
@@ -146,7 +145,8 @@ export const DiningPage: React.FC = () => {
     fetchMenuCatalog()
       .then((res) => {
         if (res.success) {
-          setCategories(res.data.categories);
+          const sortedCats = [...res.data.categories].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+          setCategories(sortedCats);
           setItems(res.data.items);
         }
       })
@@ -993,17 +993,17 @@ export const DiningPage: React.FC = () => {
       {/* CART & CHECKOUT MODAL */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#00174A] text-[#FAF9F6] border border-white/20 rounded-sm max-w-xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl space-y-6">
+          <div className="bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-sm max-w-xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl space-y-6">
             <button
               onClick={() => setCartOpen(false)}
-              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white/70 hover:text-white"
+              className="absolute top-6 right-6 p-2 rounded-full bg-[#00174A]/10 text-[#00174A]/70 hover:text-[#00174A] hover:bg-[#00174A]/20 transition-colors"
             >
               <X size={18} />
             </button>
 
-            <div className="border-b border-white/10 pb-4">
+            <div className="border-b border-[#cbc0ad] pb-4">
               <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Dining Cart</span>
-              <h2 className="text-2xl font-serif text-[#FAF9F6]">Order Checkout</h2>
+              <h2 className="text-2xl font-serif text-[#00174A]">Order Checkout</h2>
             </div>
 
             {/* Cart Items List */}
@@ -1011,23 +1011,23 @@ export const DiningPage: React.FC = () => {
               {cartList.map((item: any) => {
                 const key = `${item.menuItemId}_${item.potionSize}`;
                 return (
-                  <div key={key} className="flex items-center justify-between bg-white/5 p-3 rounded-sm border border-white/10 text-xs font-sans">
+                  <div key={key} className="flex items-center justify-between bg-white/70 p-3 rounded-sm border border-[#cbc0ad] text-xs font-sans">
                     <div>
-                      <span className="font-bold text-[#FAF9F6] block">{item.name}</span>
-                      <span className="text-[10px] text-white/60">Size: {item.potionSize} · ₹{item.price} each</span>
+                      <span className="font-bold text-[#00174A] block">{item.name}</span>
+                      <span className="text-[10px] text-[#00174A]/60">Size: {item.potionSize} · ₹{item.price} each</span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-[#10184A] border border-white/20 rounded-sm px-2 py-1">
-                        <button onClick={() => updateQuantity(key, -1)} className="text-white/70 hover:text-white">
+                      <div className="flex items-center gap-2 bg-white border border-[#cbc0ad] rounded-sm px-2 py-1 shadow-xs">
+                        <button onClick={() => updateQuantity(key, -1)} className="text-[#00174A]/70 hover:text-[#00174A]">
                           <Minus size={12} />
                         </button>
-                        <span className="font-bold text-xs">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(key, 1)} className="text-white/70 hover:text-white">
+                        <span className="font-bold text-xs text-[#00174A]">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(key, 1)} className="text-[#00174A]/70 hover:text-[#00174A]">
                           <Plus size={12} />
                         </button>
                       </div>
-                      <span className="font-bold text-sm text-[#D6B369] min-w-14 text-right">₹{item.price * item.quantity}</span>
+                      <span className="font-bold text-sm text-[#00174A] min-w-14 text-right">₹{item.price * item.quantity}</span>
                     </div>
                   </div>
                 );
@@ -1035,30 +1035,30 @@ export const DiningPage: React.FC = () => {
             </div>
 
             {/* Total Amount Summary */}
-            <div className="flex justify-between items-center pt-3 border-t border-white/10 text-sm font-sans font-bold">
+            <div className="flex justify-between items-center pt-3 border-t border-[#cbc0ad] text-sm font-sans font-bold text-[#00174A]">
               <span>Total Payable Amount:</span>
-              <span className="text-xl font-serif text-[#D6B369]">₹{totalCartPrice}</span>
+              <span className="text-xl font-serif text-[#00174A] font-bold">₹{totalCartPrice}</span>
             </div>
 
             {/* Checkout Form */}
             <form onSubmit={handleOrderSubmit} className="space-y-4 pt-2">
               {activeRoomNumber ? (
-                <div className="p-3 bg-white/10 rounded-sm border border-[#D6B369]/30 flex items-center justify-between">
+                <div className="p-3 bg-white/70 rounded-sm border border-[#cbc0ad] flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] font-sans uppercase font-bold text-[#D6B369] tracking-wider block">
+                    <span className="text-[9px] font-sans uppercase font-bold text-[#00174A]/70 tracking-wider block">
                       Auto-Fetched Verified Location
                     </span>
-                    <span className="text-sm font-serif font-bold text-[#FAF9F6]">
+                    <span className="text-sm font-serif font-bold text-[#00174A]">
                       Room #{activeRoomNumber}
                     </span>
                   </div>
-                  <span className="px-2 py-1 rounded-sm bg-emerald-500/20 text-emerald-300 text-[9px] font-sans font-bold uppercase tracking-wider border border-emerald-500/30">
+                  <span className="px-2 py-1 rounded-sm bg-emerald-600/15 text-emerald-800 text-[9px] font-sans font-bold uppercase tracking-wider border border-emerald-600/30">
                     ✓ Scanned from QR
                   </span>
                 </div>
               ) : (
                 <div>
-                  <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">
+                  <label className="block text-[10px] font-sans uppercase text-[#00174A] font-bold mb-1">
                     Room / Table Number *
                   </label>
                   <input
@@ -1066,7 +1066,7 @@ export const DiningPage: React.FC = () => {
                     placeholder="e.g. Room 204 or Table 5"
                     value={guestRoom}
                     onChange={(e) => setGuestRoom(e.target.value)}
-                    className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
+                    className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] placeholder-[#00174A]/40 focus:border-[#00174A] focus:outline-none shadow-xs"
                     required
                   />
                 </div>
@@ -1074,24 +1074,24 @@ export const DiningPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">Guest Name *</label>
+                  <label className="block text-[10px] font-sans uppercase text-[#00174A] font-bold mb-1">Guest Name *</label>
                   <input
                     type="text"
                     placeholder="John Doe"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
+                    className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] placeholder-[#00174A]/40 focus:border-[#00174A] focus:outline-none shadow-xs"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">Phone Number *</label>
+                  <label className="block text-[10px] font-sans uppercase text-[#00174A] font-bold mb-1">Phone Number *</label>
                   <input
                     type="tel"
                     placeholder="9876543210"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
+                    className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] placeholder-[#00174A]/40 focus:border-[#00174A] focus:outline-none shadow-xs"
                     required
                   />
                 </div>
@@ -1099,40 +1099,44 @@ export const DiningPage: React.FC = () => {
 
               {/* Special Instructions */}
               <div>
-                <label className="block text-[10px] font-sans uppercase text-[#FAF9F6]/80 font-bold mb-1">Special Instructions</label>
+                <label className="block text-[10px] font-sans uppercase text-[#00174A] font-bold mb-1">Special Instructions</label>
                 <input
                   type="text"
                   placeholder="e.g. Less spicy, extra cutlery"
                   value={specialInstructions}
                   onChange={(e) => setSpecialInstructions(e.target.value)}
-                  className="w-full bg-[#10184A] border border-white/20 rounded-sm px-3.5 py-2 text-xs font-sans text-white placeholder-white/40"
+                  className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#00174A] placeholder-[#00174A]/40 focus:border-[#00174A] focus:outline-none shadow-xs"
                 />
               </div>
 
               {/* Payment Mode Selection */}
               <div className="space-y-2 pt-2">
-                <span className="text-[10px] font-sans uppercase tracking-wider text-[#D6B369] font-bold block">Payment Method *</span>
+                <span className="text-[10px] font-sans uppercase tracking-wider text-[#00174A] font-bold block">Payment Method *</span>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMode('RAZORPAY')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'RAZORPAY' ? 'bg-[#F7F0DF] text-[#00174A] font-bold border-[#F7F0DF]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
+                      paymentMode === 'RAZORPAY'
+                        ? 'bg-[#00174A] text-white font-bold border-[#00174A] shadow-sm'
+                        : 'bg-white text-[#00174A] border-[#cbc0ad] hover:border-[#00174A]/50'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💳 Online (Razorpay)</span>
-                    <span className="text-[10px] opacity-80">UPI, Cards, NetBanking</span>
+                    <span className={`text-[10px] ${paymentMode === 'RAZORPAY' ? 'text-white/80' : 'text-[#00174A]/60'}`}>UPI, Cards, NetBanking</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentMode('CASH')}
                     className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'CASH' ? 'bg-[#F7F0DF] text-[#00174A] font-bold border-[#F7F0DF]' : 'bg-transparent text-white/70 border-white/20 hover:border-white/40'
+                      paymentMode === 'CASH'
+                        ? 'bg-[#00174A] text-white font-bold border-[#00174A] shadow-sm'
+                        : 'bg-white text-[#00174A] border-[#cbc0ad] hover:border-[#00174A]/50'
                     }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💵 Pay at Reception</span>
-                    <span className="text-[10px] opacity-80">Cash or UPI at counter</span>
+                    <span className={`text-[10px] ${paymentMode === 'CASH' ? 'text-white/80' : 'text-[#00174A]/60'}`}>Cash or UPI at counter</span>
                   </button>
                 </div>
               </div>
