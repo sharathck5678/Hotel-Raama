@@ -60,14 +60,16 @@ export class InvoicePdfService {
         doc.text(roomTypeName, 50, rowTop);
         doc.text(`${new Date(booking.checkIn).toLocaleDateString()} - ${new Date(booking.checkOut).toLocaleDateString()}`, 250, rowTop);
         doc.text(`${booking.numNights}`, 430, rowTop);
-        doc.text(`Rs. ${(booking.roomPricePerNightSnapshot * booking.numNights).toFixed(2)}`, 480, rowTop);
+        const roomSubtotal = ((booking.roomPricePerNightSnapshot || 0) * (booking.numNights || 1)).toFixed(2);
+        doc.text(`Rs. ${roomSubtotal}`, 480, rowTop);
 
-        if (booking.mealPlanSelection && booking.mealPlanSelection.pricePerNight > 0) {
+        if (booking.mealPlanSelection && (booking.mealPlanSelection.pricePerNight || 0) > 0) {
           rowTop += 20;
           doc.text(`Meal Plan Additions`, 50, rowTop);
-          doc.text(`Pax: ${booking.numGuests}`, 250, rowTop);
-          doc.text(`${booking.numNights}`, 430, rowTop);
-          doc.text(`Rs. ${(booking.mealPlanSelection.pricePerNight * booking.numNights).toFixed(2)}`, 480, rowTop);
+          doc.text(`Pax: ${booking.numGuests || 1}`, 250, rowTop);
+          doc.text(`${booking.numNights || 1}`, 430, rowTop);
+          const mealPlanSubtotal = ((booking.mealPlanSelection.pricePerNight || 0) * (booking.numNights || 1)).toFixed(2);
+          doc.text(`Rs. ${mealPlanSubtotal}`, 480, rowTop);
         }
 
         rowTop += 30;
@@ -75,17 +77,20 @@ export class InvoicePdfService {
         rowTop += 10;
 
         // Totals summary
+        const discountVal = (booking.discountAmountSnapshot || 0).toFixed(2);
         doc.font('Helvetica').text(`Discount Applied:`, 350, rowTop);
-        doc.text(`- Rs. ${booking.discountAmountSnapshot.toFixed(2)}`, 480, rowTop);
+        doc.text(`- Rs. ${discountVal}`, 480, rowTop);
         rowTop += 15;
 
+        const taxVal = (booking.taxAmountSnapshot || 0).toFixed(2);
         doc.text(`GST (12%):`, 350, rowTop);
-        doc.text(`Rs. ${booking.taxAmountSnapshot.toFixed(2)}`, 480, rowTop);
+        doc.text(`Rs. ${taxVal}`, 480, rowTop);
         rowTop += 20;
 
+        const totalVal = (booking.totalAmount || 0).toFixed(2);
         doc.fillColor('#07111F').font('Helvetica-Bold').fontSize(12);
         doc.text(`Total Amount Paid:`, 350, rowTop);
-        doc.fillColor('#C9A227').text(`Rs. ${booking.totalAmount.toFixed(2)}`, 480, rowTop);
+        doc.fillColor('#C9A227').text(`Rs. ${totalVal}`, 480, rowTop);
 
         // Footer
         doc.fillColor('#777777').fontSize(9).font('Helvetica').text('Thank you for choosing Hotel Raama, Hassan!', 40, 720, { align: 'center' });

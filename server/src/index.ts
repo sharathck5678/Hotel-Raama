@@ -10,6 +10,7 @@ import qrRoutes from './routes/qrRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { SocketService } from './services/SocketService';
 import { initCleanupHoldJob } from './jobs/CleanupHoldJob';
+import { initEmailRetryJob } from './jobs/EmailRetryJob';
 import { apiLimiter } from './middleware/rateLimiter';
 
 dotenv.config();
@@ -47,9 +48,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date(), service: 'Hotel Raama Backend API' });
 });
 
-// 3. Initialize Socket.IO Server & Cron Job
+// 3. Initialize Socket.IO Server & Cron Jobs
 SocketService.init(httpServer, CLIENT_URL);
 initCleanupHoldJob();
+initEmailRetryJob();
 
 import { Room } from './models/Room';
 import { RoomType } from './models/RoomType';

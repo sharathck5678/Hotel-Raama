@@ -52,6 +52,15 @@ export interface IBooking extends Document {
 
   trackingToken: string;
   expiresAt?: Date; // Temporary hold expiry for unpaid PENDING bookings
+
+  // Email Notification Tracking
+  hotelNotificationStatus?: 'PENDING' | 'PROCESSING' | 'SENT' | 'FAILED';
+  guestConfirmationStatus?: 'PENDING' | 'PROCESSING' | 'SENT' | 'FAILED';
+  hotelNotificationError?: string;
+  guestConfirmationError?: string;
+  notificationAttempts?: number;
+  emailSentAt?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -103,6 +112,22 @@ const BookingSchema = new Schema<IBooking>(
 
     trackingToken: { type: String, required: true, unique: true },
     expiresAt: { type: Date },
+
+    // Email Notification Status Tracking
+    hotelNotificationStatus: {
+      type: String,
+      enum: ['PENDING', 'PROCESSING', 'SENT', 'FAILED'],
+      default: 'PENDING',
+    },
+    guestConfirmationStatus: {
+      type: String,
+      enum: ['PENDING', 'PROCESSING', 'SENT', 'FAILED'],
+      default: 'PENDING',
+    },
+    hotelNotificationError: { type: String },
+    guestConfirmationError: { type: String },
+    notificationAttempts: { type: Number, default: 0 },
+    emailSentAt: { type: Date },
   },
   { timestamps: true }
 );
