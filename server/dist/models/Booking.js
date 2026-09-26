@@ -43,9 +43,25 @@ const BookingSchema = new mongoose_1.Schema({
     razorpaySignature: { type: String },
     trackingToken: { type: String, required: true, unique: true },
     expiresAt: { type: Date },
+    // Email Notification Status Tracking
+    hotelNotificationStatus: {
+        type: String,
+        enum: ['PENDING', 'PROCESSING', 'SENT', 'FAILED'],
+        default: 'PENDING',
+    },
+    guestConfirmationStatus: {
+        type: String,
+        enum: ['PENDING', 'PROCESSING', 'SENT', 'FAILED'],
+        default: 'PENDING',
+    },
+    hotelNotificationError: { type: String },
+    guestConfirmationError: { type: String },
+    notificationAttempts: { type: Number, default: 0 },
+    emailSentAt: { type: Date },
 }, { timestamps: true });
 BookingSchema.index({ checkIn: 1, checkOut: 1 });
 BookingSchema.index({ guestPhone: 1 });
 BookingSchema.index({ guestEmail: 1 });
 BookingSchema.index({ bookingStatus: 1, paymentStatus: 1 });
+BookingSchema.index({ razorpayOrderId: 1 });
 exports.Booking = (0, mongoose_1.model)('Booking', BookingSchema);

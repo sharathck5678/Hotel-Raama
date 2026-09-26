@@ -5,7 +5,6 @@ import {
   FALLBACK_MENU_CATEGORIES,
   mockAdminMetrics,
 } from '../data/mockData';
-import { cloudRelay } from './cloudRelayService';
 
 const ORDERS_KEY = 'raama_local_orders';
 const BOOKINGS_KEY = 'raama_local_bookings';
@@ -114,77 +113,6 @@ export const addLocalAuditLog = (action: string, entity: string, details: any, a
   return newLog;
 };
 
-const CLOUD_SYNC_URL = 'https://kvdb.io/W89v34P2gUa3xL67Z9/hotel_raama_orders_v1';
-
-export const syncLocalOrdersToCloud = async (orders: any[]) => {
-  if (typeof window === 'undefined') return;
-  try {
-    await fetch(CLOUD_SYNC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orders),
-    });
-  } catch (e) {
-    // Offline fallback
-  }
-};
-
-export const syncLocalOrdersFromCloud = async (): Promise<any[]> => {
-  const localOrders = getStored(ORDERS_KEY, SEED_ORDERS);
-  if (typeof window === 'undefined') return localOrders;
-
-  try {
-    const res = await fetch(CLOUD_SYNC_URL, { cache: 'no-store' });
-    if (res.ok) {
-      const cloudOrders = await res.json();
-      if (Array.isArray(cloudOrders) && cloudOrders.length > 0) {
-        const orderMap = new Map();
-        localOrders.forEach((o) => {
-          const key = o._id || o.orderId || o.trackingToken;
-          if (key) orderMap.set(key, o);
-        });
-
-        cloudOrders.forEach((ord) => {
-          if (!ord._id && !ord.orderId && !ord.trackingToken) return;
-          const key = ord._id || ord.orderId || ord.trackingToken;
-          const existing = orderMap.get(key);
-          if (!existing) {
-            orderMap.set(key, ord);
-          } else {
-            const statusOrder: Record<string, number> = {
-              PENDING: 1,
-              CONFIRMED: 2,
-              PREPARING: 3,
-              READY: 4,
-              DELIVERED: 5,
-              SERVED: 5,
-              COMPLETED: 5,
-              CANCELLED: 6,
-            };
-            const s1 = statusOrder[String(existing.status).toUpperCase()] || 0;
-            const s2 = statusOrder[String(ord.status).toUpperCase()] || 0;
-            const time1 = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
-            const time2 = ord.updatedAt ? new Date(ord.updatedAt).getTime() : 0;
-
-            if (s2 > s1 || time2 > time1) {
-              orderMap.set(key, ord);
-            }
-          }
-        });
-
-        const merged = Array.from(orderMap.values());
-        merged.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-        setStored(ORDERS_KEY, merged);
-        return merged;
-      }
-    }
-  } catch (e) {
-    // Fallback
-  }
-
-  return localOrders;
-};
-
 // --- ORDERS ---
 export const getLocalOrders = (): any[] => {
   return getStored(ORDERS_KEY, SEED_ORDERS);
@@ -217,10 +145,6 @@ export const saveLocalOrder = (orderData: any) => {
   const updated = [newOrder, ...orders.filter((o) => o._id !== _id && o.orderId !== orderId)];
   setStored(ORDERS_KEY, updated);
   addLocalAuditLog('ORDER_CREATED', 'Order', { orderId, totalAmount: newOrder.totalAmount });
-  syncLocalOrdersToCloud(updated);
-  try {
-    cloudRelay.broadcastNewOrder(newOrder);
-  } catch (e) {}
   return newOrder;
 };
 
@@ -269,10 +193,6 @@ export const updateLocalOrderStatus = (idOrOrderId: string, newStatus: string) =
     orderId: updatedOrder.orderId,
     status: newStatus,
   });
-  syncLocalOrdersToCloud(updated);
-  try {
-    cloudRelay.broadcastOrderUpdate(updatedOrder);
-  } catch (e) {}
   return updatedOrder;
 };
 
@@ -300,10 +220,6 @@ export const updateLocalOrderPayment = (idOrOrderId: string, payload: { paymentS
       paymentStatus: updatedOrder.paymentStatus,
       paymentMethod: updatedOrder.paymentMethod,
     });
-    syncLocalOrdersToCloud(updated);
-    try {
-      cloudRelay.broadcastOrderUpdate(updatedOrder);
-    } catch (e) {}
   }
   return updatedOrder;
 };

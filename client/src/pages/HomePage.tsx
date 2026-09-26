@@ -54,7 +54,6 @@ export const HomePage: React.FC = () => {
             poster="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1920&q=80"
           >
             <source src="/hero-video.mp4" type="video/mp4" />
-            <source src="/hero-video.webm" type="video/webm" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
         </div>

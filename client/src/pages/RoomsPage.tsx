@@ -328,13 +328,20 @@ export const RoomsPage: React.FC = () => {
         image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=200&q=80',
         order_id: razorpayOrderId && razorpayOrderId.startsWith('order_mock_') ? undefined : razorpayOrderId,
         handler: async function (response: any) {
-          toast.loading('Verifying payment signature...');
+          toast.loading('Verifying payment with server...');
+
+          if (!response.razorpay_payment_id || !response.razorpay_signature) {
+            toast.dismiss();
+            toast.error('Incomplete payment response from gateway.');
+            setSubmittingBooking(false);
+            return;
+          }
 
           const verifyRes = await verifyBookingPayment({
             bookingId,
             razorpayOrderId,
-            razorpayPaymentId: response.razorpay_payment_id || `pay_mock_${Date.now()}`,
-            razorpaySignature: response.razorpay_signature || 'mock_sig',
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
           });
 
           if (verifyRes.success) {
@@ -352,7 +359,8 @@ export const RoomsPage: React.FC = () => {
             navigate(`/booking/confirmation/${trackingToken}`);
           } else {
             toast.dismiss();
-            toast.error(verifyRes.message || 'Payment verification failed.');
+            toast.error(verifyRes.message || 'Payment verification failed. Your booking has not been confirmed.');
+            setSubmittingBooking(false);
           }
         },
         prefill: {
@@ -375,25 +383,8 @@ export const RoomsPage: React.FC = () => {
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        // Fallback for environment without script
-        const verifyRes = await verifyBookingPayment({
-          bookingId,
-          razorpayOrderId,
-          razorpayPaymentId: `pay_mock_${Date.now()}`,
-          razorpaySignature: 'mock_sig',
-        });
-        if (verifyRes.success) {
-          try {
-            const storedBookings = JSON.parse(localStorage.getItem('my_bookings') || '[]');
-            if (!storedBookings.includes(trackingToken)) {
-              storedBookings.push(trackingToken);
-              localStorage.setItem('my_bookings', JSON.stringify(storedBookings));
-            }
-          } catch (e) {
-            console.error('Error updating localStorage:', e);
-          }
-          navigate(`/booking/confirmation/${trackingToken}`);
-        }
+        toast.error('Payment gateway failed to load. Please check your internet connection or disable adblockers and reload.');
+        setSubmittingBooking(false);
       }
     } catch (err: any) {
       toast.error(err.message || 'Error processing booking.');

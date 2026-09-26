@@ -2,12 +2,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SocketService = void 0;
 const socket_io_1 = require("socket.io");
+const corsConfig_1 = require("../utils/corsConfig");
 let io = null;
 class SocketService {
     static init(httpServer, clientUrl) {
         io = new socket_io_1.Server(httpServer, {
             cors: {
-                origin: true,
+                origin: (origin, callback) => {
+                    if ((0, corsConfig_1.isOriginAllowed)(origin)) {
+                        callback(null, true);
+                    }
+                    else {
+                        callback(new Error(`CORS blocked for origin: ${origin}`));
+                    }
+                },
                 methods: ['GET', 'POST'],
                 credentials: true,
             },

@@ -62,18 +62,63 @@ class RazorpayService {
      * Verify signature of Razorpay payment
      */
     static verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature) {
-        if (razorpayOrderId.startsWith('order_mock_') || razorpayPaymentId.startsWith('pay_mock_')) {
-            return true; // Auto-verify in dev/mock environment
+        const isProduction = (process.env.NODE_ENV || '').toLowerCase() === 'production';
+        const isMock = (razorpayOrderId && razorpayOrderId.startsWith('order_mock_')) ||
+            (razorpayPaymentId && razorpayPaymentId.startsWith('pay_mock_'));
+        if (isMock) {
+            if (isProduction) {
+                console.warn(`[Security] Rejected mock payment identifier in production environment: order=${razorpayOrderId}, payment=${razorpayPaymentId}`);
+                return false;
+            }
+            // Only permit mock verification in development or test if explicitly allowed
+            const allowMock = process.env.ALLOW_MOCK_PAYMENTS === 'true' ||
+                process.env.NODE_ENV === 'test' ||
+                process.env.NODE_ENV === 'development';
+            return allowMock;
+        }
+        const secret = process.env.RAZORPAY_KEY_SECRET || key_secret;
+        if (!secret || !razorpaySignature || !razorpayOrderId || !razorpayPaymentId) {
+            return false;
         }
         try {
             const generatedSignature = crypto_1.default
-                .createHmac('sha256', key_secret)
+                .createHmac('sha256', secret)
                 .update(`${razorpayOrderId}|${razorpayPaymentId}`)
                 .digest('hex');
-            return generatedSignature === razorpaySignature;
+            const genBuf = Buffer.from(generatedSignature, 'utf8');
+            const sigBuf = Buffer.from(razorpaySignature, 'utf8');
+            if (genBuf.length !== sigBuf.length) {
+                return false;
+            }
+            return crypto_1.default.timingSafeEqual(genBuf, sigBuf);
         }
         catch (error) {
             console.error('Signature verification error:', error);
+            return false;
+        }
+    }
+    /**
+     * Verify Razorpay webhook signature using HMAC SHA256 over raw request body
+     */
+    static verifyWebhookSignature(rawBody, signature, secret) {
+        const webhookSecret = secret || process.env.RAZORPAY_WEBHOOK_SECRET;
+        if (!webhookSecret || !signature || !rawBody) {
+            return false;
+        }
+        try {
+            const generatedSignature = crypto_1.default
+                .createHmac('sha256', webhookSecret)
+                .update(rawBody)
+                .digest('hex');
+            const genBuf = Buffer.from(generatedSignature, 'utf8');
+            const sigBuf = Buffer.from(signature, 'utf8');
+            if (genBuf.length !== sigBuf.length) {
+                return false;
+            }
+            return crypto_1.default.timingSafeEqual(genBuf, sigBuf);
+        }
+        catch (error) {
+            console.error('[RazorpayService] Webhook signature verification error:', error);
             return false;
         }
     }

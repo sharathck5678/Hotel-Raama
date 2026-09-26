@@ -1,5 +1,6 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
+import { isOriginAllowed } from '../utils/corsConfig';
 
 let io: SocketIOServer | null = null;
 
@@ -7,7 +8,13 @@ export class SocketService {
   static init(httpServer: HttpServer, clientUrl: string) {
     io = new SocketIOServer(httpServer, {
       cors: {
-        origin: true,
+        origin: (origin, callback) => {
+          if (isOriginAllowed(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`CORS blocked for origin: ${origin}`));
+          }
+        },
         methods: ['GET', 'POST'],
         credentials: true,
       },

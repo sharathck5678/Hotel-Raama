@@ -22,18 +22,29 @@ const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/hotel_raama';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
+import { isOriginAllowed } from './utils/corsConfig';
+
 // 1. Security & Body Middlewares
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests from any origin (mobile phones, local IP, domain)
-      callback(null, true);
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+      }
     },
     credentials: true,
   })
 );
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use('/api', apiLimiter);

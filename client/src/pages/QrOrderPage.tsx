@@ -176,13 +176,20 @@ export const QrOrderPage: React.FC = () => {
         image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=200&q=80',
         order_id: razorpayOrderId && razorpayOrderId.startsWith('order_mock_') ? undefined : razorpayOrderId,
         handler: async function (response: any) {
-          toast.loading('Verifying payment signature...');
+          toast.loading('Verifying order payment...');
+
+          if (!response.razorpay_payment_id || !response.razorpay_signature) {
+            toast.dismiss();
+            toast.error('Incomplete payment response from gateway.');
+            setPlacingOrder(false);
+            return;
+          }
 
           const verifyRes = await verifyOrderPayment({
             orderId,
             razorpayOrderId,
-            razorpayPaymentId: response.razorpay_payment_id || `pay_mock_${Date.now()}`,
-            razorpaySignature: response.razorpay_signature || 'mock_sig',
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
           });
 
           if (verifyRes.success) {
@@ -201,6 +208,7 @@ export const QrOrderPage: React.FC = () => {
           } else {
             toast.dismiss();
             toast.error(verifyRes.message || 'Payment verification failed.');
+            setPlacingOrder(false);
           }
         },
         prefill: {
@@ -222,25 +230,8 @@ export const QrOrderPage: React.FC = () => {
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        // Fallback for environment without script
-        const verifyRes = await verifyOrderPayment({
-          orderId,
-          razorpayOrderId,
-          razorpayPaymentId: `pay_mock_${Date.now()}`,
-          razorpaySignature: 'mock_sig',
-        });
-        if (verifyRes.success) {
-          try {
-            const storedOrders = JSON.parse(localStorage.getItem('my_orders') || '[]');
-            if (!storedOrders.includes(trackingToken)) {
-              storedOrders.push(trackingToken);
-              localStorage.setItem('my_orders', JSON.stringify(storedOrders));
-            }
-          } catch (e) {
-            console.error('Error updating localStorage:', e);
-          }
-          navigate(`/track-order/${trackingToken}`);
-        }
+        toast.error('Payment gateway failed to load. Please check your internet connection or disable adblockers and reload.');
+        setPlacingOrder(false);
       }
     } catch (err: any) {
       toast.error(err.message || 'Error placing order.');

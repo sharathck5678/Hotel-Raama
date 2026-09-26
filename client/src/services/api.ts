@@ -8,14 +8,10 @@ import {
   FALLBACK_PARTY_PACKAGES,
   FALLBACK_ATTRACTIONS,
   mockCalculateAvailability,
-  mockCreateBooking,
 } from '../data/mockData';
 import {
   updateLocalOrderPayment,
   findLocalOrder,
-  syncLocalOrdersFromCloud,
-  saveLocalBooking,
-  updateLocalBookingStatus,
   findLocalBooking,
   getLocalRooms,
   updateLocalRoomStatus,
@@ -99,27 +95,19 @@ export const createBookingHold = (payload: any) =>
   api
     .post('/bookings', payload)
     .then((res) => res.data)
-    .catch(() => {
-      const mockResult = mockCreateBooking(payload);
-      saveLocalBooking({
-        ...payload,
-        bookingId: mockResult.bookingId,
-        trackingToken: mockResult.trackingToken,
-        totalAmount: mockResult.totalAmount,
-      });
-      return { success: true, data: mockResult };
-    });
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to initialize booking hold. Please check your details and try again.',
+    }));
 
 export const verifyBookingPayment = (payload: any) =>
   api
     .post('/bookings/verify-payment', payload)
     .then((res) => res.data)
-    .catch(() => {
-      if (payload.bookingId || payload.trackingToken) {
-        updateLocalBookingStatus(payload.bookingId || payload.trackingToken, { paymentStatus: 'PAID', status: 'CONFIRMED' });
-      }
-      return { success: true, message: 'Payment verified successfully.' };
-    });
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Payment verification failed. Your booking has not been confirmed.',
+    }));
 
 export const trackBookingStatus = (token: string) =>
   api
@@ -262,45 +250,23 @@ export const verifyOrderPayment = (payload: any) =>
   api
     .post('/orders/verify-payment', payload)
     .then((res) => res.data)
-    .catch((err) => {
-      console.warn('[API Warning] verifyOrderPayment fallback to localStore:', err.message);
-      if (payload.orderId || payload.trackingToken) {
-        updateLocalOrderPayment(payload.orderId || payload.trackingToken, { paymentStatus: 'PAID' });
-      }
-      return { success: true, message: 'Order payment verified.' };
-    });
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Order payment verification failed.',
+    }));
 
 export const trackOrderStatus = (token: string) =>
   api
     .get(`/orders/track/${token}`)
     .then((res) => res.data)
-    .catch(async (err) => {
-      console.warn('[API Warning] trackOrderStatus fallback to Cloud Sync / localStore:', err.message);
-      await syncLocalOrdersFromCloud();
+    .catch((err) => {
       const localOrder = findLocalOrder(token);
       if (localOrder) {
         return { success: true, data: localOrder };
       }
       return {
-        success: true,
-        data: {
-          _id: 'mock_order_id',
-          orderId: `ORD${token.slice(-5)}`,
-          status: 'PENDING',
-          guestName: 'Valued Guest',
-          guestPhone: '9876543210',
-          roomNumber: '104',
-          deliveryOption: 'ROOM_SERVICE',
-          items: [
-            { menuItemId: 'item_s9', name: 'South Indian Meals', price: 125, quantity: 2, potionSize: 'Standard' },
-            { menuItemId: 'item_s51', name: 'Filter Coffee', price: 30, quantity: 2, potionSize: 'Standard' },
-          ],
-          totalAmount: 310,
-          paymentStatus: 'UNPAID',
-          paymentMethod: 'CASH',
-          trackingToken: token,
-          createdAt: new Date().toISOString(),
-        },
+        success: false,
+        message: err.response?.data?.message || 'Order not found.',
       };
     });
 

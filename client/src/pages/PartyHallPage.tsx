@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageSquare, BookOpen, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchPartyPackages } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
@@ -8,9 +7,13 @@ export const PartyHallPage: React.FC = () => {
   const [packages, setPackages] = useState<any[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerPageIndex, setViewerPageIndex] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
+
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const isTransitioningRef = useRef(false);
+  const [hasTransition, setHasTransition] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Sambhrama has 16 brochure pages
   const brochurePages = Array.from({ length: 16 }, (_, i) => `/party_hall_images/page-${String(i + 1).padStart(2, '0')}.png`);
@@ -18,20 +21,101 @@ export const PartyHallPage: React.FC = () => {
   const galleryImages = [
     '/party_hall_images/sambhrama-banquet-entrance.png',
     '/party_hall_images/sambhrama-grand-hall-view.png',
-    '/party_hall_images/sambhrama-birthday-celebration.jpg',
     '/party_hall_images/sambhrama-hall-setup.png',
   ];
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % galleryImages.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  // Extended slides for seamless infinite loop: [last, ...original, first]
+  const extendedSlides = [
+    galleryImages[galleryImages.length - 1],
+    ...galleryImages,
+    galleryImages[0],
+  ];
 
-  // Auto-play timer
+  // Starts at real index 0 (which corresponds to index 1 in extendedSlides)
+  const [slideIndex, setSlideIndex] = useState(1);
+
+  // Preload all gallery images immediately on mount so they are cached in GPU memory
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % galleryImages.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [galleryImages.length]);
+    galleryImages.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
+  const nextSlide = useCallback(() => {
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+    setHasTransition(true);
+    setSlideIndex((prev) => prev + 1);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+    setHasTransition(true);
+    setSlideIndex((prev) => prev - 1);
+  }, []);
+
+  const goToSlide = (idx: number) => {
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+    setHasTransition(true);
+    setSlideIndex(idx + 1);
+  };
+
+  const restartTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      nextSlide();
+    }, 3500);
+  }, [nextSlide]);
+
+  const handleUserNext = () => {
+    nextSlide();
+    restartTimer();
+  };
+
+  const handleUserPrev = () => {
+    prevSlide();
+    restartTimer();
+  };
+
+  const handleUserGoTo = (idx: number) => {
+    goToSlide(idx);
+    restartTimer();
+  };
+
+  const handleTransitionEnd = () => {
+    isTransitioningRef.current = false;
+    if (slideIndex >= extendedSlides.length - 1) {
+      setHasTransition(false);
+      setSlideIndex(1);
+    } else if (slideIndex <= 0) {
+      setHasTransition(false);
+      setSlideIndex(galleryImages.length);
+    }
+  };
+
+  // Re-enable smooth transition after instant silent reset
+  useEffect(() => {
+    if (!hasTransition) {
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => {
+          setHasTransition(true);
+        });
+        return () => cancelAnimationFrame(raf2);
+      });
+      return () => cancelAnimationFrame(raf1);
+    }
+  }, [hasTransition]);
+
+  // Continuous auto slideshow timer (slides every 3.5 seconds unconditionally)
+  useEffect(() => {
+    restartTimer();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [restartTimer]);
 
   // Touch Swipe handlers for mobile
   const minSwipeDistance = 40;
@@ -46,11 +130,21 @@ export const PartyHallPage: React.FC = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
     if (distance > minSwipeDistance) {
-      nextSlide();
+      handleUserNext();
     } else if (distance < -minSwipeDistance) {
-      prevSlide();
+      handleUserPrev();
     }
+    setTouchStart(null);
+    setTouchEnd(null);
   };
+
+  // Active dot indicator (maps extended index back to 0..galleryImages.length-1)
+  const activeDotIndex =
+    slideIndex === 0
+      ? galleryImages.length - 1
+      : slideIndex >= extendedSlides.length - 1
+      ? 0
+      : slideIndex - 1;
 
   useEffect(() => {
     fetchPartyPackages().then((res) => {
@@ -145,53 +239,67 @@ export const PartyHallPage: React.FC = () => {
 
         {/* Clean Slideshow Container */}
         <div
-          className="relative rounded-sm overflow-hidden border border-[#10184A]/15 shadow-lg bg-stone-950 select-none"
+          className="relative rounded-sm overflow-hidden border border-[#10184A]/15 shadow-lg bg-stone-950 select-none group"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div className="relative h-[250px] sm:h-[380px] md:h-[480px] lg:h-[540px] w-full overflow-hidden flex items-center justify-center bg-stone-900">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentSlide}
-                src={galleryImages[currentSlide]}
-                alt={`Sambhrama Banquet Photo ${currentSlide + 1}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6, ease: 'easeInOut' }}
-                className="w-full h-full object-cover"
-              />
-            </AnimatePresence>
+          <div className="relative h-[250px] sm:h-[380px] md:h-[480px] lg:h-[540px] w-full overflow-hidden bg-stone-950">
+            {/* Smooth Sliding Hardware-Accelerated Track */}
+            <div
+              className="flex w-full h-full will-change-transform"
+              style={{
+                transform: `translate3d(-${slideIndex * 100}%, 0, 0)`,
+                transition: hasTransition
+                  ? 'transform 750ms cubic-bezier(0.25, 1, 0.5, 1)'
+                  : 'none',
+              }}
+              onTransitionEnd={handleTransitionEnd}
+            >
+              {extendedSlides.map((imgSrc, idx) => (
+                <div
+                  key={idx}
+                  className="w-full h-full flex-shrink-0 relative overflow-hidden bg-stone-900"
+                >
+                  <img
+                    src={imgSrc}
+                    alt={`Sambhrama Banquet Photo ${(idx % galleryImages.length) + 1}`}
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
+              ))}
+            </div>
 
             {/* Left Navigation Arrow */}
             <button
-              onClick={prevSlide}
+              onClick={handleUserPrev}
               aria-label="Previous Photo"
-              className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-black/50 hover:bg-[#00174A] text-white transition-all cursor-pointer shadow-md active:scale-95"
+              className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-black/50 hover:bg-[#00174A] text-white transition-all cursor-pointer shadow-md active:scale-95 z-10 hover:scale-105"
             >
               <ChevronLeft size={22} />
             </button>
 
             {/* Right Navigation Arrow */}
             <button
-              onClick={nextSlide}
+              onClick={handleUserNext}
               aria-label="Next Photo"
-              className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-black/50 hover:bg-[#00174A] text-white transition-all cursor-pointer shadow-md active:scale-95"
+              className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-black/50 hover:bg-[#00174A] text-white transition-all cursor-pointer shadow-md active:scale-95 z-10 hover:scale-105"
             >
               <ChevronRight size={22} />
             </button>
 
             {/* Minimal Dot Indicators */}
-            <div className="absolute bottom-4 inset-x-0 flex justify-center items-center gap-2 pointer-events-auto">
+            <div className="absolute bottom-4 inset-x-0 flex justify-center items-center gap-2 pointer-events-auto z-10">
               {galleryImages.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setCurrentSlide(idx)}
+                  onClick={() => handleUserGoTo(idx)}
                   aria-label={`Go to photo ${idx + 1}`}
                   className={`transition-all duration-300 rounded-full cursor-pointer ${
-                    currentSlide === idx
-                      ? 'w-7 h-2 bg-[#D6B369]'
+                    activeDotIndex === idx
+                      ? 'w-8 h-2 bg-[#D6B369]'
                       : 'w-2 h-2 bg-white/60 hover:bg-white'
                   }`}
                 />

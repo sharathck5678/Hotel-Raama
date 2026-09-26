@@ -211,59 +211,94 @@ export class QrController {
         finalDeliveryOption = 'RECEPTION_PICKUP';
       }
 
-      // 2. Fetch Menu Items & Recalculate Prices Server-Side where possible
-      const validObjectIds = items
-        .map((i: any) => i.menuItemId || i._id)
-        .filter((id: any) => id && Types.ObjectId.isValid(id));
-
-      let menuItems: any[] = [];
-      if (validObjectIds.length > 0) {
-        menuItems = await MenuItem.find({ _id: { $in: validObjectIds } });
-      }
-      const menuMap = new Map(menuItems.map(m => [m._id.toString(), m]));
-
-      let subtotal = 0;
-      const orderItems: IOrderItem[] = [];
-
+      // 2. Fetch Menu Items & Calculate Prices Strictly Server-Side from Database
+      const objectIdStrings: string[] = [];
       for (const item of items) {
         const rawItemId = typeof item.menuItemId === 'object' && item.menuItemId?._id
           ? item.menuItemId._id
           : typeof item._id === 'object' && item._id?._id
           ? item._id._id
-          : item.menuItemId || item._id || '';
-        const itemIdStr = String(rawItemId);
-        const dbItem = menuMap.get(itemIdStr);
+          : item.menuItemId || item._id;
 
-        const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
-        let unitPrice = dbItem ? dbItem.price : (parseFloat(item.price) || 100);
-        let itemName = dbItem ? dbItem.name : (item.name || 'Delicious Item');
+        if (!rawItemId || typeof rawItemId !== 'string' || !Types.ObjectId.isValid(rawItemId)) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid or missing menu item identifier for item '${item.name || 'unnamed'}'.`,
+          });
+        }
+        objectIdStrings.push(rawItemId);
+      }
 
-        if (item.potionSize === '60ML' && dbItem?.price60ml) {
-          unitPrice = dbItem.price60ml;
-        } else if (item.potionSize === '60ML' && item.price60ml) {
-          unitPrice = parseFloat(item.price60ml);
+      const menuItems = await MenuItem.find({ _id: { $in: objectIdStrings } });
+      const menuMap = new Map(menuItems.map((m) => [m._id.toString(), m]));
+
+      let subtotal = 0;
+      const orderItems: IOrderItem[] = [];
+
+      for (const item of items) {
+        const rawItemId = String(
+          typeof item.menuItemId === 'object' && item.menuItemId?._id
+            ? item.menuItemId._id
+            : typeof item._id === 'object' && item._id?._id
+            ? item._id._id
+            : item.menuItemId || item._id
+        );
+
+        const dbItem = menuMap.get(rawItemId);
+        if (!dbItem) {
+          return res.status(400).json({
+            success: false,
+            message: `Menu item with ID '${rawItemId}' does not exist.`,
+          });
         }
 
-        const itemSubtotal = unitPrice * quantity;
-        subtotal += itemSubtotal;
+        if (dbItem.isAvailable === false) {
+          return res.status(400).json({
+            success: false,
+            message: `Menu item '${dbItem.name}' is currently unavailable.`,
+          });
+        }
 
-        const finalObjectId = dbItem
-          ? dbItem._id
-          : (Types.ObjectId.isValid(itemIdStr) && itemIdStr.length === 24 ? new Types.ObjectId(itemIdStr) : new Types.ObjectId());
+        const quantity = parseInt(item.quantity, 10);
+        if (isNaN(quantity) || quantity <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid quantity for '${dbItem.name}'. Must be at least 1.`,
+          });
+        }
+
+        // Determine unit price strictly from database record
+        let unitPrice = dbItem.price;
+        const potionSize = item.potionSize === '60ML' ? '60ML' : 'Standard';
+
+        if (potionSize === '60ML') {
+          if (dbItem.price60ml && dbItem.price60ml > 0) {
+            unitPrice = dbItem.price60ml;
+          } else {
+            return res.status(400).json({
+              success: false,
+              message: `60ML potion is not available for '${dbItem.name}'.`,
+            });
+          }
+        }
+
+        const lineTotal = unitPrice * quantity;
+        subtotal += lineTotal;
 
         orderItems.push({
-          menuItemId: finalObjectId,
-          name: itemName,
+          menuItemId: dbItem._id as Types.ObjectId,
+          name: dbItem.name,
           price: unitPrice,
           quantity,
-          potionSize: item.potionSize || 'Standard',
-          specialInstructions: item.specialInstructions,
+          potionSize,
+          specialInstructions: item.specialInstructions ? String(item.specialInstructions).slice(0, 200) : undefined,
         });
       }
 
       const orderId = `HRO-${Math.floor(1000 + Math.random() * 9000)}`;
       const trackingToken = crypto.randomBytes(16).toString('hex');
-      const totalAmount = subtotal; // GST can be added if applicable
+      const tax = 0; // GST if applicable
+      const totalAmount = Math.round(subtotal + tax);
 
       const chosenPaymentMethod = paymentMethod === 'CASH' ? 'CASH' : 'RAZORPAY';
       let razorpayOrderId: string | undefined = undefined;

@@ -15,4 +15,5 @@ router.get('/attractions', publicController_1.PublicController.getAttractions);
 router.get('/hotel-info', publicController_1.PublicController.getHotelInfo);
 router.get('/billing/invoice/booking/:idOrToken', publicController_1.PublicController.downloadBookingInvoicePdf);
 router.get('/billing/invoice/order/:idOrToken', publicController_1.PublicController.downloadOrderInvoicePdf);
+router.post('/webhooks/razorpay', publicController_1.PublicController.handleRazorpayWebhook);
 exports.default = router;

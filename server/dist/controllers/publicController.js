@@ -18,6 +18,7 @@ const AvailabilityEngine_1 = require("../services/AvailabilityEngine");
 const PricingEngine_1 = require("../services/PricingEngine");
 const RazorpayService_1 = require("../services/RazorpayService");
 const InvoicePdfService_1 = require("../services/InvoicePdfService");
+const EmailService_1 = require("../services/EmailService");
 const seedDatabase_1 = require("../seed/seedDatabase");
 const aadharValidator_1 = require("../utils/aadharValidator");
 class PublicController {
@@ -156,32 +157,94 @@ class PublicController {
     static async verifyPayment(req, res) {
         try {
             const { bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
-            if (!bookingId || !razorpayOrderId || !razorpayPaymentId) {
+            if (!bookingId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
                 return res.status(400).json({ success: false, message: 'Missing payment verification details.' });
             }
             const booking = await Booking_1.Booking.findOne({ bookingId });
             if (!booking) {
                 return res.status(404).json({ success: false, message: 'Booking not found.' });
             }
-            // Verify Razorpay signature
-            const isValid = RazorpayService_1.RazorpayService.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature || 'mock_sig');
+            // 1. Idempotency Check: Already verified & confirmed bookings must not re-run transitions or duplicate emails
+            if (booking.paymentStatus === 'PAID' && booking.bookingStatus === 'CONFIRMED') {
+                return res.json({
+                    success: true,
+                    message: 'Payment already verified! Booking confirmed.',
+                    data: {
+                        bookingId: booking.bookingId,
+                        trackingToken: booking.trackingToken,
+                        status: booking.bookingStatus,
+                    },
+                });
+            }
+            // 2. Pre-confirmation State Validation: Cannot confirm cancelled or invalid states
+            if (booking.bookingStatus === 'CANCELLED') {
+                return res.status(400).json({ success: false, message: 'Booking is cancelled and cannot be confirmed.' });
+            }
+            if (booking.bookingStatus !== 'PENDING') {
+                return res.status(400).json({ success: false, message: 'Booking is not in a pending state for payment.' });
+            }
+            // 3. Expiration Check: Expired hold cannot reclaim room
+            if (booking.expiresAt && new Date(booking.expiresAt).getTime() < Date.now()) {
+                booking.paymentStatus = 'FAILED';
+                booking.bookingStatus = 'CANCELLED';
+                await booking.save();
+                return res.status(400).json({ success: false, message: 'Booking hold has expired. Please initiate a new reservation.' });
+            }
+            // 4. Order ID Verification: Submitted razorpayOrderId must match the booking's order ID
+            if (booking.razorpayOrderId && booking.razorpayOrderId !== razorpayOrderId) {
+                return res.status(400).json({ success: false, message: 'Provided order ID does not match this booking.' });
+            }
+            // 5. Server-side HMAC-SHA256 Signature Verification
+            const isValid = RazorpayService_1.RazorpayService.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
             if (!isValid) {
                 booking.paymentStatus = 'FAILED';
                 booking.bookingStatus = 'CANCELLED';
                 await booking.save();
                 return res.status(400).json({ success: false, message: 'Payment verification failed. Invalid signature.' });
             }
-            // Transition to CONFIRMED
-            booking.paymentStatus = 'PAID';
-            booking.bookingStatus = 'CONFIRMED';
-            booking.razorpayPaymentId = razorpayPaymentId;
-            booking.razorpaySignature = razorpaySignature;
-            booking.expiresAt = undefined;
-            await booking.save();
-            // If room is assigned, update room status to RESERVED
-            if (booking.assignedRoomId) {
-                await Room_1.Room.findByIdAndUpdate(booking.assignedRoomId, { status: 'RESERVED' });
+            // 6. Atomic Transition to CONFIRMED & PAID
+            // Only one concurrent request can match { bookingStatus: 'PENDING', paymentStatus: { $ne: 'PAID' } }
+            const confirmedBooking = await Booking_1.Booking.findOneAndUpdate({
+                _id: booking._id,
+                bookingStatus: 'PENDING',
+                paymentStatus: { $ne: 'PAID' },
+            }, {
+                $set: {
+                    paymentStatus: 'PAID',
+                    bookingStatus: 'CONFIRMED',
+                    razorpayPaymentId,
+                    razorpaySignature,
+                },
+                $unset: {
+                    expiresAt: 1,
+                },
+            }, { new: true });
+            // If another concurrent request already updated this booking, fetch current state and return idempotently
+            if (!confirmedBooking) {
+                const latestBooking = await Booking_1.Booking.findOne({ bookingId });
+                if (latestBooking && latestBooking.paymentStatus === 'PAID') {
+                    return res.json({
+                        success: true,
+                        message: 'Payment already verified! Booking confirmed.',
+                        data: {
+                            bookingId: latestBooking.bookingId,
+                            trackingToken: latestBooking.trackingToken,
+                            status: latestBooking.bookingStatus,
+                        },
+                    });
+                }
+                return res.status(400).json({ success: false, message: 'Booking state could not be confirmed.' });
             }
+            // 7. Update assigned physical room status to RESERVED
+            if (confirmedBooking.assignedRoomId) {
+                await Room_1.Room.findByIdAndUpdate(confirmedBooking.assignedRoomId, { status: 'RESERVED' });
+            }
+            // 8. Downstream Async Email Notifications (Hotel & Guest)
+            // Only the single atomic transition winner triggers email dispatch
+            // Failure to send email will NOT roll back payment or corrupt confirmed booking state
+            EmailService_1.EmailService.processBookingEmails(confirmedBooking._id.toString()).catch((emailErr) => {
+                console.error(`[EmailService] Non-blocking dispatch error for booking ${confirmedBooking.bookingId}:`, emailErr.message || emailErr);
+            });
             return res.json({
                 success: true,
                 message: 'Payment verified! Booking confirmed.',
@@ -319,6 +382,124 @@ class PublicController {
         catch (error) {
             console.error('Error generating order PDF receipt:', error);
             return res.status(500).send('Failed to generate order PDF receipt');
+        }
+    }
+    /**
+     * POST /api/webhooks/razorpay
+     * Reconciles payment events securely from Razorpay webhook notifications
+     */
+    static async handleRazorpayWebhook(req, res) {
+        try {
+            const signature = req.headers['x-razorpay-signature'];
+            const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+            if (!signature) {
+                console.warn('[Razorpay Webhook] Rejected webhook missing x-razorpay-signature header');
+                return res.status(400).json({ success: false, message: 'Missing x-razorpay-signature header.' });
+            }
+            const isValidSignature = RazorpayService_1.RazorpayService.verifyWebhookSignature(rawBody, signature);
+            if (!isValidSignature) {
+                console.warn(`[Razorpay Webhook] Invalid webhook signature detected from IP: ${req.ip}`);
+                return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
+            }
+            const event = req.body?.event;
+            console.log(`[Razorpay Webhook] Validated event received: ${event}`);
+            // Reconcile on payment.captured or order.paid
+            if (event !== 'payment.captured' && event !== 'order.paid') {
+                return res.status(200).json({
+                    success: true,
+                    message: `Webhook event '${event}' acknowledged. No reconciliation required.`,
+                });
+            }
+            const paymentEntity = req.body?.payload?.payment?.entity;
+            const orderEntity = req.body?.payload?.order?.entity;
+            const razorpayOrderId = paymentEntity?.order_id || orderEntity?.id;
+            const razorpayPaymentId = paymentEntity?.id;
+            const noteBookingId = paymentEntity?.notes?.bookingId || orderEntity?.notes?.bookingId;
+            if (!razorpayOrderId && !noteBookingId) {
+                console.warn('[Razorpay Webhook] Webhook payload missing order_id and notes.bookingId');
+                return res.status(200).json({
+                    success: true,
+                    message: 'Payload missing order identifiers. Ignored.',
+                });
+            }
+            // Match Razorpay order ID to the correct booking (or bookingId from notes)
+            let booking = null;
+            if (razorpayOrderId) {
+                booking = await Booking_1.Booking.findOne({ razorpayOrderId });
+            }
+            if (!booking && noteBookingId) {
+                booking = await Booking_1.Booking.findOne({ bookingId: noteBookingId });
+            }
+            if (!booking) {
+                console.warn(`[Razorpay Webhook] No matching booking found for order=${razorpayOrderId}, noteId=${noteBookingId}`);
+                return res.status(200).json({
+                    success: true,
+                    message: 'No matching booking found for reconciliation.',
+                });
+            }
+            // 1. Idempotency Check: Already verified & confirmed bookings must not re-run transitions or duplicate emails
+            if (booking.paymentStatus === 'PAID' && booking.bookingStatus === 'CONFIRMED') {
+                console.log(`[Razorpay Webhook] Booking ${booking.bookingId} is already PAID & CONFIRMED. Webhook acknowledged idempotently.`);
+                return res.status(200).json({
+                    success: true,
+                    message: 'Booking already confirmed.',
+                    data: { bookingId: booking.bookingId, status: booking.bookingStatus },
+                });
+            }
+            // 2. Pre-confirmation State Validation: Only transition valid PENDING bookings
+            if (booking.bookingStatus !== 'PENDING') {
+                console.warn(`[Razorpay Webhook] Booking ${booking.bookingId} status is '${booking.bookingStatus}' (not PENDING). Skipping.`);
+                return res.status(200).json({
+                    success: true,
+                    message: `Booking is in state '${booking.bookingStatus}'. Reconciliation skipped.`,
+                });
+            }
+            // 3. Atomic Transition to CONFIRMED & PAID
+            const confirmedBooking = await Booking_1.Booking.findOneAndUpdate({
+                _id: booking._id,
+                bookingStatus: 'PENDING',
+                paymentStatus: { $ne: 'PAID' },
+            }, {
+                $set: {
+                    paymentStatus: 'PAID',
+                    bookingStatus: 'CONFIRMED',
+                    ...(razorpayPaymentId ? { razorpayPaymentId } : {}),
+                    ...(signature ? { razorpaySignature: signature } : {}),
+                },
+                $unset: {
+                    expiresAt: 1,
+                },
+            }, { new: true });
+            if (!confirmedBooking) {
+                console.log(`[Razorpay Webhook] Concurrent confirmation won by another handler for booking ${booking.bookingId}`);
+                return res.status(200).json({
+                    success: true,
+                    message: 'Booking already confirmed concurrently.',
+                });
+            }
+            // 4. Update assigned physical room status to RESERVED
+            if (confirmedBooking.assignedRoomId) {
+                await Room_1.Room.findByIdAndUpdate(confirmedBooking.assignedRoomId, { status: 'RESERVED' });
+            }
+            // 5. Downstream Async Email Notifications (Hotel & Guest)
+            // Only the single atomic transition winner triggers email dispatch
+            EmailService_1.EmailService.processBookingEmails(confirmedBooking._id.toString()).catch((emailErr) => {
+                console.error(`[Razorpay Webhook] Non-blocking dispatch error for booking ${confirmedBooking.bookingId}:`, emailErr.message || emailErr);
+            });
+            console.log(`[Razorpay Webhook] Successfully reconciled and confirmed booking ${confirmedBooking.bookingId}`);
+            return res.status(200).json({
+                success: true,
+                message: 'Booking successfully reconciled and confirmed.',
+                data: {
+                    bookingId: confirmedBooking.bookingId,
+                    trackingToken: confirmedBooking.trackingToken,
+                    status: confirmedBooking.bookingStatus,
+                },
+            });
+        }
+        catch (error) {
+            console.error('[Razorpay Webhook] Internal server error handling webhook:', error);
+            return res.status(500).json({ success: false, message: 'Internal error processing webhook' });
         }
     }
 }

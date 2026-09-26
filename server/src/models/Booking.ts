@@ -136,5 +136,6 @@ BookingSchema.index({ checkIn: 1, checkOut: 1 });
 BookingSchema.index({ guestPhone: 1 });
 BookingSchema.index({ guestEmail: 1 });
 BookingSchema.index({ bookingStatus: 1, paymentStatus: 1 });
+BookingSchema.index({ razorpayOrderId: 1 });
 
 export const Booking = model<IBooking>('Booking', BookingSchema);
