@@ -8,6 +8,7 @@ router.get('/rooms', publicController_1.PublicController.getRoomTypes);
 router.post('/availability/check', publicController_1.PublicController.checkAvailabilityAndPrice);
 router.post('/bookings', rateLimiter_1.bookingLimiter, publicController_1.PublicController.createBooking);
 router.post('/bookings/verify-payment', publicController_1.PublicController.verifyPayment);
+router.post('/bookings/cancel', publicController_1.PublicController.cancelBooking);
 router.get('/bookings/track/:token', publicController_1.PublicController.trackBooking);
 router.get('/menu', publicController_1.PublicController.getMenu);
 router.get('/party-packages', publicController_1.PublicController.getPartyPackages);

@@ -12,7 +12,11 @@ export const AdminBookingsView: React.FC = () => {
   const loadBookings = () => {
     fetchAdminBookings()
       .then((res) => {
-        if (res.success) setBookings(res.data);
+        if (res.success && Array.isArray(res.data)) {
+          // Strictly display only confirmed/paid bookings in the admin desk
+          const paidBookings = res.data.filter((b: any) => b.paymentStatus === 'PAID');
+          setBookings(paidBookings);
+        }
       })
       .finally(() => setLoading(false));
   };

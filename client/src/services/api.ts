@@ -109,6 +109,15 @@ export const verifyBookingPayment = (payload: any) =>
       message: err.response?.data?.message || 'Payment verification failed. Your booking has not been confirmed.',
     }));
 
+export const cancelBookingHold = (payload: { bookingId?: string; trackingToken?: string }) =>
+  api
+    .post('/bookings/cancel', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to cancel booking hold.',
+    }));
+
 export const trackBookingStatus = (token: string) =>
   api
     .get(`/bookings/track/${token}`)

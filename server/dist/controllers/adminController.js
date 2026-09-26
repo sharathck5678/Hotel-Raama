@@ -200,10 +200,22 @@ class AdminController {
     }
     /**
      * GET /api/admin/bookings
+     * Only return bookings where payment has been successfully completed (PAID).
+     * Unpaid pending holds and cancelled payment attempts are excluded from admin portal.
      */
     static async getBookings(req, res) {
         try {
-            const bookings = await Booking_1.Booking.find().populate('roomTypeId assignedRoomId').sort({ createdAt: -1 });
+            const { paymentStatus, bookingStatus } = req.query;
+            const filter = {
+                paymentStatus: 'PAID',
+            };
+            if (paymentStatus && typeof paymentStatus === 'string') {
+                filter.paymentStatus = paymentStatus;
+            }
+            if (bookingStatus && typeof bookingStatus === 'string') {
+                filter.bookingStatus = bookingStatus;
+            }
+            const bookings = await Booking_1.Booking.find(filter).populate('roomTypeId assignedRoomId').sort({ createdAt: -1 });
             return res.json({ success: true, data: bookings });
         }
         catch (error) {

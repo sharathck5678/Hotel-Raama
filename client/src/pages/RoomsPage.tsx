@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, CreditCard, ChevronLeft, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchRoomTypes, checkAvailability, createBookingHold, verifyBookingPayment } from '../services/api';
+import { fetchRoomTypes, checkAvailability, createBookingHold, verifyBookingPayment, cancelBookingHold } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 import { formatAadharInput, validateAadhar } from '../utils/aadharValidator';
 
@@ -373,8 +373,11 @@ export const RoomsPage: React.FC = () => {
         },
         modal: {
           ondismiss: function () {
-            toast.warning('Payment cancelled. Reservation hold expired.');
+            toast.warning('Payment cancelled. Reservation hold released.');
             setSubmittingBooking(false);
+            cancelBookingHold({ bookingId, trackingToken }).catch((err) => {
+              console.error('Failed to cancel hold:', err);
+            });
           },
         },
       };

@@ -303,6 +303,38 @@ class PublicController {
         }
     }
     /**
+     * POST /api/bookings/cancel
+     * Allows releasing a pending booking hold when payment is cancelled or dismissed by the user
+     */
+    static async cancelBooking(req, res) {
+        try {
+            const { bookingId, trackingToken } = req.body;
+            if (!bookingId && !trackingToken) {
+                return res.status(400).json({ success: false, message: 'Booking ID or tracking token required.' });
+            }
+            const query = {};
+            if (bookingId)
+                query.bookingId = bookingId;
+            if (trackingToken)
+                query.trackingToken = trackingToken;
+            const booking = await Booking_1.Booking.findOne(query);
+            if (!booking) {
+                return res.status(404).json({ success: false, message: 'Booking not found.' });
+            }
+            // If booking was already paid, do not cancel via public endpoint
+            if (booking.paymentStatus === 'PAID') {
+                return res.status(400).json({ success: false, message: 'Paid bookings cannot be cancelled via this endpoint.' });
+            }
+            booking.bookingStatus = 'CANCELLED';
+            booking.paymentStatus = 'FAILED';
+            await booking.save();
+            return res.json({ success: true, message: 'Booking hold cancelled successfully.' });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message || 'Failed to cancel booking hold.' });
+        }
+    }
+    /**
      * GET /api/menu
      */
     static async getMenu(req, res) {
