@@ -18,6 +18,25 @@ import { ensureDatabaseSeeded } from '../seed/seedDatabase';
 import { validateAadhar } from '../utils/aadharValidator';
 
 export class PublicController {
+  private static async resolveRoomTypeId(roomTypeId: any): Promise<string | null> {
+    if (!roomTypeId) return null;
+    if (typeof roomTypeId === 'string' && mongoose.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+      return roomTypeId;
+    }
+    const MOCK_MAP: Record<string, string> = {
+      rt_1: 'PREM_SGL_NONAC',
+      rt_2: 'PREM_DBL_NONAC',
+      rt_3: 'EXEC_SGL_AC',
+      rt_4: 'EXEC_DBL_AC',
+      rt_5: 'TRIPLE_PREM',
+      rt_6: 'TRIPLE_EXEC',
+      rt_7: 'SUITE_ROOM',
+    };
+    const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+    const found = await RoomType.findOne({ code: searchCode });
+    return found ? found._id.toString() : null;
+  }
+
   /**
    * GET /api/rooms
    */
@@ -56,12 +75,17 @@ export class PublicController {
         return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
       }
 
+      const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
+      if (!resolvedRoomTypeId) {
+        return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+      }
+
       // Check availability
-      const availability = await AvailabilityEngine.checkAvailability(roomTypeId, checkInDate, checkOutDate);
+      const availability = await AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
       
       // Calculate server pricing
       const pricing = await PricingEngine.calculateBookingPrice(
-        roomTypeId,
+        resolvedRoomTypeId,
         checkInDate,
         checkOutDate,
         numGuests || 1,
@@ -118,15 +142,20 @@ export class PublicController {
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
 
+      const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
+      if (!resolvedRoomTypeId) {
+        return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+      }
+
       // 1. Transactional Availability Check
-      const availability = await AvailabilityEngine.checkAvailability(roomTypeId, checkInDate, checkOutDate);
+      const availability = await AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
       if (!availability.isAvailable) {
         return res.status(400).json({ success: false, message: 'Selected room type is fully booked for these dates.' });
       }
 
       // 2. Strict Server-side Price Engine Calculation
       const pricing = await PricingEngine.calculateBookingPrice(
-        roomTypeId,
+        resolvedRoomTypeId,
         checkInDate,
         checkOutDate,
         numGuests || 1,
@@ -151,7 +180,7 @@ export class PublicController {
         guestEmail,
         guestPhone,
         guestAadhar: guestAadhar ? guestAadhar.trim() : undefined,
-        roomTypeId,
+        roomTypeId: resolvedRoomTypeId,
         assignedRoomId: availability.assignedRoomId,
         checkIn: checkInDate,
         checkOut: checkOutDate,

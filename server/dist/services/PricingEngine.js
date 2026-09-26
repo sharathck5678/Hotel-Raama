@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PricingEngine = void 0;
+const mongoose_1 = require("mongoose");
 const RoomType_1 = require("../models/RoomType");
 const MealPlan_1 = require("../models/MealPlan");
 const Coupon_1 = require("../models/Coupon");
@@ -11,7 +12,23 @@ class PricingEngine {
         const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
         const numNights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
         // 2. Fetch RoomType rate
-        const roomType = await RoomType_1.RoomType.findById(roomTypeId);
+        let roomType = null;
+        if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+            roomType = await RoomType_1.RoomType.findById(roomTypeId);
+        }
+        if (!roomType) {
+            const MOCK_MAP = {
+                rt_1: 'PREM_SGL_NONAC',
+                rt_2: 'PREM_DBL_NONAC',
+                rt_3: 'EXEC_SGL_AC',
+                rt_4: 'EXEC_DBL_AC',
+                rt_5: 'TRIPLE_PREM',
+                rt_6: 'TRIPLE_EXEC',
+                rt_7: 'SUITE_ROOM',
+            };
+            const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+            roomType = await RoomType_1.RoomType.findOne({ code: searchCode });
+        }
         if (!roomType) {
             throw new Error('Invalid Room Type');
         }

@@ -3,13 +3,45 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AvailabilityEngine = void 0;
 const mongoose_1 = require("mongoose");
 const Room_1 = require("../models/Room");
+const RoomType_1 = require("../models/RoomType");
 const Booking_1 = require("../models/Booking");
 class AvailabilityEngine {
     /**
      * Check room availability for a specific room type between checkIn and checkOut dates
      */
     static async checkAvailability(roomTypeId, checkIn, checkOut) {
-        const rTypeId = typeof roomTypeId === 'string' ? new mongoose_1.Types.ObjectId(roomTypeId) : roomTypeId;
+        let rTypeId;
+        if (roomTypeId instanceof mongoose_1.Types.ObjectId) {
+            rTypeId = roomTypeId;
+        }
+        else if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+            rTypeId = new mongoose_1.Types.ObjectId(roomTypeId);
+        }
+        else {
+            const MOCK_MAP = {
+                rt_1: 'PREM_SGL_NONAC',
+                rt_2: 'PREM_DBL_NONAC',
+                rt_3: 'EXEC_SGL_AC',
+                rt_4: 'EXEC_DBL_AC',
+                rt_5: 'TRIPLE_PREM',
+                rt_6: 'TRIPLE_EXEC',
+                rt_7: 'SUITE_ROOM',
+            };
+            const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+            const foundType = await RoomType_1.RoomType.findOne({ code: searchCode });
+            if (foundType) {
+                rTypeId = foundType._id;
+            }
+            else {
+                return {
+                    roomTypeId: String(roomTypeId),
+                    totalRooms: 0,
+                    bookedRooms: 0,
+                    availableRooms: 0,
+                    isAvailable: false,
+                };
+            }
+        }
         const now = new Date();
         // 1. Get all active rooms of this type
         const rooms = await Room_1.Room.find({ roomTypeId: rTypeId, isActive: true });

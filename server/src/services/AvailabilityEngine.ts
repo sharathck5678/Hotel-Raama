@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { Room } from '../models/Room';
+import { RoomType } from '../models/RoomType';
 import { Booking } from '../models/Booking';
 
 export interface IAvailabilityResult {
@@ -20,7 +21,35 @@ export class AvailabilityEngine {
     checkIn: Date,
     checkOut: Date
   ): Promise<IAvailabilityResult> {
-    const rTypeId = typeof roomTypeId === 'string' ? new Types.ObjectId(roomTypeId) : roomTypeId;
+    let rTypeId: Types.ObjectId;
+    if (roomTypeId instanceof Types.ObjectId) {
+      rTypeId = roomTypeId;
+    } else if (typeof roomTypeId === 'string' && Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+      rTypeId = new Types.ObjectId(roomTypeId);
+    } else {
+      const MOCK_MAP: Record<string, string> = {
+        rt_1: 'PREM_SGL_NONAC',
+        rt_2: 'PREM_DBL_NONAC',
+        rt_3: 'EXEC_SGL_AC',
+        rt_4: 'EXEC_DBL_AC',
+        rt_5: 'TRIPLE_PREM',
+        rt_6: 'TRIPLE_EXEC',
+        rt_7: 'SUITE_ROOM',
+      };
+      const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+      const foundType = await RoomType.findOne({ code: searchCode });
+      if (foundType) {
+        rTypeId = foundType._id as Types.ObjectId;
+      } else {
+        return {
+          roomTypeId: String(roomTypeId),
+          totalRooms: 0,
+          bookedRooms: 0,
+          availableRooms: 0,
+          isAvailable: false,
+        };
+      }
+    }
     const now = new Date();
 
     // 1. Get all active rooms of this type

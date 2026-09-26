@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { RoomType } from '../models/RoomType';
 import { MealPlan } from '../models/MealPlan';
 import { Coupon } from '../models/Coupon';
@@ -42,7 +43,23 @@ export class PricingEngine {
     const numNights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
     // 2. Fetch RoomType rate
-    const roomType = await RoomType.findById(roomTypeId);
+    let roomType = null;
+    if (typeof roomTypeId === 'string' && Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+      roomType = await RoomType.findById(roomTypeId);
+    }
+    if (!roomType) {
+      const MOCK_MAP: Record<string, string> = {
+        rt_1: 'PREM_SGL_NONAC',
+        rt_2: 'PREM_DBL_NONAC',
+        rt_3: 'EXEC_SGL_AC',
+        rt_4: 'EXEC_DBL_AC',
+        rt_5: 'TRIPLE_PREM',
+        rt_6: 'TRIPLE_EXEC',
+        rt_7: 'SUITE_ROOM',
+      };
+      const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+      roomType = await RoomType.findOne({ code: searchCode });
+    }
     if (!roomType) {
       throw new Error('Invalid Room Type');
     }

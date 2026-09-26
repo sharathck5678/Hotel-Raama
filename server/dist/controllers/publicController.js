@@ -22,6 +22,25 @@ const EmailService_1 = require("../services/EmailService");
 const seedDatabase_1 = require("../seed/seedDatabase");
 const aadharValidator_1 = require("../utils/aadharValidator");
 class PublicController {
+    static async resolveRoomTypeId(roomTypeId) {
+        if (!roomTypeId)
+            return null;
+        if (typeof roomTypeId === 'string' && mongoose_1.default.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+            return roomTypeId;
+        }
+        const MOCK_MAP = {
+            rt_1: 'PREM_SGL_NONAC',
+            rt_2: 'PREM_DBL_NONAC',
+            rt_3: 'EXEC_SGL_AC',
+            rt_4: 'EXEC_DBL_AC',
+            rt_5: 'TRIPLE_PREM',
+            rt_6: 'TRIPLE_EXEC',
+            rt_7: 'SUITE_ROOM',
+        };
+        const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+        const found = await RoomType_1.RoomType.findOne({ code: searchCode });
+        return found ? found._id.toString() : null;
+    }
     /**
      * GET /api/rooms
      */
@@ -55,10 +74,14 @@ class PublicController {
             if (checkOutDate <= checkInDate) {
                 return res.status(400).json({ success: false, message: 'Check-out must be after check-in.' });
             }
+            const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
+            if (!resolvedRoomTypeId) {
+                return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+            }
             // Check availability
-            const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(roomTypeId, checkInDate, checkOutDate);
+            const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
             // Calculate server pricing
-            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(roomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
+            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
             return res.json({
                 success: true,
                 data: {
@@ -88,13 +111,17 @@ class PublicController {
             }
             const checkInDate = new Date(checkIn);
             const checkOutDate = new Date(checkOut);
+            const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
+            if (!resolvedRoomTypeId) {
+                return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+            }
             // 1. Transactional Availability Check
-            const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(roomTypeId, checkInDate, checkOutDate);
+            const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
             if (!availability.isAvailable) {
                 return res.status(400).json({ success: false, message: 'Selected room type is fully booked for these dates.' });
             }
             // 2. Strict Server-side Price Engine Calculation
-            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(roomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
+            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
             // Generate IDs
             const bookingId = `HR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
             const trackingToken = crypto_1.default.randomBytes(16).toString('hex');
@@ -108,7 +135,7 @@ class PublicController {
                 guestEmail,
                 guestPhone,
                 guestAadhar: guestAadhar ? guestAadhar.trim() : undefined,
-                roomTypeId,
+                roomTypeId: resolvedRoomTypeId,
                 assignedRoomId: availability.assignedRoomId,
                 checkIn: checkInDate,
                 checkOut: checkOutDate,

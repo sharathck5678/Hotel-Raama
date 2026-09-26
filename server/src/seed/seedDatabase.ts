@@ -25,80 +25,88 @@ export const runSeedLogic = async (clearExisting = false) => {
   try {
     // 1. Clear existing data if requested
     if (clearExisting) {
-    console.log('Clearing existing collections...');
-    await Admin.deleteMany({});
-    await HotelSetting.deleteMany({});
-    await MealPlan.deleteMany({});
-    await Coupon.deleteMany({});
-    await Attraction.deleteMany({});
-    await RoomType.deleteMany({});
-    await Room.deleteMany({});
-    await MenuCategory.deleteMany({});
-    await MenuItem.deleteMany({});
-  }
+      console.log('Clearing existing collections...');
+      await Admin.deleteMany({});
+      await HotelSetting.deleteMany({});
+      await MealPlan.deleteMany({});
+      await Coupon.deleteMany({});
+      await Attraction.deleteMany({});
+      await RoomType.deleteMany({});
+      await Room.deleteMany({});
+      await MenuCategory.deleteMany({});
+      await MenuItem.deleteMany({});
+    }
 
-  // 2. Admin User
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@hotelraama.com';
-  const existingAdmin = await Admin.findOne({ email: adminEmail });
-  if (!existingAdmin) {
-    const adminPassword = process.env.ADMIN_PASSWORD || 'AdminRaama@2026';
-    const passwordHash = await bcrypt.hash(adminPassword, 10);
-    
-    await Admin.create({
-      email: adminEmail,
-      passwordHash,
-      name: 'Hotel Raama Admin',
-      role: 'ADMIN',
-    });
-    console.log(`✓ Admin user created: ${adminEmail}`);
-  }
+    // 2. Admin User
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@hotelraama.com';
+    const existingAdmin = await Admin.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      const adminPassword = process.env.ADMIN_PASSWORD || 'AdminRaama@2026';
+      const passwordHash = await bcrypt.hash(adminPassword, 10);
 
-  // 3. Hotel Settings
-  const existingSetting = await HotelSetting.findOne();
-  if (!existingSetting) {
-    await HotelSetting.create({
-      hotelName: 'Hotel Raama',
-      tagline: 'Hospitality That Feels Like Home',
-      address: 'B.M. Road, Thanneeruhalla, Opposite S.D.M. Ayurvedic Hospital & College',
-      city: 'Hassan',
-      state: 'Karnataka',
-      pincode: '573201',
-      phone: '+91 78995 11330',
-      email: 'hotelraama.hsn@gmail.com',
-      receptionWhatsapp: '917899511330',
-      notificationEmail: 'hotelraama.hsn@gmail.com',
-      taxPercentage: 12,
-      bookingHoldMinutes: 15,
-    });
-    console.log('✓ Hotel settings created');
-  }
+      await Admin.create({
+        email: adminEmail,
+        passwordHash,
+        name: 'Hotel Raama Admin',
+        role: 'ADMIN',
+      });
+      console.log(`✓ Admin user created: ${adminEmail}`);
+    }
 
-    // 4. Meal Plans
-    await MealPlan.create([
+    // 3. Hotel Settings
+    const existingSetting = await HotelSetting.findOne();
+    if (!existingSetting) {
+      await HotelSetting.create({
+        hotelName: 'Hotel Raama',
+        tagline: 'Hospitality That Feels Like Home',
+        address: 'B.M. Road, Thanneeruhalla, Opposite S.D.M. Ayurvedic Hospital & College',
+        city: 'Hassan',
+        state: 'Karnataka',
+        pincode: '573201',
+        phone: '+91 78995 11330',
+        email: 'hotelraama.hsn@gmail.com',
+        receptionWhatsapp: '917899511330',
+        notificationEmail: 'hotelraama.hsn@gmail.com',
+        taxPercentage: 12,
+        bookingHoldMinutes: 15,
+      });
+      console.log('✓ Hotel settings created');
+    }
+
+    // 4. Meal Plans (Idempotent upsert by type)
+    const mealPlansData = [
       { name: 'Buffet Breakfast', type: 'BREAKFAST', pricePerPersonPerNight: 150, description: 'Fresh South Indian & Continental breakfast spread' },
       { name: 'Executive Lunch', type: 'LUNCH', pricePerPersonPerNight: 250, description: 'Traditional South/North Indian Thali lunch' },
       { name: 'Royal Dinner', type: 'DINNER', pricePerPersonPerNight: 300, description: 'Gourmet dinner buffet at Swaad restaurant' },
-    ]);
-    console.log('✓ Meal plans created');
+    ];
+    for (const mp of mealPlansData) {
+      await MealPlan.findOneAndUpdate({ type: mp.type }, mp, { upsert: true, new: true });
+    }
+    console.log('✓ Meal plans created/updated');
 
-    // 5. Coupons
+    // 5. Coupons (Idempotent upsert by code)
     const now = new Date();
     const nextYear = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
-    await Coupon.create([
-      { code: 'RAAMA5', discountType: 'PERCENTAGE', discountValue: 5, minBookingAmount: 0, startDate: now, endDate: nextYear, maxUsage: 1000 },
-    ]);
-    console.log('✓ Initial coupons created');
+    await Coupon.findOneAndUpdate(
+      { code: 'RAAMA5' },
+      { code: 'RAAMA5', discountType: 'PERCENTAGE', discountValue: 5, minBookingAmount: 0, startDate: now, endDate: nextYear, maxUsage: 1000, isActive: true },
+      { upsert: true, new: true }
+    );
+    console.log('✓ Initial coupons created/updated');
 
-    // 6. Attractions
-    await Attraction.create([
+    // 6. Attractions (Idempotent upsert by name)
+    const attractionsData = [
       { name: 'Chennakeshava Temple, Belur', category: 'Hoysala Heritage', distance: '38 km', image: '/chennakeshava-temple-belur.png', description: 'Famous 12th-century Hoysala temple renowned for intricate stone carvings and architecture.', sortOrder: 1 },
       { name: 'Hoysaleswara Temple, Halebidu', category: 'Hoysala Heritage', distance: '31 km', image: '/hoysaleswara-temple-halebidu.png', description: 'Twin-temple complex dedicated to Shiva, showcasing breathtaking stone sculptures.', sortOrder: 2 },
       { name: 'Shravanabelagola (Gommateshwara)', category: 'Pilgrimage', distance: '52 km', image: '/shravanabelagola.png', description: 'Home to the magnificent 57-foot monolithic statue of Lord Bahubali atop Vindhyagiri Hill.', sortOrder: 3 },
       { name: 'Manjarabad Fort, Sakleshpur', category: 'History & Forts', distance: '40 km', image: '/manjarabad-fort.jpg', description: 'Star-shaped fort built by Tipu Sultan offering panoramic views of the Western Ghats.', sortOrder: 4 },
       { name: 'Shettihalli Rosary Church', category: 'Historic Ruins', distance: '22 km', image: '/shettihalli-church.png', description: 'Submerged Gothic church ruins built in 1860, famous for its surreal monsoon landscape.', sortOrder: 5 },
       { name: 'Bisle Ghat Viewpoint', category: 'Nature & Trekking', distance: '85 km', image: '/bisle-ghat.png', description: 'Spectacular mountain outlook providing sweeping vistas of three mountain ranges.', sortOrder: 6 },
-    ]);
-    console.log('✓ Hassan attractions created');
+    ];
+    for (const attr of attractionsData) {
+      await Attraction.findOneAndUpdate({ name: attr.name }, attr, { upsert: true, new: true });
+    }
+    console.log('✓ Hassan attractions created/updated');
 
     // 7. Room Types & 40 Rooms (1 to 40) + 1 Sambhrama Party Hall
     const roomTypesData = [
@@ -111,51 +119,69 @@ export const runSeedLogic = async (clearExisting = false) => {
       { name: 'Suite Room', code: 'SUITE_ROOM', description: 'Presidential suite with separate living lounge, master bedroom, luxury bathtub, and VIP service.', basePrice: 3500, cpPrice: 4000, maxOccupancy: 4, isAc: true, amenities: ['Living Room Lounge', 'Jacuzzi / Bathtub', 'Fruit Basket', 'Express Check-in', 'Premium A/C'], images: ['/suite-room.png', '/hotel-corridor.jpg', '/suite-room-angle.png'] },
     ];
 
-    const createdRoomTypes = await RoomType.create(roomTypesData);
-    console.log(`✓ ${createdRoomTypes.length} room types created`);
+    const createdRoomTypes = [];
+    for (const rt of roomTypesData) {
+      const savedRt = await RoomType.findOneAndUpdate({ code: rt.code }, rt, { upsert: true, new: true });
+      createdRoomTypes.push(savedRt);
+    }
+    console.log(`✓ ${createdRoomTypes.length} room types created/updated`);
 
     // Create 40 rooms (numbered 1 to 40) + 1 Sambhrama Party Hall
-    const roomsToSeed = [];
-    const rtMap = new Map(createdRoomTypes.map(rt => [rt.code, rt._id]));
-    const typeCodes = ['PREM_SGL_NONAC', 'PREM_DBL_NONAC', 'EXEC_SGL_AC', 'EXEC_DBL_AC', 'TRIPLE_PREM', 'TRIPLE_EXEC', 'SUITE_ROOM'];
+    const existingRoomsCount = await Room.countDocuments();
+    if (existingRoomsCount === 0 || clearExisting) {
+      if (clearExisting) await Room.deleteMany({});
+      const roomsToSeed = [];
+      const rtMap = new Map(createdRoomTypes.map(rt => [rt.code, rt._id]));
+      const typeCodes = ['PREM_SGL_NONAC', 'PREM_DBL_NONAC', 'EXEC_SGL_AC', 'EXEC_DBL_AC', 'TRIPLE_PREM', 'TRIPLE_EXEC', 'SUITE_ROOM'];
 
-    for (let i = 1; i <= 40; i++) {
-      const roomNum = `${i}`;
-      const code = typeCodes[(i - 1) % typeCodes.length];
-      const floor = i <= 20 ? 1 : 2;
+      for (let i = 1; i <= 40; i++) {
+        const roomNum = `${i}`;
+        const code = typeCodes[(i - 1) % typeCodes.length];
+        const floor = i <= 20 ? 1 : 2;
+        roomsToSeed.push({
+          roomNumber: roomNum,
+          roomTypeId: rtMap.get(code),
+          floor,
+          status: 'AVAILABLE',
+          qrToken: generateQrToken(roomNum),
+        });
+      }
+
+      // Add Sambhrama Party Hall QR
       roomsToSeed.push({
-        roomNumber: roomNum,
-        roomTypeId: rtMap.get(code),
-        floor,
+        roomNumber: 'Sambhrama Party Hall',
+        roomTypeId: rtMap.get('SUITE_ROOM'),
+        floor: 1,
         status: 'AVAILABLE',
-        qrToken: generateQrToken(roomNum),
+        qrToken: generateQrToken('SambhramaPartyHall'),
       });
+
+      // Add Board Room QR
+      roomsToSeed.push({
+        roomNumber: 'Board Room',
+        roomTypeId: rtMap.get('EXEC_DBL_AC') || rtMap.get('SUITE_ROOM'),
+        floor: 1,
+        status: 'AVAILABLE',
+        qrToken: generateQrToken('BoardRoom'),
+      });
+
+      for (const r of roomsToSeed) {
+        await Room.findOneAndUpdate({ roomNumber: r.roomNumber }, r, { upsert: true, new: true });
+      }
+      console.log(`✓ Rooms created/updated (40 rooms numbered 1-40 + Sambhrama Party Hall + Board Room)`);
+    } else {
+      console.log(`✓ Rooms already exist (${existingRoomsCount} rooms), skipping.`);
     }
-
-    // Add Sambhrama Party Hall QR
-    roomsToSeed.push({
-      roomNumber: 'Sambhrama Party Hall',
-      roomTypeId: rtMap.get('SUITE_ROOM'),
-      floor: 1,
-      status: 'AVAILABLE',
-      qrToken: generateQrToken('SambhramaPartyHall'),
-    });
-
-    // Add Board Room QR
-    roomsToSeed.push({
-      roomNumber: 'Board Room',
-      roomTypeId: rtMap.get('EXEC_DBL_AC') || rtMap.get('SUITE_ROOM'),
-      floor: 1,
-      status: 'AVAILABLE',
-      qrToken: generateQrToken('BoardRoom'),
-    });
-
-    const createdRooms = await Room.create(roomsToSeed);
-    console.log(`✓ ${createdRooms.length} rooms created (40 rooms numbered 1-40 + Sambhrama Party Hall + Board Room with unique QR tokens)`);
 
 
     // 8. Menu Categories & Items
-    // --- SWAAD VEG RESTAURANT (Pure Vegetarian with English & Kannada names) ---
+    const existingMenuItemsCount = await MenuItem.countDocuments();
+    if (existingMenuItemsCount === 0 || clearExisting) {
+      if (clearExisting) {
+        await MenuItem.deleteMany({});
+        await MenuCategory.deleteMany({});
+      }
+      // --- SWAAD VEG RESTAURANT (Pure Vegetarian with English & Kannada names) ---
     const catSouth = await MenuCategory.create({ name: 'South Indian Dishes (ದಕ್ಷಿಣ ಭಾರತೀಯ ತಿನಿಸುಗಳು)', section: 'SWAAD', description: 'Timings: 7:00 AM to 11:30 AM', sortOrder: 1 });
     const catDosa = await MenuCategory.create({ name: 'Dosa Specialities (ದೋಸೆ ಸ್ಪೆಷಲ್)', section: 'SWAAD', description: 'Timings: 7:00 AM to 11:30 AM & 3:30 PM to 8:30 PM', sortOrder: 2 });
     const catSoups = await MenuCategory.create({ name: 'Soups (ಸೂಪ್)', section: 'SWAAD', description: 'Timings: 12:00 Noon to 3:30 PM & 7:00 PM to 10:00 PM', sortOrder: 3 });
@@ -963,6 +989,9 @@ export const runSeedLogic = async (clearExisting = false) => {
       { name: 'Multiple Cuisine Menu', categoryId: partyCategory._id, section: 'SAMBHRAMA', price: 550, description: 'Welcome drink, Veg Soup, 2 Salads, 1 Veg starter, 1 Main course, 1 Dal, 2 Breads, 1 Pulao/Biriyani, Rice, Sweet, Sambar, Rasam, Curds, Papad, Pickle & Dessert (+GST)', isVeg: true, featured: true },
     ]);
     console.log('✓ Sambhrama Party Hall menu packages created');
+    } else {
+      console.log(`✓ Menu items already exist (${existingMenuItemsCount} items), skipping menu generation.`);
+    }
 
     console.log('\n========================================');
     console.log(' DATABASE SEEDING COMPLETED SUCCESSFULLY!');
