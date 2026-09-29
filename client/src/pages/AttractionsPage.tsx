@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { fetchAttractions } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
+import { SEO } from '../components/SEO';
 
 export const AttractionsPage: React.FC = () => {
   const [attractions, setAttractions] = useState<any[]>([]);
@@ -14,6 +15,12 @@ export const AttractionsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
+      <SEO
+        title="Places to Visit Near Hassan | Hotel Raama"
+        description="Explore places to visit near Hassan, Karnataka, with Hotel Raama as a convenient base for local heritage and sightseeing."
+        canonical="/attractions"
+      />
+
       <ScrollReveal direction="up" duration={0.8}>
         <div className="text-center max-w-3xl mx-auto border-b border-[#10184A]/15 pb-8">
           <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#667085] block mb-2">

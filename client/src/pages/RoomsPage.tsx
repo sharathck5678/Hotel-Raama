@@ -5,6 +5,7 @@ import { Check, X, CreditCard, ChevronLeft, ChevronRight, ChevronDown, FileText 
 import { toast } from 'sonner';
 import { fetchRoomTypes, checkAvailability, createBookingHold, verifyBookingPayment, cancelBookingHold } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
+import { SEO } from '../components/SEO';
 import { formatAadharInput, validateAadhar } from '../utils/aadharValidator';
 
 declare global {
@@ -139,9 +140,8 @@ const RoomSlideshow: React.FC<{
               key={idx}
               type="button"
               onClick={(e) => goToSlide(idx, e)}
-              className={`h-2 rounded-full transition-all cursor-pointer ${
-                idx === currentIndex ? 'w-5 bg-[#D6B369]' : 'w-2 bg-white/60 hover:bg-white'
-              }`}
+              className={`h-2 rounded-full transition-all cursor-pointer ${idx === currentIndex ? 'w-5 bg-[#D6B369]' : 'w-2 bg-white/60 hover:bg-white'
+                }`}
             />
           ))}
         </div>
@@ -403,6 +403,11 @@ export const RoomsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8">
+      <SEO
+        title="Rooms & Accommodation in Hassan | Hotel Raama"
+        description="Explore comfortable rooms and accommodation at Hotel Raama in Hassan, Karnataka, with options for different stays and travel needs."
+        canonical="/rooms"
+      />
       {/* Header */}
       <ScrollReveal direction="up" duration={0.8}>
         <div className="text-center max-w-3xl mx-auto mb-16 border-b border-[#cbc0ad] pb-8">
@@ -464,69 +469,69 @@ export const RoomsPage: React.FC = () => {
               <div
                 className="bg-[#F7F0DF] rounded-sm overflow-hidden border border-[#10184A]/15 shadow-sm flex flex-col justify-between hover:border-[#D6B369]/40 transition-all duration-300 h-full"
               >
-              <div>
-                <RoomSlideshow
-                  images={room.images}
-                  roomName={room.name}
-                  badgeText={room.isAc ? 'A/C Executive' : 'Non A/C Premium'}
-                />
+                <div>
+                  <RoomSlideshow
+                    images={room.images}
+                    roomName={room.name}
+                    badgeText={room.isAc ? 'A/C Executive' : 'Non A/C Premium'}
+                  />
 
-                <div className="p-7 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-2xl font-serif text-[#00174A]">{room.name}</h3>
-                    <span className="text-[10px] font-sans text-[#666666] bg-[#0B1849]/5 px-2.5 py-1 rounded-sm uppercase tracking-wider font-semibold border border-[#cbc0ad]">
-                      Max {room.maxOccupancy} Guests
-                    </span>
-                  </div>
-
-                  <p className="text-xs font-sans text-[#666666] leading-relaxed">{room.description}</p>
-
-                  {/* Amenities list */}
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {room.amenities?.map((amenity: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="text-[10px] font-sans px-2.5 py-1 rounded-sm bg-[#0B1849]/5 text-[#333333] flex items-center gap-1 border border-[#cbc0ad] font-medium"
-                      >
-                        <Check size={11} className="text-[#333333]" /> {amenity}
+                  <div className="p-7 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-2xl font-serif text-[#00174A]">{room.name}</h3>
+                      <span className="text-[10px] font-sans text-[#666666] bg-[#0B1849]/5 px-2.5 py-1 rounded-sm uppercase tracking-wider font-semibold border border-[#cbc0ad]">
+                        Max {room.maxOccupancy} Guests
                       </span>
-                    ))}
+                    </div>
+
+                    <p className="text-xs font-sans text-[#666666] leading-relaxed">{room.description}</p>
+
+                    {/* Amenities list */}
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {room.amenities?.map((amenity: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] font-sans px-2.5 py-1 rounded-sm bg-[#0B1849]/5 text-[#333333] flex items-center gap-1 border border-[#cbc0ad] font-medium"
+                        >
+                          <Check size={11} className="text-[#333333]" /> {amenity}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-7 pt-0 border-t border-[#cbc0ad] mt-4 space-y-4">
+                  <div className="flex justify-between items-center bg-[#0B1849]/5 p-3.5 rounded-sm border border-[#cbc0ad] text-xs">
+                    <div>
+                      <span className="text-[#666666] text-[10px] font-sans uppercase tracking-wider block font-semibold">EP Plan (Room Only)</span>
+                      <span className="text-[10px] font-sans text-[#666666]">Standard Direct Tariff</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-serif font-bold text-[#333333]">₹{room.basePrice}</span>
+                      <span className="text-[10px] font-sans text-[#666666]"> / night + GST</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-sans uppercase tracking-wider text-[#666666] font-semibold">Instant Reservation</span>
+                    <button
+                      onClick={() => {
+                        setSelectedRoom(room);
+                        setPlanType('NON_CP');
+                        setExtraPerson(false);
+                        const maxAllowed = room.maxOccupancy || 2;
+                        setNumGuests((prev) => (prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev));
+                      }}
+                      className="px-5 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer"
+                    >
+                      Select & Book
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="p-7 pt-0 border-t border-[#cbc0ad] mt-4 space-y-4">
-                <div className="flex justify-between items-center bg-[#0B1849]/5 p-3.5 rounded-sm border border-[#cbc0ad] text-xs">
-                  <div>
-                    <span className="text-[#666666] text-[10px] font-sans uppercase tracking-wider block font-semibold">EP Plan (Room Only)</span>
-                    <span className="text-[10px] font-sans text-[#666666]">Standard Direct Tariff</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xl font-serif font-bold text-[#333333]">₹{room.basePrice}</span>
-                    <span className="text-[10px] font-sans text-[#666666]"> / night + GST</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-sans uppercase tracking-wider text-[#666666] font-semibold">Instant Reservation</span>
-                  <button
-                    onClick={() => {
-                      setSelectedRoom(room);
-                      setPlanType('NON_CP');
-                      setExtraPerson(false);
-                      const maxAllowed = room.maxOccupancy || 2;
-                      setNumGuests((prev) => (prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev));
-                    }}
-                    className="px-5 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer"
-                  >
-                    Select & Book
-                  </button>
-                </div>
-              </div>
-            </div>
-          </ScrollRevealItem>
-        ))}
-      </ScrollRevealGroup>
+            </ScrollRevealItem>
+          ))}
+        </ScrollRevealGroup>
       )}
 
       {/* BOOKING MODAL - Cream Background Container */}
@@ -792,13 +797,12 @@ export const RoomsPage: React.FC = () => {
                         value={guestAadhar}
                         onChange={handleAadharChange}
                         maxLength={14}
-                        className={`w-full bg-white border rounded-sm px-3.5 py-2 pr-8 text-xs font-sans text-[#333333] placeholder-[#999999] tracking-wider focus:outline-none transition-colors ${
-                          aadharError
+                        className={`w-full bg-white border rounded-sm px-3.5 py-2 pr-8 text-xs font-sans text-[#333333] placeholder-[#999999] tracking-wider focus:outline-none transition-colors ${aadharError
                             ? 'border-rose-500 focus:border-rose-500'
                             : guestAadhar.replace(/\s/g, '').length === 12
-                            ? 'border-emerald-600 focus:border-emerald-600'
-                            : 'border-[#cbc0ad] focus:border-[#00174A]'
-                        }`}
+                              ? 'border-emerald-600 focus:border-emerald-600'
+                              : 'border-[#cbc0ad] focus:border-[#00174A]'
+                          }`}
                         required
                       />
                       {guestAadhar.replace(/\s/g, '').length === 12 && !aadharError && (

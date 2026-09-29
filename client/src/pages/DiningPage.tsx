@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchMenuCatalog, createFoodOrder, verifyOrderPayment } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
+import { SEO } from '../components/SEO';
 
 type CourseType = 'ALL' | 'BREAKFAST' | 'STARTERS' | 'MAIN_COURSE' | 'BEVERAGES' | 'ICE_CREAM';
 
@@ -135,8 +136,8 @@ export const DiningPage: React.FC = () => {
     activeTab === 'SWAAD_VEG'
       ? swaadPages
       : activeTab === 'HOTEL_RAAMA'
-      ? llbFoodPages
-      : llbBeveragePages;
+        ? llbFoodPages
+        : llbBeveragePages;
 
   useEffect(() => {
     if (urlRoom) localStorage.setItem('scanned_room_number', urlRoom);
@@ -443,6 +444,11 @@ export const DiningPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-6 lg:px-8 relative">
+      <SEO
+        title="Restaurant & Dining in Hassan | Hotel Raama"
+        description="Explore dining at Hotel Raama in Hassan, including Swaad Pure Veg Restaurant, Hotel Raama dining and Liquid Lounge Bar."
+        canonical="/dining"
+      />
       {/* Header Banner */}
       <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 border-b border-[#10184A]/15 pb-8">
         <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#667085] block mb-1">
@@ -503,11 +509,10 @@ export const DiningPage: React.FC = () => {
           {/* SWAAD PURE VEG */}
           <button
             onClick={() => handleTabChange('SWAAD_VEG')}
-            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${
-              activeTab === 'SWAAD_VEG'
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${activeTab === 'SWAAD_VEG'
                 ? 'border-2 border-[#D6B369] shadow-[0_0_16px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
                 : 'border border-[#10184A]/15 hover:border-[#D6B369]/60 shadow-xs'
-            }`}
+              }`}
           >
             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border bg-emerald-50 border-emerald-200 text-emerald-700">
               <Leaf size={20} />
@@ -521,11 +526,10 @@ export const DiningPage: React.FC = () => {
           {/* HOTEL RAAMA (Non-Veg restaurant branding) */}
           <button
             onClick={() => handleTabChange('HOTEL_RAAMA')}
-            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${
-              activeTab === 'HOTEL_RAAMA'
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${activeTab === 'HOTEL_RAAMA'
                 ? 'border-2 border-[#D6B369] shadow-[0_0_16px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
                 : 'border border-[#10184A]/15 hover:border-[#D6B369]/60 shadow-xs'
-            }`}
+              }`}
           >
             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border bg-[#C8102E] border-[#A00D24] text-white">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -544,11 +548,10 @@ export const DiningPage: React.FC = () => {
           {/* LIQUID LOUNGE BAR */}
           <button
             onClick={() => handleTabChange('LIQUID_LOUNGE')}
-            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${
-              activeTab === 'LIQUID_LOUNGE'
+            className={`flex items-center gap-3.5 p-3.5 rounded-xl transition-all cursor-pointer text-left bg-white text-[#00174A] ${activeTab === 'LIQUID_LOUNGE'
                 ? 'border-2 border-[#D6B369] shadow-[0_0_16px_rgba(214,179,105,0.45)] ring-2 ring-[#D6B369]/20'
                 : 'border border-[#10184A]/15 hover:border-[#D6B369]/60 shadow-xs'
-            }`}
+              }`}
           >
             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border bg-[#071A3D] border-[#10184A] text-white">
               <Martini size={19} />
@@ -583,11 +586,10 @@ export const DiningPage: React.FC = () => {
 
           <button
             onClick={() => setFilterOpen(!filterOpen)}
-            className={`w-full sm:w-auto px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border transition-all cursor-pointer shadow-sm shrink-0 ${
-              filterOpen || selectedCategoryIds.length > 0 || selectedCourse !== 'ALL'
+            className={`w-full sm:w-auto px-4 py-2.5 rounded-sm font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border transition-all cursor-pointer shadow-sm shrink-0 ${filterOpen || selectedCategoryIds.length > 0 || selectedCourse !== 'ALL'
                 ? 'bg-[#00174A] text-[#FAF9F6] border-[#00174A]'
                 : 'bg-white text-[#00174A] border-[#10184A]/20 hover:bg-[#00174A]/10'
-            }`}
+              }`}
           >
             <SlidersHorizontal size={14} />
             <span>Filter</span>
@@ -690,11 +692,10 @@ export const DiningPage: React.FC = () => {
                     <button
                       key={opt.id}
                       onClick={() => setSelectedCourse(opt.id)}
-                      className={`px-3.5 py-2 rounded-sm text-xs font-sans font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        isSelected
+                      className={`px-3.5 py-2 rounded-sm text-xs font-sans font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${isSelected
                           ? 'bg-[#00174A] text-white shadow-sm ring-1 ring-[#00174A]'
                           : 'bg-[#F7F0DF] text-[#00174A] border border-[#10184A]/20 hover:border-[#00174A]'
-                      }`}
+                        }`}
                     >
                       {isSelected && <Check size={13} />}
                       <span>{opt.label}</span>
@@ -738,16 +739,15 @@ export const DiningPage: React.FC = () => {
                     <label
                       key={cat._id}
                       onClick={() => toggleCategory(cat._id)}
-                      className={`flex items-start gap-2.5 p-2.5 rounded-sm border transition-all cursor-pointer select-none text-xs font-sans ${
-                        isChecked
+                      className={`flex items-start gap-2.5 p-2.5 rounded-sm border transition-all cursor-pointer select-none text-xs font-sans ${isChecked
                           ? 'bg-[#00174A]/10 border-[#00174A] text-[#00174A]'
                           : 'bg-white border-[#10184A]/15 text-[#667085] hover:border-[#10184A]/30'
-                      }`}
+                        }`}
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={() => {}} // Handled by label onClick
+                        onChange={() => { }} // Handled by label onClick
                         className="mt-0.5 rounded text-[#00174A] focus:ring-[#00174A] cursor-pointer"
                       />
                       <div className="flex-grow min-w-0">
@@ -824,11 +824,10 @@ export const DiningPage: React.FC = () => {
                             <h3 className="text-lg font-serif font-bold text-[#00174A]">{item.name}</h3>
                             {item.section !== 'LIQUID_LOUNGE' && activeTab !== 'LIQUID_LOUNGE' && (
                               <span
-                                className={`shrink-0 text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
-                                  item.isVeg
+                                className={`shrink-0 text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${item.isVeg
                                     ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                                     : 'bg-red-50 text-red-800 border-red-300'
-                                }`}
+                                  }`}
                               >
                                 {item.isVeg ? 'Veg' : 'Non-Veg'}
                               </span>
@@ -1116,11 +1115,10 @@ export const DiningPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPaymentMode('RAZORPAY')}
-                    className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'RAZORPAY'
+                    className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${paymentMode === 'RAZORPAY'
                         ? 'bg-[#00174A] text-white font-bold border-[#00174A] shadow-sm'
                         : 'bg-white text-[#00174A] border-[#cbc0ad] hover:border-[#00174A]/50'
-                    }`}
+                      }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💳 Online (Razorpay)</span>
                     <span className={`text-[10px] ${paymentMode === 'RAZORPAY' ? 'text-white/80' : 'text-[#00174A]/60'}`}>UPI, Cards, NetBanking</span>
@@ -1129,11 +1127,10 @@ export const DiningPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPaymentMode('CASH')}
-                    className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                      paymentMode === 'CASH'
+                    className={`p-3 rounded-sm border text-left flex flex-col gap-1 transition-all cursor-pointer ${paymentMode === 'CASH'
                         ? 'bg-[#00174A] text-white font-bold border-[#00174A] shadow-sm'
                         : 'bg-white text-[#00174A] border-[#cbc0ad] hover:border-[#00174A]/50'
-                    }`}
+                      }`}
                   >
                     <span className="text-xs font-sans uppercase font-bold flex items-center gap-1.5">💵 Pay at Reception</span>
                     <span className={`text-[10px] ${paymentMode === 'CASH' ? 'text-white/80' : 'text-[#00174A]/60'}`}>Cash or UPI at counter</span>

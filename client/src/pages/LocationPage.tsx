@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  Compass, 
-  ArrowUpRight, 
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Compass,
+  ArrowUpRight,
   ArrowRight,
-  ShieldCheck, 
-  Copy, 
-  Check 
+  ShieldCheck,
+  Copy,
+  Check
 } from 'lucide-react';
 import { fetchHotelInfo } from '../services/api';
 import { toast } from 'sonner';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
+import { SEO } from '../components/SEO';
 
 export const LocationPage: React.FC = () => {
   const [info, setInfo] = useState<any | null>(null);
@@ -47,7 +48,12 @@ export const LocationPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-      
+      <SEO
+        title="Hotel Raama Location | Hassan, Karnataka"
+        description="Find Hotel Raama on B.M. Road in Hassan, Karnataka, with directions, contact details, GPS coordinates and nearby landmarks."
+        canonical="/location"
+      />
+
       {/* 1. Header & Hero */}
       <ScrollReveal direction="up" duration={0.8}>
         <div className="text-center max-w-3xl mx-auto border-b border-[#10184A]/15 pb-8 space-y-3">
@@ -120,7 +126,7 @@ export const LocationPage: React.FC = () => {
 
       {/* 2. Main Location Showcase: Info Card + Interactive Map */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        
+
         {/* Left Column: Comprehensive Hotel Coordinates Card (5 cols) */}
         <ScrollReveal direction="left" duration={0.85} className="lg:col-span-5 h-full">
           <div className="bg-[#F7F0DF] text-[#00174A] p-7 sm:p-9 rounded-2xl border border-[#10184A]/25 flex flex-col justify-between shadow-md space-y-8 h-full">
@@ -259,11 +265,10 @@ export const LocationPage: React.FC = () => {
             {keyDistances.map((item, idx) => (
               <ScrollRevealItem key={idx}>
                 <div
-                  className={`p-4 rounded-xl border flex items-center justify-between transition-all h-full ${
-                    item.highlight
+                  className={`p-4 rounded-xl border flex items-center justify-between transition-all h-full ${item.highlight
                       ? 'bg-[#00174A]/10 border-[#00174A]/40 shadow-xs'
                       : 'bg-[#F7F0DF] border-[#10184A]/15 hover:border-[#D6B369]/60'
-                  }`}
+                    }`}
                 >
                   <div className="space-y-1">
                     <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-[#667085]">

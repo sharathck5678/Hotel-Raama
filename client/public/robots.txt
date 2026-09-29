@@ -1,0 +1,20 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow private, administrative and transactional routes
+Disallow: /admin
+Disallow: /admin/
+Disallow: /order
+Disallow: /order/
+Disallow: /qr
+Disallow: /qr/
+Disallow: /menu
+Disallow: /menu/
+Disallow: /track-order
+Disallow: /track-order/
+Disallow: /booking/confirmation/
+Disallow: /my-bookings-orders
+
+# Sitemap location
+Sitemap: https://hotelraama.com/sitemap.xml

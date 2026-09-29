@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
+import { SEO } from './components/SEO';
 
 // Guest Pages
 import { HomePage } from './pages/HomePage';
@@ -34,6 +35,17 @@ import { AdminBookingsView } from './pages/admin/AdminBookingsView';
 import { AdminRoomsView } from './pages/admin/AdminRoomsView';
 import { AdminCustomerHistoryView } from './pages/admin/AdminCustomerHistoryView';
 
+const NoIndex: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <>
+    <SEO
+      title="Hotel Raama"
+      description="Hotel Raama"
+      noindex
+    />
+    {children}
+  </>
+);
+
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -47,34 +59,106 @@ export const App: React.FC = () => {
             {/* Public Guest Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/rooms" element={<RoomsPage />} />
-            <Route path="/booking/confirmation/:token" element={<BookingConfirmationPage />} />
+            <Route
+              path="/booking/confirmation/:token"
+              element={
+                <NoIndex>
+                  <BookingConfirmationPage />
+                </NoIndex>
+              }
+            />
             <Route path="/dining" element={<DiningPage />} />
             <Route path="/party-hall" element={<PartyHallPage />} />
             <Route path="/attractions" element={<AttractionsPage />} />
             <Route path="/location" element={<LocationPage />} />
-            <Route path="/my-bookings-orders" element={<MyBookingsOrdersPage />} />
+            <Route
+              path="/my-bookings-orders"
+              element={
+                <NoIndex>
+                  <MyBookingsOrdersPage />
+                </NoIndex>
+              }
+            />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/terms-of-booking" element={<TermsOfBookingPage />} />
 
             {/* Room QR Scan & Tracking Routes for Guests */}
-            <Route path="/order/:token" element={<QrOrderPage />} />
-            <Route path="/order" element={<QrOrderPage />} />
-            <Route path="/qr/:token" element={<QrOrderPage />} />
-            <Route path="/qr" element={<QrOrderPage />} />
-            <Route path="/menu/:token" element={<QrOrderPage />} />
-            <Route path="/menu" element={<QrOrderPage />} />
-            <Route path="/track-order/:token" element={<OrderTrackingPage />} />
+            <Route
+              path="/order/:token"
+              element={
+                <NoIndex>
+                  <QrOrderPage />
+                </NoIndex>
+              }
+            />
+            <Route
+              path="/order"
+              element={
+                <NoIndex>
+                  <QrOrderPage />
+                </NoIndex>
+              }
+            />
+            <Route
+              path="/qr/:token"
+              element={
+                <NoIndex>
+                  <QrOrderPage />
+                </NoIndex>
+              }
+            />
+            <Route
+              path="/qr"
+              element={
+                <NoIndex>
+                  <QrOrderPage />
+                </NoIndex>
+              }
+            />
+            <Route
+              path="/menu/:token"
+              element={
+                <NoIndex>
+                  <QrOrderPage />
+                </NoIndex>
+              }
+            />
+            <Route
+              path="/menu"
+              element={
+                <NoIndex>
+                  <QrOrderPage />
+                </NoIndex>
+              }
+            />
+            <Route
+              path="/track-order/:token"
+              element={
+                <NoIndex>
+                  <OrderTrackingPage />
+                </NoIndex>
+              }
+            />
 
             {/* Admin Login */}
-            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route
+              path="/admin/login"
+              element={
+                <NoIndex>
+                  <AdminLoginPage />
+                </NoIndex>
+              }
+            />
 
             {/* Protected Admin Routes */}
             <Route
               path="/admin"
               element={
-                <ProtectedAdminRoute>
-                  <AdminLayout />
-                </ProtectedAdminRoute>
+                <NoIndex>
+                  <ProtectedAdminRoute>
+                    <AdminLayout />
+                  </ProtectedAdminRoute>
+                </NoIndex>
               }
             >
               <Route index element={<AdminDashboardView />} />

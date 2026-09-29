@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageSquare, BookOpen, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchPartyPackages } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
+import { SEO } from '../components/SEO';
 
 export const PartyHallPage: React.FC = () => {
   const [packages, setPackages] = useState<any[]>([]);
@@ -143,8 +144,8 @@ export const PartyHallPage: React.FC = () => {
     slideIndex === 0
       ? galleryImages.length - 1
       : slideIndex >= extendedSlides.length - 1
-      ? 0
-      : slideIndex - 1;
+        ? 0
+        : slideIndex - 1;
 
   useEffect(() => {
     fetchPartyPackages().then((res) => {
@@ -154,6 +155,11 @@ export const PartyHallPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F0DF] text-[#00174A] py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-20 relative">
+      <SEO
+        title="Party Hall in Hassan | Sambhrama Banquet Hall | Hotel Raama"
+        description="Discover Sambhrama Banquet Hall at Hotel Raama in Hassan, with space for 300+ guests, climate control, audio-visual setups and catering packages."
+        canonical="/party-hall"
+      />
       {/* Hero Header */}
       <div className="relative rounded-sm overflow-hidden min-h-[440px] sm:min-h-[500px] py-14 sm:py-20 px-6 sm:px-10 flex flex-col items-center justify-center text-center border border-[#10184A]/15 shadow-md">
         <img
@@ -297,11 +303,10 @@ export const PartyHallPage: React.FC = () => {
                   key={idx}
                   onClick={() => handleUserGoTo(idx)}
                   aria-label={`Go to photo ${idx + 1}`}
-                  className={`transition-all duration-300 rounded-full cursor-pointer ${
-                    activeDotIndex === idx
+                  className={`transition-all duration-300 rounded-full cursor-pointer ${activeDotIndex === idx
                       ? 'w-8 h-2 bg-[#D6B369]'
                       : 'w-2 h-2 bg-white/60 hover:bg-white'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -357,11 +362,10 @@ export const PartyHallPage: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => setViewerPageIndex(idx)}
-                className={`w-7 sm:w-8 h-7 sm:h-8 rounded-sm text-xs font-sans font-bold flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                  viewerPageIndex === idx
+                className={`w-7 sm:w-8 h-7 sm:h-8 rounded-sm text-xs font-sans font-bold flex items-center justify-center transition-all cursor-pointer shrink-0 ${viewerPageIndex === idx
                     ? 'bg-[#D6B369] text-[#00174A]'
                     : 'bg-[#00174A] text-white/60 border border-white/10 hover:text-white'
-                }`}
+                  }`}
               >
                 {idx + 1}
               </button>
