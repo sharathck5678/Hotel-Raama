@@ -12,7 +12,8 @@ export class SocketService {
           if (isOriginAllowed(origin)) {
             callback(null, true);
           } else {
-            callback(new Error(`CORS blocked for origin: ${origin}`));
+            console.warn(`[Socket.IO CORS] Blocked origin: ${origin}`);
+            callback(null, false);
           }
         },
         methods: ['GET', 'POST'],

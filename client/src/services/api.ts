@@ -61,7 +61,7 @@ const API_BASE_URL = getApiBaseUrl();
 export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  timeout: 15000,
+  timeout: 35000,
 });
 
 api.interceptors.request.use((config) => {
@@ -71,6 +71,19 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+const getFriendlyErrorMessage = (err: any, fallback: string): string => {
+  if (err.response?.data?.message) {
+    return err.response.data.message;
+  }
+  if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+    return 'The server took longer than expected to respond. It may be waking up, please try again in a few moments.';
+  }
+  if (err.message?.includes('Network Error') || !err.response) {
+    return 'Unable to reach the server. Please check your internet connection and try again.';
+  }
+  return err.message || fallback;
+};
 
 // --- GUEST APIS WITH AUTOMATIC PERSISTENT FALLBACKS ---
 
@@ -97,7 +110,7 @@ export const createBookingHold = (payload: any) =>
     .then((res) => res.data)
     .catch((err) => ({
       success: false,
-      message: err.response?.data?.message || 'Failed to initialize booking hold. Please check your details and try again.',
+      message: getFriendlyErrorMessage(err, 'Failed to initialize booking hold. Please check your details and try again.'),
     }));
 
 export const verifyBookingPayment = (payload: any) =>
@@ -106,7 +119,7 @@ export const verifyBookingPayment = (payload: any) =>
     .then((res) => res.data)
     .catch((err) => ({
       success: false,
-      message: err.response?.data?.message || 'Payment verification failed. Your booking has not been confirmed.',
+      message: getFriendlyErrorMessage(err, 'Payment verification failed. Your booking has not been confirmed.'),
     }));
 
 export const cancelBookingHold = (payload: { bookingId?: string; trackingToken?: string }) =>
@@ -251,7 +264,7 @@ export const createFoodOrder = (payload: any) =>
     .catch((err) => {
       return {
         success: false,
-        message: err.response?.data?.message || 'Failed to place food order. Unable to connect to backend server.',
+        message: getFriendlyErrorMessage(err, 'Failed to place food order. Unable to connect to backend server.'),
       };
     });
 
@@ -261,7 +274,7 @@ export const verifyOrderPayment = (payload: any) =>
     .then((res) => res.data)
     .catch((err) => ({
       success: false,
-      message: err.response?.data?.message || 'Order payment verification failed.',
+      message: getFriendlyErrorMessage(err, 'Order payment verification failed.'),
     }));
 
 export const trackOrderStatus = (token: string) =>

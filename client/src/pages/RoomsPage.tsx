@@ -206,11 +206,13 @@ export const RoomsPage: React.FC = () => {
       })
       .finally(() => setLoadingRooms(false));
 
-    // Load Razorpay Script dynamically
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
+    // Ensure Razorpay Script is available
+    if (!window.Razorpay && !document.querySelector('script[src*="checkout.razorpay.com"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
   }, []);
 
   // Ensure numGuests stays within maxOccupancy of the selected room & reset terms agreement on room select
@@ -310,13 +312,14 @@ export const RoomsPage: React.FC = () => {
         extraPerson,
       });
 
-      if (!res.success) {
+      if (!res.success || !res.data) {
         toast.error(res.message || 'Failed to initialize booking.');
         setSubmittingBooking(false);
         return;
       }
 
       const { bookingId, trackingToken, totalAmount, razorpayOrderId, razorpayKeyId } = res.data;
+      let paymentCompleted = false;
 
       // 2. Trigger Razorpay Payment Modal
       const options = {
@@ -328,6 +331,7 @@ export const RoomsPage: React.FC = () => {
         image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=200&q=80',
         order_id: razorpayOrderId && razorpayOrderId.startsWith('order_mock_') ? undefined : razorpayOrderId,
         handler: async function (response: any) {
+          paymentCompleted = true;
           toast.loading('Verifying payment with server...');
 
           if (!response.razorpay_payment_id || !response.razorpay_signature) {
@@ -373,6 +377,7 @@ export const RoomsPage: React.FC = () => {
         },
         modal: {
           ondismiss: function () {
+            if (paymentCompleted) return;
             toast.warning('Payment cancelled. Reservation hold released.');
             setSubmittingBooking(false);
             cancelBookingHold({ bookingId, trackingToken }).catch((err) => {
@@ -381,6 +386,20 @@ export const RoomsPage: React.FC = () => {
           },
         },
       };
+
+      if (!window.Razorpay) {
+        // Wait briefly if script tag in HTML is still executing
+        await new Promise<void>((resolve) => {
+          let count = 0;
+          const interval = setInterval(() => {
+            count++;
+            if (window.Razorpay || count > 30) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, 100);
+        });
+      }
 
       if (window.Razorpay) {
         const rzp = new window.Razorpay(options);

@@ -32,10 +32,13 @@ app.use(
       if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
-        callback(new Error(`CORS blocked for origin: ${origin}`));
+        console.warn(`[CORS] Blocked request from origin: ${origin}`);
+        callback(null, false);
       }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   })
 );
 app.use(
@@ -57,6 +60,16 @@ app.use('/api/admin', adminRoutes);
 // Health Check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date(), service: 'Hotel Raama Backend API' });
+});
+
+// Global JSON Error Handler
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(`[Unhandled Error] ${req.method} ${req.originalUrl}:`, err.message || err);
+  const status = err.status || err.statusCode || 500;
+  return res.status(status).json({
+    success: false,
+    message: err.message || 'An internal server error occurred.',
+  });
 });
 
 // 3. Initialize Socket.IO Server & Cron Jobs

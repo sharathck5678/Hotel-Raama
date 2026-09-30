@@ -166,6 +166,8 @@ export const QrOrderPage: React.FC = () => {
         return;
       }
 
+      let paymentCompleted = false;
+
       // 2. Open Razorpay Checkout Modal
       const options = {
         key: razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '',
@@ -176,6 +178,7 @@ export const QrOrderPage: React.FC = () => {
         image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=200&q=80',
         order_id: razorpayOrderId && razorpayOrderId.startsWith('order_mock_') ? undefined : razorpayOrderId,
         handler: async function (response: any) {
+          paymentCompleted = true;
           toast.loading('Verifying order payment...');
 
           if (!response.razorpay_payment_id || !response.razorpay_signature) {
@@ -220,11 +223,25 @@ export const QrOrderPage: React.FC = () => {
         },
         modal: {
           ondismiss: function () {
+            if (paymentCompleted) return;
             toast.warning('Payment cancelled. Order was not submitted.');
             setPlacingOrder(false);
           },
         },
       };
+
+      if (!window.Razorpay) {
+        await new Promise<void>((resolve) => {
+          let count = 0;
+          const interval = setInterval(() => {
+            count++;
+            if (window.Razorpay || count > 30) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, 100);
+        });
+      }
 
       if (window.Razorpay) {
         const rzp = new window.Razorpay(options);

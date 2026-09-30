@@ -2,15 +2,22 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const ALLOWED_PRODUCTION_ORIGINS = [
+  'https://hotelraama.com',
+  'https://www.hotelraama.com',
+  'http://hotelraama.com',
+  'http://www.hotelraama.com',
   'https://hotel-raama.hotelraama5.workers.dev',
+  'https://hotel-raama.pages.dev',
 ];
 
 export const getAllowedOrigins = (): string[] => {
   const list = [...ALLOWED_PRODUCTION_ORIGINS];
   if (process.env.CLIENT_URL) {
-    const envUrl = process.env.CLIENT_URL.trim().replace(/\/$/, '');
-    if (envUrl && !list.includes(envUrl)) {
-      list.push(envUrl);
+    const envUrls = process.env.CLIENT_URL.split(',').map((u) => u.trim().replace(/\/$/, ''));
+    for (const envUrl of envUrls) {
+      if (envUrl && !list.includes(envUrl)) {
+        list.push(envUrl);
+      }
     }
   }
   return list;
@@ -24,6 +31,20 @@ export const isOriginAllowed = (origin: string | undefined): boolean => {
 
   const allowedProduction = getAllowedOrigins();
   if (allowedProduction.includes(normalized)) {
+    return true;
+  }
+
+  // Allow hotelraama.com and any subdomains (e.g., www.hotelraama.com, admin.hotelraama.com)
+  if (/^https?:\/\/([a-zA-Z0-9-]+\.)*hotelraama\.com$/.test(normalized)) {
+    return true;
+  }
+
+  // Allow Cloudflare Workers and Pages deployments for Hotel Raama
+  if (
+    /^https?:\/\/([a-zA-Z0-9-]+\.)*hotelraama.*\.workers\.dev$/.test(normalized) ||
+    /^https?:\/\/([a-zA-Z0-9-]+\.)*hotel-raama.*\.workers\.dev$/.test(normalized) ||
+    /^https?:\/\/([a-zA-Z0-9-]+\.)*hotel-raama.*\.pages\.dev$/.test(normalized)
+  ) {
     return true;
   }
 

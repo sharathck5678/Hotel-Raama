@@ -21,7 +21,8 @@ export class PublicController {
   private static async resolveRoomTypeId(roomTypeId: any): Promise<string | null> {
     if (!roomTypeId) return null;
     if (typeof roomTypeId === 'string' && mongoose.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
-      return roomTypeId;
+      const foundById = await RoomType.findById(roomTypeId);
+      if (foundById) return foundById._id.toString();
     }
     const MOCK_MAP: Record<string, string> = {
       rt_1: 'PREM_SGL_NONAC',

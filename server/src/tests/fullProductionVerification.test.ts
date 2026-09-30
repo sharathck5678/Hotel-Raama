@@ -376,6 +376,8 @@ async function runAllTests() {
   try {
     const prodAllowedWorkers = isOriginAllowed('https://hotel-raama.hotelraama5.workers.dev');
     const prodAllowedWorkersTrailing = isOriginAllowed('https://hotel-raama.hotelraama5.workers.dev/');
+    const prodAllowedHotelRaama = isOriginAllowed('https://hotelraama.com');
+    const prodAllowedWwwHotelRaama = isOriginAllowed('https://www.hotelraama.com');
     const devAllowedLocalhost = isOriginAllowed('http://localhost:5173');
     const serverToServerAllowed = isOriginAllowed(undefined);
 
@@ -385,12 +387,12 @@ async function runAllTests() {
     const prodRejectedLocalhost = !isOriginAllowed('http://localhost:5173');
     process.env.NODE_ENV = prevEnv;
 
-    const corsPassed = prodAllowedWorkers && prodAllowedWorkersTrailing && devAllowedLocalhost && serverToServerAllowed && prodRejectedAttacker && prodRejectedLocalhost;
+    const corsPassed = prodAllowedWorkers && prodAllowedWorkersTrailing && prodAllowedHotelRaama && prodAllowedWwwHotelRaama && devAllowedLocalhost && serverToServerAllowed && prodRejectedAttacker && prodRejectedLocalhost;
     record(
       'CORS Restriction',
-      'Production CORS restricts strictly to authorized domains while dev permits localhost',
+      'Production CORS restricts strictly to authorized domains (hotelraama.com & workers.dev) while dev permits localhost',
       corsPassed,
-      'Workers.dev permitted, arbitrary origins blocked in production'
+      'hotelraama.com and workers.dev permitted, arbitrary origins blocked in production'
     );
   } catch (err: any) {
     record('CORS Restriction', 'CORS origin testing', false, undefined, err.message);
