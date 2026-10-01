@@ -18,6 +18,7 @@ import { LocationPage } from './pages/LocationPage';
 import { MyBookingsOrdersPage } from './pages/MyBookingsOrdersPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfBookingPage } from './pages/TermsOfBookingPage';
+import { CustomerFeedbackPage } from './pages/CustomerFeedbackPage';
 
 // QR Order Pages
 import { QrOrderingSectionPage } from './pages/QrOrderingSectionPage';
@@ -34,6 +35,7 @@ import { AdminMenuView } from './pages/admin/AdminMenuView';
 import { AdminBookingsView } from './pages/admin/AdminBookingsView';
 import { AdminRoomsView } from './pages/admin/AdminRoomsView';
 import { AdminCustomerHistoryView } from './pages/admin/AdminCustomerHistoryView';
+import { AdminFeedbackView } from './pages/admin/AdminFeedbackView';
 
 const NoIndex: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>
@@ -81,6 +83,14 @@ export const App: React.FC = () => {
             />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/terms-of-booking" element={<TermsOfBookingPage />} />
+            <Route
+              path="/feedback/:token"
+              element={
+                <NoIndex>
+                  <CustomerFeedbackPage />
+                </NoIndex>
+              }
+            />
 
             {/* Room QR Scan & Tracking Routes for Guests */}
             <Route
@@ -165,6 +175,7 @@ export const App: React.FC = () => {
               <Route path="orders" element={<AdminOrdersView />} />
               <Route path="menu" element={<AdminMenuView />} />
               <Route path="bookings" element={<AdminBookingsView />} />
+              <Route path="feedback" element={<AdminFeedbackView />} />
               <Route path="rooms" element={<AdminRoomsView />} />
               <Route path="qr-codes" element={<QrOrderingSectionPage />} />
               <Route path="customers" element={<AdminCustomerHistoryView />} />

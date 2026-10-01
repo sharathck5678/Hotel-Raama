@@ -542,3 +542,77 @@ export const toggleAdminMenuItemAvailability = (id: string) =>
       const updated = toggleLocalMenuItemAvailability(id);
       return { success: true, data: updated, message: 'Availability toggled successfully.' };
     });
+
+// --- CUSTOMER FEEDBACK (NO LOGIN REQUIRED) ---
+
+export const validateFeedbackToken = (token: string) =>
+  api
+    .get(`/feedback/${token}`)
+    .then((res) => res.data)
+    .catch((err) => {
+      return {
+        success: false,
+        code: err.response?.data?.code || 'INVALID_TOKEN',
+        message: err.response?.data?.message || 'This feedback link is invalid or has expired.',
+      };
+    });
+
+export const submitCustomerFeedback = (token: string, payload: any) =>
+  api
+    .post(`/feedback/${token}`, payload)
+    .then((res) => res.data)
+    .catch((err) => {
+      return {
+        success: false,
+        code: err.response?.data?.code || 'ERROR',
+        message: err.response?.data?.message || 'Failed to submit feedback. Please try again.',
+      };
+    });
+
+// --- ADMIN FEEDBACK MANAGEMENT (AUTH REQUIRED) ---
+
+export const fetchAdminFeedbacks = (params?: any) =>
+  api
+    .get('/admin/feedback', { params })
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch customer feedback.',
+      data: { feedbacks: [], summary: { totalFeedback: 0, averageRating: 0, recommendPercentage: 0, newCount: 0, ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } } },
+    }));
+
+export const fetchAdminFeedbackById = (id: string) =>
+  api
+    .get(`/admin/feedback/${id}`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch feedback details.',
+    }));
+
+export const updateAdminFeedbackStatus = (id: string, status: string) =>
+  api
+    .patch(`/admin/feedback/${id}/status`, { status })
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to update feedback status.',
+    }));
+
+export const deleteAdminFeedback = (id: string) =>
+  api
+    .delete(`/admin/feedback/${id}`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to delete feedback entry.',
+    }));
+
+export const sendBookingFeedbackRequest = (bookingId: string) =>
+  api
+    .post(`/admin/bookings/${bookingId}/send-feedback-request`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to dispatch feedback request email.',
+    }));

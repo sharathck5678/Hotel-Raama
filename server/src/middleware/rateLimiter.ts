@@ -23,3 +23,11 @@ export const bookingLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many booking attempts. Please slow down.' },
 });
+
+export const feedbackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // 30 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many feedback requests. Please try again later.' },
+});

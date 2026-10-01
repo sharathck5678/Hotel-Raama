@@ -17,4 +17,7 @@ router.get('/hotel-info', publicController_1.PublicController.getHotelInfo);
 router.get('/billing/invoice/booking/:idOrToken', publicController_1.PublicController.downloadBookingInvoicePdf);
 router.get('/billing/invoice/order/:idOrToken', publicController_1.PublicController.downloadOrderInvoicePdf);
 router.post('/webhooks/razorpay', publicController_1.PublicController.handleRazorpayWebhook);
+// Customer Private Feedback (No Login Required)
+router.get('/feedback/:token', rateLimiter_1.feedbackLimiter, publicController_1.PublicController.validateFeedbackToken);
+router.post('/feedback/:token', rateLimiter_1.feedbackLimiter, publicController_1.PublicController.submitFeedback);
 exports.default = router;

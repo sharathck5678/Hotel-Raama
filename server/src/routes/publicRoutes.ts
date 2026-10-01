@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PublicController } from '../controllers/publicController';
-import { bookingLimiter } from '../middleware/rateLimiter';
+import { bookingLimiter, feedbackLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -17,5 +17,9 @@ router.get('/hotel-info', PublicController.getHotelInfo);
 router.get('/billing/invoice/booking/:idOrToken', PublicController.downloadBookingInvoicePdf);
 router.get('/billing/invoice/order/:idOrToken', PublicController.downloadOrderInvoicePdf);
 router.post('/webhooks/razorpay', PublicController.handleRazorpayWebhook);
+
+// Customer Private Feedback (No Login Required)
+router.get('/feedback/:token', feedbackLimiter, PublicController.validateFeedbackToken);
+router.post('/feedback/:token', feedbackLimiter, PublicController.submitFeedback);
 
 export default router;

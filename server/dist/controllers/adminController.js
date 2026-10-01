@@ -14,6 +14,8 @@ const Room_1 = require("../models/Room");
 const MenuItem_1 = require("../models/MenuItem");
 const MenuCategory_1 = require("../models/MenuCategory");
 const AuditLog_1 = require("../models/AuditLog");
+const Feedback_1 = require("../models/Feedback");
+const EmailService_1 = require("../services/EmailService");
 const SocketService_1 = require("../services/SocketService");
 const InvoicePdfService_1 = require("../services/InvoicePdfService");
 const seedDatabase_1 = require("../seed/seedDatabase");
@@ -251,6 +253,12 @@ class AdminController {
                 else if (booking.bookingStatus === 'CANCELLED') {
                     await Room_1.Room.findByIdAndUpdate(booking.assignedRoomId, { status: 'AVAILABLE' });
                 }
+            }
+            // Automatically dispatch private feedback request email upon guest checkout
+            if (booking.bookingStatus === 'CHECKED_OUT' && booking.paymentStatus === 'PAID' && !booking.feedbackRequestSent) {
+                EmailService_1.EmailService.dispatchCustomerFeedbackRequest(booking._id.toString()).catch((err) => {
+                    console.warn('[AdminController] Background feedback dispatch notice:', err.message || err);
+                });
             }
             await AuditLog_1.AuditLog.create({
                 adminId: req.admin.id,
@@ -583,6 +591,231 @@ class AdminController {
         }
         catch (error) {
             return res.status(500).json({ success: false, message: 'Failed to update availability.' });
+        }
+    }
+    /**
+     * GET /api/admin/feedback
+     * Retrieve customer feedback with filtering, sorting, and summary metrics.
+     * Strictly private - authenticated admin access only.
+     */
+    static async getFeedbacks(req, res) {
+        try {
+            const { status, rating, search, sort = 'newest', page = '1', limit = '100' } = req.query;
+            const filter = {};
+            if (status && ['new', 'read', 'archived'].includes(String(status))) {
+                filter.status = status;
+            }
+            if (rating) {
+                const ratingNum = parseInt(String(rating), 10);
+                if (!isNaN(ratingNum) && ratingNum >= 1 && ratingNum <= 5) {
+                    filter.overallRating = ratingNum;
+                }
+            }
+            if (search && typeof search === 'string' && search.trim()) {
+                const term = search.trim();
+                const searchRegex = new RegExp(term, 'i');
+                filter.$or = [
+                    { customerName: searchRegex },
+                    { customerEmail: searchRegex },
+                    { bookingId: searchRegex },
+                    { comment: searchRegex },
+                ];
+            }
+            // Determine sort order
+            let sortObj = { submittedAt: -1 };
+            if (sort === 'oldest')
+                sortObj = { submittedAt: 1 };
+            else if (sort === 'rating_desc')
+                sortObj = { overallRating: -1, submittedAt: -1 };
+            else if (sort === 'rating_asc')
+                sortObj = { overallRating: 1, submittedAt: -1 };
+            const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+            const limitNum = Math.min(200, Math.max(1, parseInt(String(limit), 10) || 100));
+            const skip = (pageNum - 1) * limitNum;
+            const [feedbacks, totalCount, allFeedbacksForMetrics] = await Promise.all([
+                Feedback_1.Feedback.find(filter).sort(sortObj).skip(skip).limit(limitNum).lean(),
+                Feedback_1.Feedback.countDocuments(filter),
+                Feedback_1.Feedback.find({}, 'overallRating roomRating foodRating cleanlinessRating serviceRating recommendation status').lean(),
+            ]);
+            // Calculate summary metrics across all received feedback
+            const totalAll = allFeedbacksForMetrics.length;
+            let totalRatingSum = 0;
+            let recommendCount = 0;
+            let newCount = 0;
+            const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            for (const f of allFeedbacksForMetrics) {
+                totalRatingSum += f.overallRating || 0;
+                if (f.recommendation)
+                    recommendCount++;
+                if (f.status === 'new')
+                    newCount++;
+                const rounded = Math.min(5, Math.max(1, Math.round(f.overallRating || 0)));
+                ratingDistribution[rounded] = (ratingDistribution[rounded] || 0) + 1;
+            }
+            const averageRating = totalAll > 0 ? parseFloat((totalRatingSum / totalAll).toFixed(1)) : 0;
+            const recommendPercentage = totalAll > 0 ? Math.round((recommendCount / totalAll) * 100) : 0;
+            return res.json({
+                success: true,
+                data: {
+                    feedbacks,
+                    total: totalCount,
+                    page: pageNum,
+                    limit: limitNum,
+                    summary: {
+                        totalFeedback: totalAll,
+                        averageRating,
+                        recommendCount,
+                        recommendPercentage,
+                        newCount,
+                        ratingDistribution,
+                    },
+                },
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Failed to fetch feedback list:', error);
+            return res.status(500).json({ success: false, message: 'Failed to fetch customer feedback.' });
+        }
+    }
+    /**
+     * GET /api/admin/feedback/:id
+     * Retrieve single feedback by ID and mark as read if new
+     */
+    static async getFeedbackById(req, res) {
+        try {
+            const { id } = req.params;
+            const feedback = await Feedback_1.Feedback.findById(id);
+            if (!feedback) {
+                return res.status(404).json({ success: false, message: 'Feedback not found.' });
+            }
+            if (feedback.status === 'new') {
+                feedback.status = 'read';
+                await feedback.save();
+            }
+            return res.json({ success: true, data: feedback });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: 'Failed to fetch feedback details.' });
+        }
+    }
+    /**
+     * PATCH /api/admin/feedback/:id/status
+     * Update feedback status (new, read, archived)
+     */
+    static async updateFeedbackStatus(req, res) {
+        try {
+            const { id } = req.params;
+            const { status } = req.body;
+            if (!['new', 'read', 'archived'].includes(status)) {
+                return res.status(400).json({ success: false, message: 'Invalid status. Must be new, read, or archived.' });
+            }
+            const feedback = await Feedback_1.Feedback.findByIdAndUpdate(id, { status }, { new: true });
+            if (!feedback) {
+                return res.status(404).json({ success: false, message: 'Feedback not found.' });
+            }
+            await AuditLog_1.AuditLog.create({
+                adminId: req.admin.id,
+                adminEmail: req.admin.email,
+                action: 'UPDATE_FEEDBACK_STATUS',
+                entity: 'Feedback',
+                entityId: feedback._id.toString(),
+                details: { bookingId: feedback.bookingId, newStatus: status },
+            });
+            return res.json({ success: true, data: feedback, message: `Feedback marked as ${status}.` });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: 'Failed to update feedback status.' });
+        }
+    }
+    /**
+     * DELETE /api/admin/feedback/:id
+     * Delete feedback entry
+     */
+    static async deleteFeedback(req, res) {
+        try {
+            const { id } = req.params;
+            const feedback = await Feedback_1.Feedback.findByIdAndDelete(id);
+            if (!feedback) {
+                return res.status(404).json({ success: false, message: 'Feedback not found.' });
+            }
+            await AuditLog_1.AuditLog.create({
+                adminId: req.admin.id,
+                adminEmail: req.admin.email,
+                action: 'DELETE_FEEDBACK',
+                entity: 'Feedback',
+                entityId: feedback._id.toString(),
+                details: { bookingId: feedback.bookingId },
+            });
+            return res.json({ success: true, message: 'Feedback removed successfully.' });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: 'Failed to delete feedback.' });
+        }
+    }
+    /**
+     * POST /api/admin/bookings/:id/send-feedback-request
+     * Manually dispatch or retry sending private feedback request email to guest
+     */
+    static async sendBookingFeedbackRequest(req, res) {
+        try {
+            const { id } = req.params;
+            const booking = await Booking_1.Booking.findById(id);
+            if (!booking) {
+                return res.status(404).json({ success: false, message: 'Booking not found.' });
+            }
+            if (booking.paymentStatus !== 'PAID') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Feedback requests can only be sent for paid confirmed bookings.',
+                });
+            }
+            if (booking.feedbackSubmitted) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Guest has already submitted feedback for this stay.',
+                });
+            }
+            // Reset request status if admin explicitly wants to retry or force dispatch
+            if (booking.feedbackRequestStatus === 'FAILED') {
+                booking.feedbackRequestStatus = 'NOT_SENT';
+                booking.feedbackRequestSent = false;
+                await booking.save();
+            }
+            const result = await EmailService_1.EmailService.dispatchCustomerFeedbackRequest(booking);
+            await AuditLog_1.AuditLog.create({
+                adminId: req.admin.id,
+                adminEmail: req.admin.email,
+                action: 'DISPATCH_FEEDBACK_REQUEST',
+                entity: 'Booking',
+                entityId: booking._id.toString(),
+                details: {
+                    bookingId: booking.bookingId,
+                    guestEmail: booking.guestEmail,
+                    success: result.success,
+                    error: result.error,
+                },
+            });
+            if (!result.success) {
+                return res.status(500).json({
+                    success: false,
+                    message: result.error || 'Failed to dispatch feedback request email.',
+                });
+            }
+            return res.json({
+                success: true,
+                message: `Feedback request email sent to ${booking.guestEmail}.`,
+                data: {
+                    feedbackToken: result.token,
+                    feedbackRequestSent: true,
+                },
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Error dispatching manual feedback request:', error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Internal error dispatching feedback request.',
+            });
         }
     }
 }

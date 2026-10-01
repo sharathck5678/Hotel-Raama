@@ -17,6 +17,7 @@ const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const SocketService_1 = require("./services/SocketService");
 const CleanupHoldJob_1 = require("./jobs/CleanupHoldJob");
 const EmailRetryJob_1 = require("./jobs/EmailRetryJob");
+const FeedbackSchedulerJob_1 = require("./jobs/FeedbackSchedulerJob");
 const rateLimiter_1 = require("./middleware/rateLimiter");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -35,10 +36,13 @@ app.use((0, cors_1.default)({
             callback(null, true);
         }
         else {
-            callback(new Error(`CORS blocked for origin: ${origin}`));
+            console.warn(`[CORS] Blocked request from origin: ${origin}`);
+            callback(null, false);
         }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
 app.use(express_1.default.json({
     verify: (req, _res, buf) => {
@@ -56,10 +60,20 @@ app.use('/api/admin', adminRoutes_1.default);
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date(), service: 'Hotel Raama Backend API' });
 });
+// Global JSON Error Handler
+app.use((err, req, res, _next) => {
+    console.error(`[Unhandled Error] ${req.method} ${req.originalUrl}:`, err.message || err);
+    const status = err.status || err.statusCode || 500;
+    return res.status(status).json({
+        success: false,
+        message: err.message || 'An internal server error occurred.',
+    });
+});
 // 3. Initialize Socket.IO Server & Cron Jobs
 SocketService_1.SocketService.init(httpServer, CLIENT_URL);
 (0, CleanupHoldJob_1.initCleanupHoldJob)();
 (0, EmailRetryJob_1.initEmailRetryJob)();
+(0, FeedbackSchedulerJob_1.initFeedbackSchedulerJob)();
 const Room_1 = require("./models/Room");
 const RoomType_1 = require("./models/RoomType");
 const Coupon_1 = require("./models/Coupon");

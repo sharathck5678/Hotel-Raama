@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { RoomType } from '../models/RoomType';
 import { Room } from '../models/Room';
 import { Booking } from '../models/Booking';
+import { Feedback } from '../models/Feedback';
 import { Order } from '../models/Order';
 import { MenuCategory } from '../models/MenuCategory';
 import { MenuItem } from '../models/MenuItem';
@@ -655,6 +656,268 @@ export class PublicController {
     } catch (error: any) {
       console.error('[Razorpay Webhook] Internal server error handling webhook:', error);
       return res.status(500).json({ success: false, message: 'Internal error processing webhook' });
+    }
+  }
+
+  /**
+   * GET /api/feedback/:token
+   * Validates secure feedback token and returns minimal public stay metadata for the feedback form.
+   * No customer login required.
+   */
+  static async validateFeedbackToken(req: Request, res: Response) {
+    try {
+      const { token } = req.params;
+
+      if (!token || typeof token !== 'string' || token.trim().length < 16) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_TOKEN',
+          message: 'This feedback link is invalid.',
+        });
+      }
+
+      const cleanToken = token.trim();
+      const booking = await Booking.findOne({ feedbackToken: cleanToken }).populate('roomTypeId');
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          code: 'INVALID_TOKEN',
+          message: 'This feedback link is invalid.',
+        });
+      }
+
+      // 1. Check if feedback was already submitted
+      if (booking.feedbackSubmitted) {
+        return res.status(400).json({
+          success: false,
+          code: 'ALREADY_SUBMITTED',
+          message: 'Feedback has already been submitted for this stay. Thank you for sharing your experience.',
+        });
+      }
+
+      // 2. Check if feedback link has expired
+      if (booking.feedbackTokenExpiry && booking.feedbackTokenExpiry < new Date()) {
+        return res.status(400).json({
+          success: false,
+          code: 'EXPIRED',
+          message: 'This feedback link has expired.',
+        });
+      }
+
+      const roomTypeName = booking.roomTypeId && typeof booking.roomTypeId === 'object' && (booking.roomTypeId as any).name
+        ? (booking.roomTypeId as any).name
+        : 'Hotel Raama';
+
+      // Return safe, non-sensitive booking summary strictly needed for the feedback UI
+      return res.json({
+        success: true,
+        data: {
+          guestName: booking.guestName,
+          bookingId: booking.bookingId,
+          roomTypeName,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+        },
+      });
+    } catch (error) {
+      console.error('[PublicController] Error validating feedback token:', error);
+      return res.status(500).json({
+        success: false,
+        code: 'SERVER_ERROR',
+        message: 'Unable to validate feedback link. Please try again later.',
+      });
+    }
+  }
+
+  /**
+   * POST /api/feedback/:token
+   * Validates feedback payload and securely saves private customer feedback.
+   * Idempotent & protected against duplicate submissions.
+   * Dispatches admin notification email in the background without blocking or failing feedback save.
+   */
+  static async submitFeedback(req: Request, res: Response) {
+    try {
+      const { token } = req.params;
+
+      if (!token || typeof token !== 'string' || token.trim().length < 16) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_TOKEN',
+          message: 'This feedback link is invalid.',
+        });
+      }
+
+      const cleanToken = token.trim();
+      const {
+        overallRating,
+        roomRating,
+        foodRating,
+        cleanlinessRating,
+        serviceRating,
+        recommendation,
+        comment,
+      } = req.body;
+
+      // 1. Validate Ratings (1 to 5 stars required)
+      const parseRating = (val: any) => {
+        const num = parseInt(val, 10);
+        return !isNaN(num) && num >= 1 && num <= 5 ? num : null;
+      };
+
+      const oR = parseRating(overallRating);
+      const rR = parseRating(roomRating);
+      const fR = parseRating(foodRating);
+      const cR = parseRating(cleanlinessRating);
+      const sR = parseRating(serviceRating);
+
+      if (!oR || !rR || !fR || !cR || !sR) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_RATINGS',
+          message: 'Please provide valid 1 to 5 star ratings for Overall, Room, Food, Cleanliness, and Service.',
+        });
+      }
+
+      // 2. Validate Recommendation
+      let wouldRecommend: boolean;
+      if (typeof recommendation === 'boolean') {
+        wouldRecommend = recommendation;
+      } else if (typeof recommendation === 'string') {
+        const lower = recommendation.trim().toLowerCase();
+        if (lower === 'yes' || lower === 'true') wouldRecommend = true;
+        else if (lower === 'no' || lower === 'false') wouldRecommend = false;
+        else {
+          return res.status(400).json({
+            success: false,
+            code: 'INVALID_RECOMMENDATION',
+            message: 'Please indicate whether you would recommend Hotel Raama.',
+          });
+        }
+      } else {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_RECOMMENDATION',
+          message: 'Please indicate whether you would recommend Hotel Raama.',
+        });
+      }
+
+      // 3. Find booking & verify token validity
+      const booking = await Booking.findOne({ feedbackToken: cleanToken });
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          code: 'INVALID_TOKEN',
+          message: 'This feedback link is invalid.',
+        });
+      }
+
+      if (booking.feedbackSubmitted) {
+        return res.status(400).json({
+          success: false,
+          code: 'ALREADY_SUBMITTED',
+          message: 'Feedback has already been submitted for this stay. Thank you for sharing your experience.',
+        });
+      }
+
+      if (booking.feedbackTokenExpiry && booking.feedbackTokenExpiry < new Date()) {
+        return res.status(400).json({
+          success: false,
+          code: 'EXPIRED',
+          message: 'This feedback link has expired.',
+        });
+      }
+
+      // 4. Atomic check-and-set: Lock booking so duplicate submissions cannot race
+      const updatedBooking = await Booking.findOneAndUpdate(
+        {
+          _id: booking._id,
+          feedbackSubmitted: { $ne: true },
+        },
+        {
+          $set: {
+            feedbackSubmitted: true,
+            feedbackSubmittedAt: new Date(),
+            feedbackStatus: 'RECEIVED',
+          },
+        },
+        { new: true }
+      );
+
+      if (!updatedBooking) {
+        return res.status(400).json({
+          success: false,
+          code: 'ALREADY_SUBMITTED',
+          message: 'Feedback has already been submitted for this stay. Thank you for sharing your experience.',
+        });
+      }
+
+      // 5. Save Feedback record in database
+      const sanitizedComment = typeof comment === 'string' ? comment.trim().slice(0, 2000) : '';
+
+      const feedback = await Feedback.create({
+        bookingObjectId: updatedBooking._id,
+        bookingId: updatedBooking.bookingId,
+        customerName: updatedBooking.guestName,
+        customerEmail: updatedBooking.guestEmail,
+        overallRating: oR,
+        roomRating: rR,
+        foodRating: fR,
+        cleanlinessRating: cR,
+        serviceRating: sR,
+        recommendation: wouldRecommend,
+        comment: sanitizedComment,
+        submittedAt: new Date(),
+        status: 'new',
+        emailNotificationSent: false,
+      });
+
+      // 6. Asynchronously attempt Admin Email Notification (non-blocking, failure resilient)
+      EmailService.sendAdminFeedbackNotification(feedback, updatedBooking)
+        .then(async (result) => {
+          if (result.success) {
+            await Feedback.findByIdAndUpdate(feedback._id, {
+              $set: {
+                emailNotificationSent: true,
+                emailNotificationSentAt: new Date(),
+              },
+              $unset: { emailNotificationError: 1 },
+            });
+          } else {
+            await Feedback.findByIdAndUpdate(feedback._id, {
+              $set: {
+                emailNotificationSent: false,
+                emailNotificationError: result.error?.slice(0, 500),
+              },
+            });
+          }
+        })
+        .catch((err) => {
+          console.error('[PublicController] Non-blocking admin notification dispatch error:', err.message || err);
+        });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Thank you for your feedback! Your response has been received successfully. We appreciate you taking the time to share your experience with Hotel Raama.',
+      });
+    } catch (error: any) {
+      console.error('[PublicController] Failed to process feedback submission:', error);
+
+      // Handle duplicate key error gracefully
+      if (error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          code: 'ALREADY_SUBMITTED',
+          message: 'Feedback has already been submitted for this stay. Thank you for sharing your experience.',
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        code: 'SERVER_ERROR',
+        message: 'An error occurred while saving your feedback. Please try again.',
+      });
     }
   }
 }

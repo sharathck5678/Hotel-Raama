@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Download, Mail, MessageSquareHeart } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchAdminBookings, updateBookingStatus } from '../../services/api';
+import { fetchAdminBookings, updateBookingStatus, sendBookingFeedbackRequest } from '../../services/api';
 import { downloadBookingInvoicePdf } from '../../services/clientPdfService';
 import { ScrollReveal } from '../../components/ScrollReveal';
 
 export const AdminBookingsView: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
 
   const loadBookings = () => {
     fetchAdminBookings()
@@ -41,6 +43,23 @@ export const AdminBookingsView: React.FC = () => {
     }
   };
 
+  const handleSendFeedbackRequest = async (id: string, bookingRef: string) => {
+    setSendingEmailId(id);
+    try {
+      const res = await sendBookingFeedbackRequest(id);
+      if (res.success) {
+        toast.success(`Feedback request email sent for ${bookingRef}`);
+        loadBookings();
+      } else {
+        toast.error(res.message || 'Failed to send feedback request email.');
+      }
+    } catch {
+      toast.error('Failed to send feedback request email.');
+    } finally {
+      setSendingEmailId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[#00174A]">
@@ -71,14 +90,15 @@ export const AdminBookingsView: React.FC = () => {
                 <th className="py-3 px-3.5">Dates</th>
                 <th className="py-3 px-3.5">Amount</th>
                 <th className="py-3 px-3.5">Payment</th>
-                <th className="py-3 px-3.5">Status</th>
+                <th className="py-3 px-3.5">Stay Status</th>
+                <th className="py-3 px-3.5">Feedback</th>
                 <th className="py-3 px-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#10184A]/10 text-[#00174A]">
               {bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-[#00174A]/50 text-xs">
+                  <td colSpan={10} className="py-12 text-center text-[#00174A]/50 text-xs">
                     No bookings found.
                   </td>
                 </tr>
@@ -113,6 +133,39 @@ export const AdminBookingsView: React.FC = () => {
                     <td className="py-3 px-3.5 whitespace-nowrap">
                       <span className="font-bold text-[#00174A] uppercase text-[10px] tracking-wider">{b.bookingStatus}</span>
                     </td>
+                    <td className="py-3 px-3.5 whitespace-nowrap">
+                      <div className="space-y-1">
+                        <div>
+                          {b.feedbackRequestSent || b.feedbackRequestStatus === 'SENT' ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              Req: Sent ✓
+                            </span>
+                          ) : b.feedbackRequestStatus === 'FAILED' ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                              Req: Failed ⚠
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] text-slate-500 bg-slate-100 border border-slate-200">
+                              Req: Not Sent
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          {b.feedbackSubmitted || b.feedbackStatus === 'RECEIVED' ? (
+                            <Link
+                              to="/admin/feedback"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#D6B369]/20 text-[#8A6D2B] border border-[#D6B369]/40 hover:bg-[#D6B369]/30 transition-colors"
+                            >
+                              <MessageSquareHeart size={10} /> Received ✓
+                            </Link>
+                          ) : (
+                            <span className="text-[9px] text-slate-400">
+                              Feedback: None
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
                     <td className="py-3 px-3.5 text-right whitespace-nowrap space-x-1.5">
                       {b.bookingStatus === 'CONFIRMED' && (
                         <button
@@ -128,6 +181,18 @@ export const AdminBookingsView: React.FC = () => {
                           className="px-2.5 py-1 bg-[#00174A] text-white hover:bg-[#10184A] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer inline-block"
                         >
                           Check Out
+                        </button>
+                      )}
+                      {(b.bookingStatus === 'CHECKED_OUT' || new Date(b.checkOut) <= new Date()) && !b.feedbackSubmitted && (
+                        <button
+                          type="button"
+                          onClick={() => handleSendFeedbackRequest(b._id, b.bookingId)}
+                          disabled={sendingEmailId === b._id}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                          title={b.feedbackRequestSent ? 'Resend Feedback Email to Guest' : 'Send Feedback Email to Guest'}
+                        >
+                          <Mail size={11} className={sendingEmailId === b._id ? 'animate-spin' : ''} />
+                          {b.feedbackRequestSent ? 'Resend Email' : 'Feedback Email'}
                         </button>
                       )}
                       <button

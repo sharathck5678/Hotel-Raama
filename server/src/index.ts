@@ -11,6 +11,7 @@ import adminRoutes from './routes/adminRoutes';
 import { SocketService } from './services/SocketService';
 import { initCleanupHoldJob } from './jobs/CleanupHoldJob';
 import { initEmailRetryJob } from './jobs/EmailRetryJob';
+import { initFeedbackSchedulerJob } from './jobs/FeedbackSchedulerJob';
 import { apiLimiter } from './middleware/rateLimiter';
 
 dotenv.config();
@@ -76,6 +77,7 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
 SocketService.init(httpServer, CLIENT_URL);
 initCleanupHoldJob();
 initEmailRetryJob();
+initFeedbackSchedulerJob();
 
 import { Room } from './models/Room';
 import { RoomType } from './models/RoomType';

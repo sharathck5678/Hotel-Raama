@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 import { IBooking, Booking } from '../models/Booking';
 import { HotelSetting } from '../models/HotelSetting';
 import { RoomType } from '../models/RoomType';
@@ -657,6 +658,398 @@ Email: hotelraama.hsn@gmail.com
     } catch (err: any) {
       console.error('[EmailService Unexpected Error] Failed in processBookingEmails:', err.message || err);
       // Swallow error to protect the confirmed booking status
+    }
+  }
+
+  /**
+   * Resolve customer feedback URL based on CLIENT_URL environment variable
+   */
+  public static getFeedbackUrl(token: string): string {
+    const clientBase = (process.env.CLIENT_URL || 'https://hotelraama.com').replace(/\/+$/, '');
+    return `${clientBase}/feedback/${token}`;
+  }
+
+  /**
+   * Helper to format rating into stars with numerical indicator
+   */
+  private static formatStarRating(rating: number): string {
+    const fullStars = Math.min(5, Math.max(1, Math.round(rating)));
+    const stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+    return `${stars} (${rating}/5)`;
+  }
+
+  /**
+   * Send private feedback request email to customer after stay completion
+   */
+  public static async sendCustomerFeedbackRequest(
+    booking: IBooking,
+    token: string
+  ): Promise<EmailResult> {
+    const transporter = this.getTransporter();
+    const recipient = booking.guestEmail;
+    const sender = this.resolveSenderEmail();
+    const feedbackUrl = this.getFeedbackUrl(token);
+
+    const subject = 'How was your stay at Hotel Raama?';
+
+    const plainText = `
+How was your stay at Hotel Raama?
+================================
+
+Hi ${booking.guestName},
+
+Thank you for staying at Hotel Raama.
+
+We would love to hear about your experience. Please take a moment to share your feedback.
+
+Give Your Feedback:
+${feedbackUrl}
+
+Thank you for choosing Hotel Raama.
+
+Hotel Raama
+Hassan, Karnataka
+    `.trim();
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f7f5f0; margin: 0; padding: 24px; color: #1a202c; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+    .header { background-color: #0b1849; color: #ffffff; padding: 28px 24px; text-align: center; }
+    .header h1 { margin: 0; font-size: 22px; letter-spacing: 1.5px; font-weight: 700; }
+    .header p { margin: 6px 0 0; font-size: 11px; color: #d4af37; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+    .content { padding: 32px 28px; line-height: 1.6; }
+    .greeting { font-size: 17px; font-weight: 600; color: #0b1849; margin-bottom: 16px; }
+    .text { font-size: 14px; color: #4a5568; margin-bottom: 16px; line-height: 1.7; }
+    .btn-container { text-align: center; margin: 32px 0; }
+    .btn { display: inline-block; background-color: #0b1849; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; border: 1px solid #d4af37; box-shadow: 0 4px 8px rgba(11,24,73,0.2); }
+    .divider { height: 1px; background-color: #edf2f7; margin: 28px 0; }
+    .signoff { font-size: 14px; color: #2d3748; }
+    .signoff strong { color: #0b1849; }
+    .footer { background-color: #edf2f7; padding: 18px; text-align: center; font-size: 11px; color: #718096; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>HOTEL RAAMA</h1>
+      <p>Hassan, Karnataka • Guest Experience</p>
+    </div>
+
+    <div class="content">
+      <div class="greeting">Hi ${booking.guestName},</div>
+
+      <p class="text">Thank you for staying at Hotel Raama.</p>
+      <p class="text">We would love to hear about your experience. Please take a moment to share your feedback with our management team.</p>
+
+      <div class="btn-container">
+        <a href="${feedbackUrl}" class="btn" target="_blank" rel="noopener noreferrer">Give Your Feedback</a>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="signoff">
+        Thank you for choosing Hotel Raama.<br/><br/>
+        <strong>Hotel Raama</strong><br/>
+        Hassan, Karnataka
+      </div>
+    </div>
+
+    <div class="footer">
+      This is a private feedback invitation sent to ${booking.guestEmail}. Your review is private and will only be viewed by Hotel Raama management.
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+
+    if (!transporter) {
+      console.warn(
+        `[EmailService] SMTP not configured. Skipped sending feedback request to ${recipient}.`
+      );
+      return { success: false, error: 'SMTP credentials not configured on server.' };
+    }
+
+    try {
+      const info = await transporter.sendMail({
+        from: sender,
+        to: recipient,
+        subject,
+        text: plainText,
+        html: htmlContent,
+      });
+
+      console.log(`[EmailService] Feedback request email sent for booking ${booking.bookingId} to ${recipient} (msgId: ${info.messageId})`);
+      return { success: true, messageId: info.messageId };
+    } catch (err: any) {
+      console.error(`[EmailService Error] Failed to send feedback request for ${booking.bookingId}:`, err.message || err);
+      return { success: false, error: err.message || 'SMTP delivery failed' };
+    }
+  }
+
+  /**
+   * Send notification to Admin when customer submits private feedback
+   */
+  public static async sendAdminFeedbackNotification(
+    feedback: any,
+    booking?: IBooking | null
+  ): Promise<EmailResult> {
+    const transporter = this.getTransporter();
+    const recipient = process.env.ADMIN_EMAIL?.trim() || await this.resolveHotelNotificationEmail();
+    const sender = this.resolveSenderEmail();
+
+    const clientBase = (process.env.CLIENT_URL || 'https://hotelraama.com').replace(/\/+$/, '');
+    const adminFeedbackUrl = `${clientBase}/admin/feedback`;
+
+    const subject = 'New Customer Feedback - Hotel Raama';
+
+    const submissionDate = feedback.submittedAt
+      ? new Date(feedback.submittedAt).toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const plainText = `
+New Customer Feedback Received
+
+Hotel Raama
+
+Customer: ${feedback.customerName}
+Booking ID: ${feedback.bookingId}
+
+Overall Rating: ${this.formatStarRating(feedback.overallRating)}
+Room Rating: ${this.formatStarRating(feedback.roomRating)}
+Food Rating: ${this.formatStarRating(feedback.foodRating)}
+Cleanliness: ${this.formatStarRating(feedback.cleanlinessRating)}
+Service: ${this.formatStarRating(feedback.serviceRating)}
+Would Recommend: ${feedback.recommendation ? 'Yes' : 'No'}
+
+Customer Feedback:
+"${feedback.comment || 'No written suggestion provided.'}"
+
+Submitted:
+${submissionDate}
+
+View this feedback in Admin Panel:
+${adminFeedbackUrl}
+    `.trim();
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f7f5f0; margin: 0; padding: 24px; color: #1a202c; }
+    .container { max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+    .header { background-color: #0b1849; color: #ffffff; padding: 24px; text-align: center; }
+    .header h1 { margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: 700; }
+    .header p { margin: 4px 0 0; font-size: 11px; color: #d4af37; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+    .content { padding: 28px; }
+    .alert-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; margin-bottom: 22px; border-radius: 4px; }
+    .alert-box strong { color: #1e40af; font-size: 14px; }
+    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #0b1849; border-bottom: 2px solid #d4af37; padding-bottom: 6px; margin-top: 18px; margin-bottom: 12px; }
+    .grid-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 13px; }
+    .grid-table td { padding: 8px 12px; border-bottom: 1px solid #edf2f7; }
+    .grid-table td.label { font-weight: 600; color: #4a5568; width: 42%; background-color: #f8fafc; }
+    .grid-table td.value { color: #1a202c; font-weight: 500; }
+    .stars { color: #f59e0b; font-weight: 700; font-size: 14px; }
+    .comment-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; margin: 16px 0; font-style: italic; color: #2d3748; line-height: 1.6; font-size: 13px; }
+    .btn-container { text-align: center; margin: 28px 0 16px; }
+    .btn { display: inline-block; background-color: #0b1849; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border: 1px solid #d4af37; }
+    .footer { background-color: #edf2f7; padding: 14px; text-align: center; font-size: 11px; color: #718096; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>HOTEL RAAMA</h1>
+      <p>Private Customer Feedback Notification</p>
+    </div>
+
+    <div class="content">
+      <div class="alert-box">
+        <strong>New Customer Feedback Received</strong><br/>
+        <span>A verified guest has submitted private feedback for their recent stay.</span>
+      </div>
+
+      <div class="section-title">Stay & Guest Details</div>
+      <table class="grid-table">
+        <tr><td class="label">Customer Name</td><td class="value"><strong>${feedback.customerName}</strong></td></tr>
+        <tr><td class="label">Customer Email</td><td class="value">${feedback.customerEmail}</td></tr>
+        <tr><td class="label">Booking Reference</td><td class="value"><strong>${feedback.bookingId}</strong></td></tr>
+        <tr><td class="label">Submission Date</td><td class="value">${submissionDate}</td></tr>
+      </table>
+
+      <div class="section-title">Guest Ratings</div>
+      <table class="grid-table">
+        <tr><td class="label">Overall Rating</td><td class="value stars">${this.formatStarRating(feedback.overallRating)}</td></tr>
+        <tr><td class="label">Room Rating</td><td class="value stars">${this.formatStarRating(feedback.roomRating)}</td></tr>
+        <tr><td class="label">Food & Dining</td><td class="value stars">${this.formatStarRating(feedback.foodRating)}</td></tr>
+        <tr><td class="label">Cleanliness</td><td class="value stars">${this.formatStarRating(feedback.cleanlinessRating)}</td></tr>
+        <tr><td class="label">Staff & Service</td><td class="value stars">${this.formatStarRating(feedback.serviceRating)}</td></tr>
+        <tr>
+          <td class="label">Would Recommend</td>
+          <td class="value" style="font-weight: 700; color: ${feedback.recommendation ? '#059669' : '#dc2626'};">
+            ${feedback.recommendation ? 'Yes ✓' : 'No ✗'}
+          </td>
+        </tr>
+      </table>
+
+      <div class="section-title">Customer Feedback & Suggestions</div>
+      <div class="comment-box">
+        "${feedback.comment ? feedback.comment : 'No written suggestion was provided by the guest.'}"
+      </div>
+
+      <div class="btn-container">
+        <a href="${adminFeedbackUrl}" class="btn" target="_blank" rel="noopener noreferrer">View Feedback in Admin Panel</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      Private management notification • This feedback is strictly confidential and not visible on the public website.
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+
+    if (!transporter) {
+      console.warn(`[EmailService] SMTP not configured. Skipped sending admin feedback alert for booking ${feedback.bookingId}.`);
+      return { success: false, error: 'SMTP credentials not configured on server.' };
+    }
+
+    try {
+      const info = await transporter.sendMail({
+        from: sender,
+        to: recipient,
+        subject,
+        text: plainText,
+        html: htmlContent,
+      });
+
+      console.log(`[EmailService] Admin feedback alert sent for ${feedback.bookingId} to ${recipient} (msgId: ${info.messageId})`);
+      return { success: true, messageId: info.messageId };
+    } catch (err: any) {
+      console.error(`[EmailService Error] Failed to send admin feedback alert for ${feedback.bookingId}:`, err.message || err);
+      return { success: false, error: err.message || 'SMTP delivery failed' };
+    }
+  }
+
+  /**
+   * Safely dispatch customer feedback request with idempotency, atomic claim, and token generation
+   */
+  public static async dispatchCustomerFeedbackRequest(
+    bookingIdOrDoc: string | IBooking
+  ): Promise<{ success: boolean; error?: string; token?: string }> {
+    try {
+      const isDbConnected = mongoose.connection.readyState === 1;
+      let booking: IBooking | null = null;
+
+      if (typeof bookingIdOrDoc === 'string') {
+        if (isDbConnected) {
+          booking = await Booking.findById(bookingIdOrDoc);
+        }
+      } else {
+        booking = bookingIdOrDoc;
+      }
+
+      if (!booking) {
+        return { success: false, error: 'Booking not found.' };
+      }
+
+      // Check if feedback request has already been sent
+      if (booking.feedbackRequestSent === true || booking.feedbackRequestStatus === 'SENT') {
+        return { success: true, token: booking.feedbackToken };
+      }
+
+      // If feedback was already submitted, skip sending request
+      if (booking.feedbackSubmitted === true) {
+        return { success: true, token: booking.feedbackToken };
+      }
+
+      // Generate secure 32-byte (64-char hex) cryptographically random token
+      const token = booking.feedbackToken || crypto.randomBytes(32).toString('hex');
+      const tokenExpiry = booking.feedbackTokenExpiry || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+      let claimSuccess = false;
+      if (isDbConnected) {
+        const claimed = await Booking.findOneAndUpdate(
+          {
+            _id: booking._id,
+            feedbackRequestSent: { $ne: true },
+            feedbackRequestStatus: { $nin: ['PROCESSING', 'SENT'] },
+          },
+          {
+            $set: {
+              feedbackRequestStatus: 'PROCESSING',
+              feedbackToken: token,
+              feedbackTokenExpiry: tokenExpiry,
+            },
+          },
+          { new: true }
+        );
+
+        if (claimed) {
+          claimSuccess = true;
+          booking = claimed;
+        } else {
+          // Already claimed or sent by another worker
+          return { success: false, error: 'Booking feedback request already in progress or sent.' };
+        }
+      } else {
+        booking.feedbackRequestStatus = 'PROCESSING';
+        booking.feedbackToken = token;
+        booking.feedbackTokenExpiry = tokenExpiry;
+        claimSuccess = true;
+      }
+
+      if (claimSuccess) {
+        const result = await this.sendCustomerFeedbackRequest(booking, token);
+
+        if (isDbConnected) {
+          if (result.success) {
+            await Booking.findByIdAndUpdate(booking._id, {
+              $set: {
+                feedbackRequestSent: true,
+                feedbackRequestStatus: 'SENT',
+                feedbackRequestSentAt: new Date(),
+              },
+              $unset: { feedbackRequestError: 1 },
+            });
+          } else {
+            await Booking.findByIdAndUpdate(booking._id, {
+              $set: {
+                feedbackRequestStatus: 'FAILED',
+                feedbackRequestError: result.error?.slice(0, 500),
+              },
+            });
+          }
+        }
+
+        booking.feedbackRequestSent = result.success;
+        booking.feedbackRequestStatus = result.success ? 'SENT' : 'FAILED';
+        if (result.success) {
+          booking.feedbackRequestSentAt = new Date();
+        } else {
+          booking.feedbackRequestError = result.error;
+        }
+
+        return { success: result.success, error: result.error, token };
+      }
+
+      return { success: false, error: 'Unable to claim booking for feedback request.' };
+    } catch (err: any) {
+      console.error('[EmailService] Error in dispatchCustomerFeedbackRequest:', err.message || err);
+      return { success: false, error: err.message };
     }
   }
 }

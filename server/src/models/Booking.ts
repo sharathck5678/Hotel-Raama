@@ -61,6 +61,17 @@ export interface IBooking extends Document {
   notificationAttempts?: number;
   emailSentAt?: Date;
 
+  // Feedback System Tracking
+  feedbackToken?: string;
+  feedbackTokenExpiry?: Date;
+  feedbackRequestSent?: boolean;
+  feedbackRequestSentAt?: Date;
+  feedbackRequestStatus?: 'NOT_SENT' | 'PROCESSING' | 'SENT' | 'FAILED';
+  feedbackRequestError?: string;
+  feedbackSubmitted?: boolean;
+  feedbackSubmittedAt?: Date;
+  feedbackStatus?: 'NOT_RECEIVED' | 'RECEIVED' | 'ARCHIVED';
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -128,6 +139,25 @@ const BookingSchema = new Schema<IBooking>(
     guestConfirmationError: { type: String },
     notificationAttempts: { type: Number, default: 0 },
     emailSentAt: { type: Date },
+
+    // Feedback System Tracking
+    feedbackToken: { type: String, sparse: true, unique: true },
+    feedbackTokenExpiry: { type: Date },
+    feedbackRequestSent: { type: Boolean, default: false },
+    feedbackRequestSentAt: { type: Date },
+    feedbackRequestStatus: {
+      type: String,
+      enum: ['NOT_SENT', 'PROCESSING', 'SENT', 'FAILED'],
+      default: 'NOT_SENT',
+    },
+    feedbackRequestError: { type: String },
+    feedbackSubmitted: { type: Boolean, default: false },
+    feedbackSubmittedAt: { type: Date },
+    feedbackStatus: {
+      type: String,
+      enum: ['NOT_RECEIVED', 'RECEIVED', 'ARCHIVED'],
+      default: 'NOT_RECEIVED',
+    },
   },
   { timestamps: true }
 );
@@ -137,5 +167,6 @@ BookingSchema.index({ guestPhone: 1 });
 BookingSchema.index({ guestEmail: 1 });
 BookingSchema.index({ bookingStatus: 1, paymentStatus: 1 });
 BookingSchema.index({ razorpayOrderId: 1 });
+BookingSchema.index({ bookingStatus: 1, checkOut: 1, feedbackRequestSent: 1 });
 
 export const Booking = model<IBooking>('Booking', BookingSchema);
