@@ -20,7 +20,7 @@ import { EmailService } from '../services/EmailService';
 import { SocketService } from '../services/SocketService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
 import { AvailabilityEngine } from '../services/AvailabilityEngine';
-import { ensureDatabaseSeeded, runSeedLogic } from '../seed/seedDatabase';
+import { ensureDatabaseSeeded, runSeedLogic, OFFICIAL_ROOMS_SPEC } from '../seed/seedDatabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'raama_super_secret_jwt_key_2026_production';
 
@@ -476,7 +476,12 @@ export class AdminController {
    */
   static async getRooms(req: AuthRequest, res: Response) {
     try {
-      const rooms = await Room.find({ isActive: true }).populate('roomTypeId').lean();
+      const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+      const validVenueNames = ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'];
+      const rooms = await Room.find({
+        isActive: true,
+        roomNumber: { $in: [...officialRoomNumbers, ...validVenueNames] },
+      }).populate('roomTypeId').lean();
       rooms.sort((a, b) => {
         const numA = parseInt(a.roomNumber, 10);
         const numB = parseInt(b.roomNumber, 10);

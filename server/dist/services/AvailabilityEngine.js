@@ -5,6 +5,7 @@ const mongoose_1 = require("mongoose");
 const Room_1 = require("../models/Room");
 const RoomType_1 = require("../models/RoomType");
 const Booking_1 = require("../models/Booking");
+const seedDatabase_1 = require("../seed/seedDatabase");
 class AvailabilityEngine {
     /**
      * Check room availability for a specific room type between checkIn and checkOut dates
@@ -56,11 +57,12 @@ class AvailabilityEngine {
         const pooledTypes = await RoomType_1.RoomType.find({ code: { $in: pooledCodes } });
         const pooledTypeIds = pooledTypes.map((t) => t._id);
         // 1. Get all active guest rooms of this pooled type (strictly excluding special venues)
+        const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
         const rooms = await Room_1.Room.find({
             roomTypeId: { $in: pooledTypeIds },
             isActive: true,
             isVenue: { $ne: true },
-            roomNumber: { $nin: ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'] },
+            roomNumber: { $in: officialRoomNumbers },
         });
         const totalRooms = rooms.length;
         if (totalRooms === 0) {
@@ -117,10 +119,11 @@ class AvailabilityEngine {
      * Batch check availability for multiple room types (strictly guest rooms, excluding venues)
      */
     static async checkAllRoomTypesAvailability(checkIn, checkOut) {
+        const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
         const rooms = await Room_1.Room.find({
             isActive: true,
             isVenue: { $ne: true },
-            roomNumber: { $nin: ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'] },
+            roomNumber: { $in: officialRoomNumbers },
         });
         const now = new Date();
         const conflictingBookings = await Booking_1.Booking.find({
@@ -202,11 +205,12 @@ class AvailabilityEngine {
      */
     static async getPhysicalInventoryStatus(checkIn, checkOut) {
         const now = new Date();
-        // Fetch all active guest rooms (excluding venues, Room 104, and legacy rooms 1-40)
+        // Fetch all 37 official active guest rooms
+        const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
         const rooms = await Room_1.Room.find({
             isActive: true,
             isVenue: { $ne: true },
-            roomNumber: { $nin: ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room', '104'] },
+            roomNumber: { $in: officialRoomNumbers },
         })
             .populate('roomTypeId')
             .lean();

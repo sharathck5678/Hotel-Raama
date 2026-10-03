@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { Room } from '../models/Room';
 import { RoomType } from '../models/RoomType';
 import { Booking } from '../models/Booking';
+import { OFFICIAL_ROOMS_SPEC } from '../seed/seedDatabase';
 
 export interface IAvailabilityResult {
   roomTypeId: string;
@@ -67,11 +68,12 @@ export class AvailabilityEngine {
     const pooledTypeIds = pooledTypes.map((t) => t._id);
 
     // 1. Get all active guest rooms of this pooled type (strictly excluding special venues)
+    const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
     const rooms = await Room.find({
       roomTypeId: { $in: pooledTypeIds },
       isActive: true,
       isVenue: { $ne: true },
-      roomNumber: { $nin: ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'] },
+      roomNumber: { $in: officialRoomNumbers },
     });
     const totalRooms = rooms.length;
 
@@ -138,10 +140,11 @@ export class AvailabilityEngine {
    * Batch check availability for multiple room types (strictly guest rooms, excluding venues)
    */
   static async checkAllRoomTypesAvailability(checkIn: Date, checkOut: Date) {
+    const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
     const rooms = await Room.find({
       isActive: true,
       isVenue: { $ne: true },
-      roomNumber: { $nin: ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'] },
+      roomNumber: { $in: officialRoomNumbers },
     });
     const now = new Date();
 
@@ -242,11 +245,12 @@ export class AvailabilityEngine {
   static async getPhysicalInventoryStatus(checkIn: Date, checkOut: Date) {
     const now = new Date();
 
-    // Fetch all active guest rooms (excluding venues, Room 104, and legacy rooms 1-40)
+    // Fetch all 37 official active guest rooms
+    const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
     const rooms = await Room.find({
       isActive: true,
       isVenue: { $ne: true },
-      roomNumber: { $nin: ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room', '104'] },
+      roomNumber: { $in: officialRoomNumbers },
     })
       .populate('roomTypeId')
       .lean();

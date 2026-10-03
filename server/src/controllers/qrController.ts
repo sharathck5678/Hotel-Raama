@@ -7,6 +7,7 @@ import { MenuItem } from '../models/MenuItem';
 import { Order, IOrderItem } from '../models/Order';
 import { SocketService } from '../services/SocketService';
 import { RazorpayService } from '../services/RazorpayService';
+import { OFFICIAL_ROOMS_SPEC } from '../seed/seedDatabase';
 
 export class QrController {
   /**
@@ -62,7 +63,12 @@ export class QrController {
         }
       }
 
-      const rooms = await Room.find({ isActive: true }).populate('roomTypeId').lean();
+      const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+      const validVenueNames = ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'];
+      const rooms = await Room.find({
+        isActive: true,
+        roomNumber: { $in: [...officialRoomNumbers, ...validVenueNames] },
+      }).populate('roomTypeId').lean();
       
       // Sort numerically by roomNumber if numeric, or put Party Hall & Board Room at end
       rooms.sort((a, b) => {

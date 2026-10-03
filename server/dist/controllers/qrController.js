@@ -12,6 +12,7 @@ const MenuItem_1 = require("../models/MenuItem");
 const Order_1 = require("../models/Order");
 const SocketService_1 = require("../services/SocketService");
 const RazorpayService_1 = require("../services/RazorpayService");
+const seedDatabase_1 = require("../seed/seedDatabase");
 class QrController {
     /**
      * GET /api/qr/all-codes
@@ -64,7 +65,12 @@ class QrController {
                     });
                 }
             }
-            const rooms = await Room_1.Room.find({ isActive: true }).populate('roomTypeId').lean();
+            const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+            const validVenueNames = ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'];
+            const rooms = await Room_1.Room.find({
+                isActive: true,
+                roomNumber: { $in: [...officialRoomNumbers, ...validVenueNames] },
+            }).populate('roomTypeId').lean();
             // Sort numerically by roomNumber if numeric, or put Party Hall & Board Room at end
             rooms.sort((a, b) => {
                 const numA = parseInt(a.roomNumber, 10);

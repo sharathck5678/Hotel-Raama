@@ -431,7 +431,12 @@ class AdminController {
      */
     static async getRooms(req, res) {
         try {
-            const rooms = await Room_1.Room.find({ isActive: true }).populate('roomTypeId').lean();
+            const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+            const validVenueNames = ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'];
+            const rooms = await Room_1.Room.find({
+                isActive: true,
+                roomNumber: { $in: [...officialRoomNumbers, ...validVenueNames] },
+            }).populate('roomTypeId').lean();
             rooms.sort((a, b) => {
                 const numA = parseInt(a.roomNumber, 10);
                 const numB = parseInt(b.roomNumber, 10);

@@ -217,11 +217,10 @@ export const runSeedLogic = async (clearExisting = false) => {
     const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map(r => r.roomNumber);
     const validVenueNames = ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'];
 
-    // 1. Production safety: Mark obsolete rooms (1-40) inactive instead of deleting to preserve historical bookings/orders
-    await Room.updateMany(
-      { roomNumber: { $nin: [...officialRoomNumbers, ...validVenueNames] } },
-      { $set: { isActive: false } }
-    );
+    // 1. Remove obsolete rooms (1-40) permanently so only the official 37 rooms + 2 venues exist
+    await Room.deleteMany({
+      roomNumber: { $nin: [...officialRoomNumbers, ...validVenueNames] }
+    });
 
     // 2. Upsert each of the 37 official rooms
     for (const spec of OFFICIAL_ROOMS_SPEC) {
@@ -1144,12 +1143,33 @@ export const runSeedLogic = async (clearExisting = false) => {
 
 export const ensureDatabaseSeeded = async () => {
   try {
+    const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+    const validVenueNames = ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'];
+
+    // 1. Permanently remove obsolete/legacy rooms (rooms 1-40) from MongoDB on startup
+    const deleteResult = await Room.deleteMany({
+      roomNumber: { $nin: [...officialRoomNumbers, ...validVenueNames] },
+    });
+    if (deleteResult.deletedCount > 0) {
+      console.log(`[AutoSeed] Permanently removed ${deleteResult.deletedCount} legacy room records.`);
+    }
+
     const itemCount = await MenuItem.countDocuments();
     const roomTypeCount = await RoomType.countDocuments();
-    if (itemCount === 0 || roomTypeCount === 0) {
-      console.log(`[AutoSeed] Missing data detected (MenuItems: ${itemCount}, RoomTypes: ${roomTypeCount}). Auto-seeding database now...`);
+    const activeGuestRoomsCount = await Room.countDocuments({
+      isActive: true,
+      isVenue: { $ne: true },
+      roomNumber: { $in: officialRoomNumbers },
+    });
+
+    const needsInventorySync = itemCount === 0 || roomTypeCount === 0 || activeGuestRoomsCount !== 37;
+
+    if (needsInventorySync) {
+      console.log(
+        `[AutoSeed] Syncing database inventory (MenuItems: ${itemCount}, RoomTypes: ${roomTypeCount}, ActiveRooms: ${activeGuestRoomsCount}/37)...`
+      );
       await runSeedLogic(false);
-      console.log('[AutoSeed] Auto-seeding finished.');
+      console.log('[AutoSeed] Official 37 rooms + 2 venues synchronized successfully.');
     }
   } catch (err) {
     console.error('[AutoSeed Error]:', err);
