@@ -3,10 +3,11 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, CreditCard, ChevronLeft, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchRoomTypes, checkAvailability, createBookingHold, verifyBookingPayment, cancelBookingHold } from '../services/api';
+import { fetchRoomTypes, checkAvailability, validateCoupon, createBookingHold, verifyBookingPayment, cancelBookingHold } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 import { SEO } from '../components/SEO';
 import { formatAadharInput, validateAadhar } from '../utils/aadharValidator';
+import { validateGSTIN } from '../utils/gstinValidator';
 
 declare global {
   interface Window {
@@ -169,6 +170,10 @@ export const RoomsPage: React.FC = () => {
   const [lunch, setLunch] = useState(false);
   const [dinner, setDinner] = useState(false);
   const [couponCode, setCouponCode] = useState('');
+  const [gstin, setGstin] = useState('');
+  const [gstinError, setGstinError] = useState('');
+  const [couponStatus, setCouponStatus] = useState<{ valid: boolean; message: string } | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
@@ -239,6 +244,7 @@ export const RoomsPage: React.FC = () => {
       couponCode,
       planType,
       extraPerson,
+      gstin,
     })
       .then((res) => {
         if (res.success) {
@@ -248,7 +254,7 @@ export const RoomsPage: React.FC = () => {
       .catch((err) => {
         console.error(err);
       });
-  }, [selectedRoom, checkIn, checkOut, numGuests, breakfast, lunch, dinner, couponCode, planType, extraPerson]);
+  }, [selectedRoom, checkIn, checkOut, numGuests, breakfast, lunch, dinner, couponCode, planType, extraPerson, gstin]);
 
   const handleAadharChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawDigits = e.target.value.replace(/\D/g, '').slice(0, 12);
@@ -261,6 +267,77 @@ export const RoomsPage: React.FC = () => {
     } else {
       const check = validateAadhar(formatted);
       setAadharError(check.isValid ? '' : check.message || 'Invalid Aadhaar number');
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    const rawCode = couponCode.trim();
+    if (!rawCode) {
+      toast.error('Please enter a coupon code.');
+      setCouponStatus({ valid: false, message: 'Please enter a coupon code.' });
+      return;
+    }
+
+    if (rawCode.includes(',') || rawCode.includes('+') || rawCode.includes('&') || /\s+/.test(rawCode)) {
+      toast.error('Only one coupon can be applied per booking.');
+      setCouponStatus({ valid: false, message: 'Only one coupon can be applied per booking.' });
+      return;
+    }
+
+    const cleanCode = rawCode.toUpperCase();
+    if (cleanCode !== 'WELCOME10' && cleanCode !== 'WELCOME15') {
+      toast.error('Invalid coupon code.');
+      setCouponStatus({ valid: false, message: 'Invalid coupon code.' });
+      return;
+    }
+
+    const cleanGstin = gstin.trim().toUpperCase();
+    if (!cleanGstin) {
+      toast.error('GSTIN is required to apply this coupon.');
+      setGstinError('GSTIN is required to apply this coupon.');
+      setCouponStatus({ valid: false, message: 'GSTIN is required to apply this coupon.' });
+      return;
+    }
+
+    const gstinCheck = validateGSTIN(cleanGstin);
+    if (!gstinCheck.isValid) {
+      toast.error('Please enter a valid GSTIN.');
+      setGstinError('Please enter a valid GSTIN.');
+      setCouponStatus({ valid: false, message: 'Please enter a valid GSTIN.' });
+      return;
+    }
+
+    setGstinError('');
+    setApplyingCoupon(true);
+
+    try {
+      const res = await validateCoupon({
+        couponCode: cleanCode,
+        gstin: cleanGstin,
+        roomTypeId: selectedRoom?._id,
+        checkIn,
+        checkOut,
+        numGuests,
+        mealSelection: { breakfast, lunch, dinner },
+        planType,
+        extraPerson,
+      });
+
+      if (res.success && res.data?.valid) {
+        toast.success(res.message || `Coupon ${cleanCode} applied!`);
+        setCouponStatus({ valid: true, message: `✓ Coupon ${cleanCode} applied (${res.data.discountPercentage}% discount)` });
+        if (res.data?.pricing) {
+          setCalcResult((prev: any) => ({ ...prev, pricing: res.data.pricing }));
+        }
+      } else {
+        toast.error(res.message || 'Invalid coupon code.');
+        setCouponStatus({ valid: false, message: res.message || 'Invalid coupon code.' });
+      }
+    } catch (err: any) {
+      toast.error('Unable to apply coupon. Please try again.');
+      setCouponStatus({ valid: false, message: 'Unable to apply coupon. Please try again.' });
+    } finally {
+      setApplyingCoupon(false);
     }
   };
 
@@ -310,6 +387,7 @@ export const RoomsPage: React.FC = () => {
         specialRequests,
         planType,
         extraPerson,
+        gstin: gstin.trim().toUpperCase(),
       });
 
       if (!res.success || !res.data) {
@@ -435,7 +513,7 @@ export const RoomsPage: React.FC = () => {
           </span>
           <h1 className="editorial-section-title text-[#00174A]">Rooms & Luxury Suites</h1>
           <p className="font-sans text-xs sm:text-sm text-[#666666] mt-3 max-w-xl mx-auto leading-relaxed">
-            Guaranteed direct tariffs. Transparent 12% GST breakdown, CP (Breakfast included) or EP (Room Only) options.
+            Guaranteed direct tariffs. Transparent 5% GST breakdown, CP (Breakfast included) or EP (Room Only) options.
           </p>
 
           {/* Filter Buttons */}
@@ -580,6 +658,22 @@ export const RoomsPage: React.FC = () => {
               <div className="rounded-sm overflow-hidden border border-[#cbc0ad]">
                 <RoomSlideshow images={selectedRoom.images} roomName={selectedRoom.name} />
               </div>
+
+              {selectedRoom.amenities && selectedRoom.amenities.length > 0 && (
+                <div className="pt-1">
+                  <span className="text-[10px] font-sans uppercase tracking-wider text-[#666666] font-semibold block mb-2">Included Amenities & Facilities</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedRoom.amenities.map((amenity: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="text-[10px] font-sans px-2.5 py-1 rounded-sm bg-[#0B1849]/5 text-[#333333] flex items-center gap-1 border border-[#cbc0ad] font-medium"
+                      >
+                        <Check size={11} className="text-[#333333]" /> {amenity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleBookingSubmit} className="space-y-6">
@@ -657,7 +751,7 @@ export const RoomsPage: React.FC = () => {
                       🍳 CP Plan (With Breakfast)
                       <span className="text-sm font-serif font-extrabold">₹{selectedRoom.cpPrice || selectedRoom.basePrice + 150}</span>
                     </span>
-                    <span className="text-[10px] font-sans text-[#666666]">Complimentary morning breakfast included</span>
+                    <span className="text-[10px] font-sans text-[#666666]">Morning breakfast included</span>
                   </button>
                 </div>
               </div>
@@ -719,51 +813,86 @@ export const RoomsPage: React.FC = () => {
                 </label>
               </div>
 
-              {/* Coupon Code Input */}
-              <div className="space-y-1.5">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Coupon Code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase().trim())}
-                    className={`flex-1 bg-white border rounded-sm px-3.5 py-2 text-xs font-sans uppercase text-[#333333] placeholder-[#999999] focus:outline-none transition-colors ${couponCode
-                      ? couponCode === 'RAAMA5'
-                        ? 'border-emerald-600 focus:border-emerald-600'
-                        : 'border-rose-400 focus:border-rose-400'
-                      : 'border-[#cbc0ad] focus:border-[#00174A]'
-                      }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const cleanCode = couponCode.trim().toUpperCase();
-                      if (!cleanCode) {
-                        toast.error('Please enter a coupon code.');
-                      } else if (cleanCode === 'RAAMA5') {
-                        toast.success('Coupon RAAMA5 applied! 5% discount added.');
-                      } else {
-                        toast.error('Invalid coupon code.');
-                      }
-                    }}
-                    className="px-4 py-2 bg-[#D6B369] text-xs font-sans uppercase font-bold rounded-sm hover:bg-[#E8C56A] text-[#00174A] cursor-pointer transition-colors"
-                  >
-                    Apply
-                  </button>
+              {/* Promotional Coupon & GSTIN Section */}
+              <div className="space-y-2 pt-2 border-t border-[#cbc0ad]/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-sans font-bold text-[#D6B369] uppercase tracking-wider">
+                    Promotional Coupon
+                  </span>
                 </div>
-                {couponCode && (
+
+                <div className="space-y-2">
                   <div>
-                    {couponCode === 'RAAMA5' ? (
-                      <span className="text-[11px] font-sans text-emerald-700 flex items-center gap-1">
-                        ✓ Coupon RAAMA5 applied (5% discount)
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-sans text-rose-600 flex items-center gap-1">
-                        ✕ Invalid coupon code
-                      </span>
+                    <label className="block text-[10px] font-bold text-[#00174A] uppercase mb-1">
+                      Coupon Code
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ENTER COUPON CODE"
+                      value={couponCode}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase().replace(/\s/g, '');
+                        setCouponCode(val);
+                        setCouponStatus(null);
+                      }}
+                      className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans uppercase text-[#333333] placeholder-[#999999] focus:outline-none focus:border-[#00174A] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#00174A] uppercase mb-1">
+                      GSTIN (Required for coupon)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter 15-digit GSTIN (e.g. 22AAAAA0000A1Z5)"
+                      value={gstin}
+                      maxLength={15}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase().replace(/\s/g, '').slice(0, 15);
+                        setGstin(val);
+                        setGstinError('');
+                        setCouponStatus(null);
+                      }}
+                      className={`w-full bg-white border rounded-sm px-3.5 py-2 text-xs font-sans uppercase text-[#333333] placeholder-[#999999] focus:outline-none transition-colors ${
+                        gstinError ? 'border-rose-400 focus:border-rose-500' : 'border-[#cbc0ad] focus:border-[#00174A]'
+                      }`}
+                    />
+                    {gstinError && (
+                      <p className="text-[10px] font-sans text-rose-600 mt-1">
+                        {gstinError}
+                      </p>
                     )}
                   </div>
-                )}
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <p className="text-[10px] text-[#666666] font-sans italic">
+                      GSTIN is required to apply promotional coupons.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={applyingCoupon}
+                      className="px-4 py-1.5 bg-[#D6B369] text-xs font-sans uppercase font-bold rounded-sm hover:bg-[#E8C56A] text-[#00174A] cursor-pointer transition-colors whitespace-nowrap disabled:opacity-50"
+                    >
+                      {applyingCoupon ? 'Applying...' : 'Apply Coupon'}
+                    </button>
+                  </div>
+
+                  {couponStatus && (
+                    <div className="pt-1">
+                      {couponStatus.valid ? (
+                        <span className="text-[11px] font-sans font-semibold text-emerald-700 flex items-center gap-1">
+                          {couponStatus.message}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-sans font-semibold text-rose-600 flex items-center gap-1">
+                          ✕ {couponStatus.message}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Guest Details */}
@@ -855,10 +984,10 @@ export const RoomsPage: React.FC = () => {
 
 
               {/* Price Breakdown Calculation */}
-              {calcResult && (
+              {calcResult && calcResult.pricing && (
                 <div className="p-4 bg-white/80 rounded-sm border border-[#cbc0ad] space-y-2 text-xs font-sans">
                   <div className="flex justify-between text-[#333333]">
-                    <span>Room ({calcResult.pricing.numNights} night{calcResult.pricing.numNights > 1 ? 's' : ''} x ₹{calcResult.pricing.roomPricePerNight}):</span>
+                    <span>Room Charges ({calcResult.pricing.numNights} night{calcResult.pricing.numNights > 1 ? 's' : ''} x ₹{calcResult.pricing.roomPricePerNight}):</span>
                     <span>₹{calcResult.pricing.roomTotal}</span>
                   </div>
                   {calcResult.pricing.extraPersonTotal > 0 && (
@@ -869,22 +998,26 @@ export const RoomsPage: React.FC = () => {
                   )}
                   {calcResult.pricing.mealPlanTotal > 0 && (
                     <div className="flex justify-between text-[#333333]">
-                      <span>Meals Addon:</span>
-                      <span>₹{calcResult.pricing.mealPlanTotal}</span>
+                      <span>Meals Add-on:</span>
+                      <span>+ ₹{calcResult.pricing.mealPlanTotal}</span>
                     </div>
                   )}
+                  <div className="flex justify-between text-[#333333] pt-1 border-t border-dashed border-[#cbc0ad]/60 font-medium">
+                    <span>Subtotal:</span>
+                    <span>₹{calcResult.pricing.subtotal}</span>
+                  </div>
                   {calcResult.pricing.discountAmount > 0 && (
                     <div className="flex justify-between text-emerald-700 font-semibold">
-                      <span>Coupon Discount ({calcResult.pricing.couponCode}):</span>
+                      <span>Coupon: {calcResult.pricing.couponCode}</span>
                       <span>- ₹{calcResult.pricing.discountAmount}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-[#666666]">
-                    <span>GST (12%):</span>
+                    <span>GST ({calcResult.pricing.taxPercentage ?? 5}%):</span>
                     <span>₹{calcResult.pricing.taxAmount}</span>
                   </div>
                   <div className="flex justify-between text-sm font-bold text-[#00174A] pt-2 border-t border-[#cbc0ad]">
-                    <span>Total Amount Payable:</span>
+                    <span>Total:</span>
                     <span>₹{calcResult.pricing.totalAmount}</span>
                   </div>
                 </div>

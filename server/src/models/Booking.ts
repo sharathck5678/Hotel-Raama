@@ -19,8 +19,9 @@ export interface IBookingMealSelection {
 
 export interface IBooking extends Document {
   bookingId: string; // e.g. "HR-2026-8942"
+  source: 'ONLINE' | 'OFFLINE';
   guestName: string;
-  guestEmail: string;
+  guestEmail?: string;
   guestPhone: string;
   guestAadhar?: string;
   roomTypeId: Types.ObjectId;
@@ -30,6 +31,8 @@ export interface IBooking extends Document {
   numGuests: number;
   numNights: number;
   specialRequests?: string;
+  adminNotes?: string;
+  createdBy?: string;
   
   // Historical Snapshots (Locked at booking creation)
   roomPricePerNightSnapshot: number;
@@ -37,8 +40,10 @@ export interface IBooking extends Document {
   extraPerson?: boolean;
   extraPersonChargeSnapshot?: number;
   couponCodeSnapshot?: string;
+  discountPercentageSnapshot?: number;
   discountAmountSnapshot: number;
-
+  gstin?: string;
+  taxRateSnapshot?: number;
   taxAmountSnapshot: number;
   totalAmount: number;
 
@@ -79,8 +84,9 @@ export interface IBooking extends Document {
 const BookingSchema = new Schema<IBooking>(
   {
     bookingId: { type: String, required: true, unique: true },
+    source: { type: String, enum: ['ONLINE', 'OFFLINE'], default: 'ONLINE', index: true },
     guestName: { type: String, required: true, trim: true },
-    guestEmail: { type: String, required: true, lowercase: true, trim: true },
+    guestEmail: { type: String, lowercase: true, trim: true },
     guestPhone: { type: String, required: true, trim: true },
     guestAadhar: { type: String, trim: true },
     roomTypeId: { type: Schema.Types.ObjectId, ref: 'RoomType', required: true },
@@ -90,6 +96,8 @@ const BookingSchema = new Schema<IBooking>(
     numGuests: { type: Number, required: true, default: 1 },
     numNights: { type: Number, required: true, default: 1 },
     specialRequests: { type: String },
+    adminNotes: { type: String, trim: true },
+    createdBy: { type: String, trim: true },
 
     roomPricePerNightSnapshot: { type: Number, required: true },
     mealPlanSelection: {
@@ -101,8 +109,10 @@ const BookingSchema = new Schema<IBooking>(
     extraPerson: { type: Boolean, default: false },
     extraPersonChargeSnapshot: { type: Number, default: 0 },
     couponCodeSnapshot: { type: String },
-
+    discountPercentageSnapshot: { type: Number, default: 0 },
     discountAmountSnapshot: { type: Number, default: 0 },
+    gstin: { type: String, trim: true },
+    taxRateSnapshot: { type: Number, default: 5 },
     taxAmountSnapshot: { type: Number, default: 0 },
     totalAmount: { type: Number, required: true },
 
@@ -163,6 +173,8 @@ const BookingSchema = new Schema<IBooking>(
 );
 
 BookingSchema.index({ checkIn: 1, checkOut: 1 });
+BookingSchema.index({ assignedRoomId: 1, checkIn: 1, checkOut: 1 });
+BookingSchema.index({ source: 1, createdAt: -1 });
 BookingSchema.index({ guestPhone: 1 });
 BookingSchema.index({ guestEmail: 1 });
 BookingSchema.index({ bookingStatus: 1, paymentStatus: 1 });

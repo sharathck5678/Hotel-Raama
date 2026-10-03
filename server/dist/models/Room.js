@@ -13,6 +13,9 @@ const RoomSchema = new mongoose_1.Schema({
     },
     qrToken: { type: String, required: true, unique: true },
     isActive: { type: Boolean, default: true },
+    isVenue: { type: Boolean, default: false },
 }, { timestamps: true });
 RoomSchema.index({ status: 1 });
+RoomSchema.index({ isActive: 1, isVenue: 1 });
+RoomSchema.index({ roomTypeId: 1, isActive: 1 });
 exports.Room = (0, mongoose_1.model)('Room', RoomSchema);

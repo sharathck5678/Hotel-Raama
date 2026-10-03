@@ -33,7 +33,7 @@ const HotelSettingSchema = new Schema<IHotelSetting>(
     email: { type: String, default: 'hotelraama.hsn@gmail.com' },
     receptionWhatsapp: { type: String, default: '917899511330' },
     notificationEmail: { type: String, default: 'admin@hotelraama.com' },
-    taxPercentage: { type: Number, default: 12 },
+    taxPercentage: { type: Number, default: 5 },
     serviceChargePercentage: { type: Number, default: 0 },
     checkInTime: { type: String, default: '12:00 PM' },
     checkOutTime: { type: String, default: '12:00 PM' },

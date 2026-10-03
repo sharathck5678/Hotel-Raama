@@ -161,7 +161,7 @@ export const QrOrderingSectionPage: React.FC = () => {
               QR Ordering Directory & Room Cards
             </h1>
             <p className="font-sans text-xs sm:text-sm text-[#667085] leading-relaxed">
-              Manage static QR codes for Rooms 1 through 40, Sambhrama Banquet Hall, and Board Room. Click or scan any card to launch guest ordering for <strong className="text-[#00174A]">Swaad Pure Veg</strong>, <strong className="text-[#00174A]">Non-Veg Specialities</strong>, and <strong className="text-[#00174A]">Liquid Lounge Bar</strong>.
+              Manage static QR codes for 37 Guest Rooms (Floors 1-3), Sambhrama Banquet Hall, and Board Room. Click or scan any card to launch guest ordering for <strong className="text-[#00174A]">Swaad Pure Veg</strong>, <strong className="text-[#00174A]">Non-Veg Specialities</strong>, and <strong className="text-[#00174A]">Liquid Lounge Bar</strong>.
             </p>
           </div>
         </ScrollReveal>
@@ -190,7 +190,7 @@ export const QrOrderingSectionPage: React.FC = () => {
                     : 'text-[#667085] hover:text-[#00174A]'
                 }`}
               >
-                Rooms 1-40 ({rooms.filter(r => !isVenueRoom(r.roomNumber)).length})
+                Guest Rooms ({rooms.filter(r => !isVenueRoom(r.roomNumber)).length})
               </button>
               <button
                 onClick={() => setActiveFilter('VENUES')}

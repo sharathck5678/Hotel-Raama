@@ -15,13 +15,14 @@ const RazorpayService_1 = require("../services/RazorpayService");
 class QrController {
     /**
      * GET /api/qr/all-codes
-     * Fetches all 40 room QRs + Sambhrama Party Hall & Board Room QR tokens for public ordering portal
+     * Fetches all 37 active guest room QRs + Sambhrama Banquet Hall & Board Room QR tokens (39 total active destinations)
      */
     static async getAllQrCodes(req, res) {
         try {
-            // 1. Auto-ensure Sambhrama Party Hall exists
+            // 1. Auto-ensure Sambhrama Banquet Hall exists
             const existingPartyHall = await Room_1.Room.findOne({
                 $or: [
+                    { roomNumber: 'Sambhrama Banquet Hall' },
                     { roomNumber: 'Sambhrama Party Hall' },
                     { roomNumber: { $regex: /party|hall|sambhrama/i } },
                     { qrToken: 'qr_token_party_hall' },
@@ -31,12 +32,13 @@ class QrController {
                 const roomType = (await RoomType_1.RoomType.findOne({ code: 'SUITE_ROOM' })) || (await RoomType_1.RoomType.findOne());
                 if (roomType) {
                     await Room_1.Room.create({
-                        roomNumber: 'Sambhrama Party Hall',
+                        roomNumber: 'Sambhrama Banquet Hall',
                         roomTypeId: roomType._id,
                         floor: 1,
                         status: 'AVAILABLE',
                         qrToken: 'qr_token_party_hall',
                         isActive: true,
+                        isVenue: true,
                     });
                 }
             }
@@ -58,6 +60,7 @@ class QrController {
                         status: 'AVAILABLE',
                         qrToken: 'qr_token_board_room',
                         isActive: true,
+                        isVenue: true,
                     });
                 }
             }
@@ -113,12 +116,13 @@ class QrController {
                 const roomType = (await RoomType_1.RoomType.findOne({ code: 'SUITE_ROOM' })) || (await RoomType_1.RoomType.findOne());
                 if (roomType) {
                     room = await Room_1.Room.create({
-                        roomNumber: 'Sambhrama Party Hall',
+                        roomNumber: 'Sambhrama Banquet Hall',
                         roomTypeId: roomType._id,
                         floor: 1,
                         status: 'AVAILABLE',
                         qrToken: cleanToken || 'qr_token_party_hall',
                         isActive: true,
+                        isVenue: true,
                     });
                 }
             }
@@ -132,6 +136,7 @@ class QrController {
                         status: 'AVAILABLE',
                         qrToken: cleanToken || 'qr_token_board_room',
                         isActive: true,
+                        isVenue: true,
                     });
                 }
             }

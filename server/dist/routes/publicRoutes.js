@@ -6,6 +6,7 @@ const rateLimiter_1 = require("../middleware/rateLimiter");
 const router = (0, express_1.Router)();
 router.get('/rooms', publicController_1.PublicController.getRoomTypes);
 router.post('/availability/check', publicController_1.PublicController.checkAvailabilityAndPrice);
+router.post('/coupons/validate', publicController_1.PublicController.validateCoupon);
 router.post('/bookings', rateLimiter_1.bookingLimiter, publicController_1.PublicController.createBooking);
 router.post('/bookings/verify-payment', publicController_1.PublicController.verifyPayment);
 router.post('/bookings/cancel', publicController_1.PublicController.cancelBooking);

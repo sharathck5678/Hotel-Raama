@@ -6,6 +6,7 @@ const router = Router();
 
 router.get('/rooms', PublicController.getRoomTypes);
 router.post('/availability/check', PublicController.checkAvailabilityAndPrice);
+router.post('/coupons/validate', PublicController.validateCoupon);
 router.post('/bookings', bookingLimiter, PublicController.createBooking);
 router.post('/bookings/verify-payment', PublicController.verifyPayment);
 router.post('/bookings/cancel', PublicController.cancelBooking);

@@ -31,9 +31,14 @@ router.get('/orders', AdminController.getOrders);
 router.patch('/orders/:id/status', AdminController.updateOrderStatus);
 router.patch('/orders/:id/payment', AdminController.updateOrderPayment);
 
-// Rooms
+// Rooms & Inventory Management
 router.get('/rooms', AdminController.getRooms);
 router.patch('/rooms/:id/status', AdminController.updateRoomStatus);
+router.get('/inventory', AdminController.getInventoryStatus);
+router.post('/inventory/offline-booking', AdminController.createOfflineBooking);
+router.get('/inventory/offline-bookings', AdminController.getOfflineBookings);
+router.patch('/inventory/offline-booking/:id', AdminController.updateOfflineBooking);
+router.post('/inventory/offline-booking/:id/cancel', AdminController.cancelOfflineBooking);
 
 // Reports & Billing
 router.get('/reports/customer-history', AdminController.getCustomerHistory);

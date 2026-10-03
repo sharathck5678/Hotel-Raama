@@ -51,6 +51,10 @@ export interface BookingPdfData {
   };
   taxAmountSnapshot?: number;
   discountAmountSnapshot?: number;
+  couponCodeSnapshot?: string;
+  discountPercentageSnapshot?: number;
+  gstin?: string;
+  taxRateSnapshot?: number;
   totalAmount?: number;
   paymentStatus?: string;
   createdAt?: string | Date;
@@ -342,11 +346,23 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
     doc.text(`Phone: ${booking.guestPhone || 'N/A'}`, rightBoxX, yPos + 25);
     if (booking.guestAadhar) {
       doc.text(`Aadhaar: ${booking.guestAadhar}`, rightBoxX, yPos + 30);
-      doc.text(`Guests: ${guests} Person${guests > 1 ? 's' : ''}`, rightBoxX, yPos + 35);
-      doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`, rightBoxX, yPos + 40);
+      if ((booking as any).gstin) {
+        doc.text(`GSTIN: ${(booking as any).gstin}`, rightBoxX, yPos + 35);
+        doc.text(`Guests: ${guests} Person${guests > 1 ? 's' : ''}`, rightBoxX, yPos + 40);
+        doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`, rightBoxX, yPos + 45);
+      } else {
+        doc.text(`Guests: ${guests} Person${guests > 1 ? 's' : ''}`, rightBoxX, yPos + 35);
+        doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`, rightBoxX, yPos + 40);
+      }
     } else {
-      doc.text(`Guests: ${guests} Person${guests > 1 ? 's' : ''}`, rightBoxX, yPos + 31);
-      doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`, rightBoxX, yPos + 36);
+      if ((booking as any).gstin) {
+        doc.text(`GSTIN: ${(booking as any).gstin}`, rightBoxX, yPos + 30);
+        doc.text(`Guests: ${guests} Person${guests > 1 ? 's' : ''}`, rightBoxX, yPos + 35);
+        doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`, rightBoxX, yPos + 40);
+      } else {
+        doc.text(`Guests: ${guests} Person${guests > 1 ? 's' : ''}`, rightBoxX, yPos + 31);
+        doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`, rightBoxX, yPos + 36);
+      }
     }
 
     // Tariff Breakdown Table
@@ -365,9 +381,10 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
     }
 
     if (discount > 0) {
+      const couponLabel = booking.couponCodeSnapshot ? `Coupon Discount (${booking.couponCodeSnapshot})` : 'Applied Promotional / Coupon Discount';
       tableBody.push([
         (tableBody.length + 1).toString(),
-        'Applied Promotional / Coupon Discount',
+        couponLabel,
         '--',
         `--`,
         `- Rs. ${discount.toFixed(2)}`,
@@ -375,9 +392,10 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
     }
 
     if (tax > 0) {
+      const taxRate = (booking as any).taxRateSnapshot || 5;
       tableBody.push([
         (tableBody.length + 1).toString(),
-        'Goods & Services Tax (GST 12%)',
+        `Goods & Services Tax (GST ${taxRate}%)`,
         '--',
         `--`,
         `Rs. ${tax.toFixed(2)}`,

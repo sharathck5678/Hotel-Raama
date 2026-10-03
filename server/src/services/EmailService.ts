@@ -215,8 +215,9 @@ export class EmailService {
         <tr><td class="label">Room Tariff (Snapshot)</td><td class="value">${this.formatCurrency(booking.roomPricePerNightSnapshot)} / night</td></tr>
         ${booking.extraPerson ? `<tr><td class="label">Extra Person Total</td><td class="value">${this.formatCurrency(booking.extraPersonChargeSnapshot || 0)}</td></tr>` : ''}
         ${booking.mealPlanSelection?.pricePerNight ? `<tr><td class="label">Meal Plan Total</td><td class="value">${this.formatCurrency((booking.mealPlanSelection.pricePerNight || 0) * booking.numNights)}</td></tr>` : ''}
-        ${booking.discountAmountSnapshot ? `<tr><td class="label">Discount Applied (${booking.couponCodeSnapshot || 'Coupon'})</td><td class="value" style="color: #dc2626;">-${this.formatCurrency(booking.discountAmountSnapshot)}</td></tr>` : ''}
-        <tr><td class="label">GST (12% Snapshot)</td><td class="value">${this.formatCurrency(booking.taxAmountSnapshot)}</td></tr>
+        ${booking.gstin ? `<tr><td class="label">Guest GSTIN</td><td class="value"><strong>${booking.gstin}</strong></td></tr>` : ''}
+        ${booking.discountAmountSnapshot ? `<tr><td class="label">Discount Applied (${booking.couponCodeSnapshot || 'Coupon'} - ${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%)</td><td class="value" style="color: #dc2626;">-${this.formatCurrency(booking.discountAmountSnapshot)}</td></tr>` : ''}
+        <tr><td class="label">GST (${booking.taxRateSnapshot ?? 5}% Snapshot)</td><td class="value">${this.formatCurrency(booking.taxAmountSnapshot)}</td></tr>
         <tr style="background-color: #fefce8;"><td class="label" style="font-size: 14px; color: #0b1849;"><strong>Total Amount Collected</strong></td><td class="value" style="font-size: 16px; color: #0b1849; font-weight: bold;">${this.formatCurrency(booking.totalAmount)}</td></tr>
       </table>
     </div>
@@ -256,7 +257,7 @@ STAY DETAILS:
 
 FINANCIAL BREAKDOWN:
 - Room Rate per Night: ${this.formatCurrency(booking.roomPricePerNightSnapshot)}
-- GST Tax: ${this.formatCurrency(booking.taxAmountSnapshot)}
+${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmountSnapshot ? `- Coupon Applied: ${booking.couponCodeSnapshot} (${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%): -${this.formatCurrency(booking.discountAmountSnapshot)}\n` : ''}- GST Tax (${booking.taxRateSnapshot ?? 5}%): ${this.formatCurrency(booking.taxAmountSnapshot)}
 - Total Amount Paid: ${this.formatCurrency(booking.totalAmount)}
 ===============================================
     `.trim();
@@ -374,7 +375,11 @@ FINANCIAL BREAKDOWN:
         <div class="details-row"><span class="details-label">Duration</span><span class="details-value">${booking.numNights} Night(s)</span></div>
         <div class="details-row"><span class="details-label">Meal Inclusions</span><span class="details-value">${mealPlanSummary}</span></div>
         <div class="details-row"><span class="details-label">Payment Status</span><span class="details-value" style="color: #059669;">PAID IN FULL</span></div>
-        <div class="details-row"><span class="details-label">GST Tax (12%)</span><span class="details-value">${this.formatCurrency(booking.taxAmountSnapshot)}</span></div>
+        ${booking.gstin ? `<div class="details-row"><span class="details-label">GSTIN</span><span class="details-value">${booking.gstin}</span></div>` : ''}
+        ${booking.discountAmountSnapshot ? `
+        <div class="details-row"><span class="details-label">Coupon Code</span><span class="details-value">${booking.couponCodeSnapshot}</span></div>
+        <div class="details-row"><span class="details-label">Discount (${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%)</span><span class="details-value" style="color: #dc2626;">-${this.formatCurrency(booking.discountAmountSnapshot)}</span></div>` : ''}
+        <div class="details-row"><span class="details-label">GST Tax (${booking.taxRateSnapshot ?? 5}%)</span><span class="details-value">${this.formatCurrency(booking.taxAmountSnapshot)}</span></div>
         <div class="details-row" style="padding-top: 10px;"><span class="details-label" style="font-size: 14px; font-weight: bold; color: #0b1849;">Total Paid</span><span class="details-value" style="font-size: 15px; color: #0b1849;">${this.formatCurrency(booking.totalAmount)}</span></div>
       </div>
 
@@ -414,7 +419,8 @@ Check-In: ${checkInStr} (From 12:00 PM)
 Check-Out: ${checkOutStr} (Until 12:00 PM)
 Guests: ${booking.numGuests} (${booking.numNights} nights)
 Meal Plan: ${mealPlanSummary}
-Total Amount Paid: ${this.formatCurrency(booking.totalAmount)} (Includes 12% GST)
+${booking.gstin ? `GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmountSnapshot ? `Coupon: ${booking.couponCodeSnapshot}\nDiscount (${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%): -${this.formatCurrency(booking.discountAmountSnapshot)}\n` : ''}GST Tax: ${this.formatCurrency(booking.taxAmountSnapshot)} (${booking.taxRateSnapshot ?? 5}%)
+Total Amount Paid: ${this.formatCurrency(booking.totalAmount)} (Includes ${booking.taxRateSnapshot ?? 5}% GST)
 
 View or track your booking online:
 ${trackingUrl}
@@ -702,7 +708,7 @@ Thank you for staying at Hotel Raama.
 
 We would love to hear about your experience. Please take a moment to share your feedback.
 
-Give Your Feedback:
+Give Us a Feedback:
 ${feedbackUrl}
 
 Thank you for choosing Hotel Raama.
@@ -747,7 +753,7 @@ Hassan, Karnataka
       <p class="text">We would love to hear about your experience. Please take a moment to share your feedback with our management team.</p>
 
       <div class="btn-container">
-        <a href="${feedbackUrl}" class="btn" target="_blank" rel="noopener noreferrer">Give Your Feedback</a>
+        <a href="${feedbackUrl}" class="btn" target="_blank" rel="noopener noreferrer">Give Us a Feedback</a>
       </div>
 
       <div class="divider"></div>

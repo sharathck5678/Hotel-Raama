@@ -361,8 +361,9 @@ export const getLocalMetrics = () => {
 
   const occupiedRooms = rooms.filter((r) => r.status === 'OCCUPIED').length;
   const reservedRooms = rooms.filter((r) => r.status === 'RESERVED').length;
-  const availableRooms = rooms.filter((r) => r.status === 'AVAILABLE').length;
-  const totalRooms = rooms.length || 40;
+  const guestRooms = rooms.filter((r) => !r.isVenue && !/party|hall|board/i.test(r.roomNumber || ''));
+  const availableRooms = guestRooms.filter((r) => r.status === 'AVAILABLE').length;
+  const totalRooms = guestRooms.length || 37;
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
 
   const pendingOrdersCount = orders.filter(

@@ -22,6 +22,7 @@ const InvoicePdfService_1 = require("../services/InvoicePdfService");
 const EmailService_1 = require("../services/EmailService");
 const seedDatabase_1 = require("../seed/seedDatabase");
 const aadharValidator_1 = require("../utils/aadharValidator");
+const gstinValidator_1 = require("../utils/gstinValidator");
 class PublicController {
     static async resolveRoomTypeId(roomTypeId) {
         if (!roomTypeId)
@@ -65,7 +66,7 @@ class PublicController {
      */
     static async checkAvailabilityAndPrice(req, res) {
         try {
-            const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType, extraPerson } = req.body;
+            const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType, extraPerson, gstin } = req.body;
             if (!roomTypeId || !checkIn || !checkOut) {
                 return res.status(400).json({ success: false, message: 'roomTypeId, checkIn, and checkOut are required.' });
             }
@@ -84,7 +85,7 @@ class PublicController {
             // Check availability
             const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
             // Calculate server pricing
-            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
+            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson, gstin);
             return res.json({
                 success: true,
                 data: {
@@ -102,7 +103,7 @@ class PublicController {
      */
     static async createBooking(req, res) {
         try {
-            const { guestName, guestEmail, guestPhone, guestAadhar, roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, specialRequests, planType, extraPerson, } = req.body;
+            const { guestName, guestEmail, guestPhone, guestAadhar, roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, specialRequests, planType, extraPerson, gstin, } = req.body;
             if (!guestName || !guestEmail || !guestPhone || !roomTypeId || !checkIn || !checkOut) {
                 return res.status(400).json({ success: false, message: 'Missing required booking fields.' });
             }
@@ -124,7 +125,7 @@ class PublicController {
                 return res.status(400).json({ success: false, message: 'Selected room type is fully booked for these dates.' });
             }
             // 2. Strict Server-side Price Engine Calculation
-            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson);
+            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson, gstin);
             // Generate IDs
             const bookingId = `HR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
             const trackingToken = crypto_1.default.randomBytes(16).toString('hex');
@@ -155,7 +156,10 @@ class PublicController {
                 extraPerson: !!extraPerson,
                 extraPersonChargeSnapshot: pricing.extraPersonTotal,
                 couponCodeSnapshot: pricing.couponCode,
+                discountPercentageSnapshot: pricing.discountPercentage || 0,
                 discountAmountSnapshot: pricing.discountAmount,
+                gstin: pricing.gstin,
+                taxRateSnapshot: pricing.taxPercentage,
                 taxAmountSnapshot: pricing.taxAmount,
                 totalAmount: pricing.totalAmount,
                 bookingStatus: 'PENDING',
@@ -493,10 +497,30 @@ class PublicController {
                 booking = await Booking_1.Booking.findOne({ bookingId: noteBookingId });
             }
             if (!booking) {
-                console.warn(`[Razorpay Webhook] No matching booking found for order=${razorpayOrderId}, noteId=${noteBookingId}`);
+                // Check if this payment belongs to a QR food order
+                if (razorpayOrderId) {
+                    const foodOrder = await Order_1.Order.findOne({ razorpayOrderId });
+                    if (foodOrder) {
+                        if (foodOrder.paymentStatus !== 'PAID') {
+                            foodOrder.paymentStatus = 'PAID';
+                            if (razorpayPaymentId)
+                                foodOrder.razorpayPaymentId = razorpayPaymentId;
+                            if (signature)
+                                foodOrder.razorpaySignature = signature;
+                            await foodOrder.save();
+                            console.log(`[Razorpay Webhook] Successfully reconciled food order ${foodOrder.orderId}`);
+                        }
+                        return res.status(200).json({
+                            success: true,
+                            message: 'Food order successfully reconciled.',
+                            data: { orderId: foodOrder.orderId, status: foodOrder.status },
+                        });
+                    }
+                }
+                console.warn(`[Razorpay Webhook] No matching booking or food order found for order=${razorpayOrderId}, noteId=${noteBookingId}`);
                 return res.status(200).json({
                     success: true,
-                    message: 'No matching booking found for reconciliation.',
+                    message: 'No matching booking or order found for reconciliation.',
                 });
             }
             // 1. Idempotency Check: Already verified & confirmed bookings must not re-run transitions or duplicate emails
@@ -791,6 +815,87 @@ class PublicController {
                 success: false,
                 code: 'SERVER_ERROR',
                 message: 'An error occurred while saving your feedback. Please try again.',
+            });
+        }
+    }
+    /**
+     * POST /api/coupons/validate
+     * Authoritative backend validation of coupon code, GSTIN requirement, and calculated discount.
+     */
+    static async validateCoupon(req, res) {
+        try {
+            const { couponCode, gstin, roomTypeId, checkIn, checkOut, numGuests, mealSelection, planType, extraPerson } = req.body;
+            if (!couponCode || typeof couponCode !== 'string' || couponCode.trim().length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please enter a coupon code.',
+                    data: { valid: false },
+                });
+            }
+            const rawCode = couponCode.trim();
+            // Check for attempted coupon stacking
+            if (rawCode.includes(',') || rawCode.includes('+') || rawCode.includes('&') || /\s+/.test(rawCode)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Only one coupon can be applied per booking.',
+                    data: { valid: false },
+                });
+            }
+            const cleanCode = rawCode.toUpperCase();
+            // The ONLY permitted active coupons are WELCOME10 and WELCOME15
+            if (!(cleanCode in PricingEngine_1.OFFICIAL_COUPONS)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid coupon code.',
+                    data: { valid: false },
+                });
+            }
+            // GSTIN is strictly required for promotional coupons
+            if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'GSTIN is required to apply this coupon.',
+                    data: { valid: false, gstinValid: false },
+                });
+            }
+            const gstinResult = (0, gstinValidator_1.validateGSTIN)(gstin);
+            if (!gstinResult.isValid) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please enter a valid GSTIN.',
+                    data: { valid: false, gstinValid: false, code: gstinResult.code },
+                });
+            }
+            const discountPercentage = PricingEngine_1.OFFICIAL_COUPONS[cleanCode];
+            let pricingSummary = null;
+            let discountAmount = 0;
+            if (roomTypeId && checkIn && checkOut) {
+                const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
+                if (resolvedRoomTypeId) {
+                    const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, new Date(checkIn), new Date(checkOut), numGuests || 1, mealSelection, cleanCode, planType || 'NON_CP', !!extraPerson, gstinResult.normalizedGstin);
+                    pricingSummary = pricing;
+                    discountAmount = pricing.discountAmount;
+                }
+            }
+            return res.json({
+                success: true,
+                message: `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`,
+                data: {
+                    valid: true,
+                    couponCode: cleanCode,
+                    discountPercentage,
+                    discountAmount,
+                    gstinValid: true,
+                    gstin: gstinResult.normalizedGstin,
+                    message: `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`,
+                    pricing: pricingSummary,
+                },
+            });
+        }
+        catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to apply coupon. Please try again.',
             });
         }
     }

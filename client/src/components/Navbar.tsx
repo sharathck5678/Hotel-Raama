@@ -5,8 +5,6 @@ import { Menu as MenuIcon, X, Calendar } from 'lucide-react';
 interface NavItem {
   name: string;
   path: string;
-  shortName: string;
-  midName?: string;
 }
 
 export const Navbar: React.FC = () => {
@@ -35,35 +33,14 @@ export const Navbar: React.FC = () => {
   }
 
   const navLinks: NavItem[] = [
-    { name: 'Home', shortName: 'Home', path: '/' },
-    { name: 'Rooms & Rates', shortName: 'Rooms', path: '/rooms' },
-    { name: 'Restaurant & Menu', shortName: 'Dining', midName: 'Dining & Menu', path: '/dining' },
-    { name: 'Sambhrama Banquet Hall', shortName: 'Banquet', midName: 'Banquet Hall', path: '/party-hall' },
-    { name: 'Things to Do', shortName: 'Attractions', midName: 'Things to Do', path: '/attractions' },
-    { name: 'Location & Directions', shortName: 'Location', midName: 'Location', path: '/location' },
-    { name: 'My Bookings & Orders', shortName: 'Bookings', midName: 'My Bookings', path: '/my-bookings-orders' },
+    { name: 'Home', path: '/' },
+    { name: 'Rooms & Rates', path: '/rooms' },
+    { name: 'Dining & Menu', path: '/dining' },
+    { name: 'Banquet Hall', path: '/party-hall' },
+    { name: 'Things to Do', path: '/attractions' },
+    { name: 'Location', path: '/location' },
+    { name: 'My Bookings', path: '/my-bookings-orders' },
   ];
-
-  const renderDesktopLabel = (link: NavItem) => {
-    if (link.midName) {
-      return (
-        <>
-          <span className="hidden 2xl:inline">{link.name}</span>
-          <span className="hidden xl:inline 2xl:hidden">{link.midName}</span>
-          <span className="inline xl:hidden">{link.shortName}</span>
-        </>
-      );
-    }
-    if (link.shortName !== link.name) {
-      return (
-        <>
-          <span className="hidden xl:inline">{link.name}</span>
-          <span className="inline xl:hidden">{link.shortName}</span>
-        </>
-      );
-    }
-    return <span>{link.name}</span>;
-  };
 
   // Header dynamic classes based on route & scroll position
   const isTransparent = isHomePage && !isScrolled && !mobileMenuOpen;
@@ -95,14 +72,14 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-1.5 2xl:gap-2 shrink min-w-0">
+          <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-1.5 2xl:gap-2 shrink min-w-0">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`text-[10px] xl:text-[11px] font-semibold uppercase tracking-[0.5px] xl:tracking-[1px] 2xl:tracking-[1.4px] px-2 lg:px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-full transition-all duration-300 whitespace-nowrap shrink-0 ${
+                  className={`text-[10px] xl:text-[11px] 2xl:text-xs font-semibold uppercase tracking-[0.6px] xl:tracking-[1px] 2xl:tracking-[1.2px] px-2 lg:px-2.5 xl:px-3 py-1.5 xl:py-2 rounded-full transition-all duration-300 whitespace-nowrap shrink-0 ${
                     isActive
                       ? isTransparent
                         ? 'bg-white/25 text-white font-bold shadow-sm backdrop-blur-xs'
@@ -112,7 +89,7 @@ export const Navbar: React.FC = () => {
                       : 'text-white/90 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  {renderDesktopLabel(link)}
+                  {link.name}
                 </Link>
               );
             })}

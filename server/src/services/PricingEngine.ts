@@ -3,6 +3,7 @@ import { RoomType } from '../models/RoomType';
 import { MealPlan } from '../models/MealPlan';
 import { Coupon } from '../models/Coupon';
 import { HotelSetting } from '../models/HotelSetting';
+import { validateGSTIN, IGSTINValidationResult } from '../utils/gstinValidator';
 
 export interface IMealSelectionInput {
   breakfast?: boolean;
@@ -21,11 +22,21 @@ export interface IPricingCalculationResult {
   mealPlanTotal: number;
   subtotal: number;
   couponCode?: string;
+  discountPercentage?: number;
   discountAmount: number;
   taxPercentage: number;
   taxAmount: number;
   totalAmount: number;
+  gstin?: string;
+  gstinValid?: boolean;
+  couponError?: string;
+  couponMessage?: string;
 }
+
+export const OFFICIAL_COUPONS: Record<string, number> = {
+  WELCOME10: 10,
+  WELCOME15: 15,
+};
 
 export class PricingEngine {
   static async calculateBookingPrice(
@@ -36,7 +47,8 @@ export class PricingEngine {
     mealSelection?: IMealSelectionInput,
     couponCode?: string,
     planType: 'NON_CP' | 'CP' = 'NON_CP',
-    extraPerson: boolean = false
+    extraPerson: boolean = false,
+    gstin?: string
   ): Promise<IPricingCalculationResult> {
     // 1. Calculate number of nights
     const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
@@ -91,41 +103,67 @@ export class PricingEngine {
 
     const subtotal = roomTotal + extraPersonTotal + mealPlanTotal;
 
-    // 5. Validate and apply Coupon
+    // 5. Authoritative Server-Side Coupon & GSTIN Validation
     let discountAmount = 0;
+    let discountPercentage = 0;
     let validCouponCode: string | undefined;
+    let couponError: string | undefined;
+    let couponMessage: string | undefined;
+    let gstinValidation: IGSTINValidationResult | undefined;
 
     if (couponCode && couponCode.trim().length > 0) {
-      const cleanCode = couponCode.trim().toUpperCase();
-      const coupon = await Coupon.findOne({
-        code: cleanCode,
-        isActive: true,
-        startDate: { $lte: new Date() },
-        endDate: { $gte: new Date() },
-      });
+      const rawCode = couponCode.trim();
 
-      if (coupon && subtotal >= coupon.minBookingAmount && coupon.usedCount < coupon.maxUsage) {
-        validCouponCode = coupon.code;
-        if (coupon.discountType === 'PERCENTAGE') {
-          discountAmount = (subtotal * coupon.discountValue) / 100;
-          if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
-            discountAmount = coupon.maxDiscountAmount;
+      // Check for attempted coupon stacking (multiple codes passed via delimiter)
+      if (rawCode.includes(',') || rawCode.includes('+') || rawCode.includes('&') || /\s+/.test(rawCode)) {
+        couponError = 'Only one coupon can be applied per booking.';
+      } else {
+        const cleanCode = rawCode.toUpperCase();
+
+        // The ONLY permitted active coupons are WELCOME10 and WELCOME15
+        if (!(cleanCode in OFFICIAL_COUPONS)) {
+          couponError = 'Invalid coupon code.';
+        } else {
+          // Verify against Coupon model in DB if exists (or verify active status)
+          const dbCoupon = await Coupon.findOne({
+            code: cleanCode,
+            isActive: true,
+          });
+
+          // Check if coupon exists in DB and is active (or seed if not yet created)
+          if (dbCoupon && !dbCoupon.isActive) {
+            couponError = 'Invalid coupon code.';
+          } else {
+            // Validate GSTIN requirement for coupon application
+            gstinValidation = validateGSTIN(gstin);
+
+            if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
+              couponError = 'GSTIN is required to apply this coupon.';
+            } else if (!gstinValidation.isValid) {
+              couponError = 'Please enter a valid GSTIN.';
+            } else {
+              // GSTIN is valid and coupon is eligible
+              validCouponCode = cleanCode;
+              discountPercentage = OFFICIAL_COUPONS[cleanCode];
+              discountAmount = Math.round((subtotal * discountPercentage) / 100);
+              discountAmount = Math.min(discountAmount, subtotal);
+              couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+            }
           }
-        } else if (coupon.discountType === 'FLAT') {
-          discountAmount = coupon.discountValue;
         }
-        discountAmount = Math.min(discountAmount, subtotal);
       }
+    } else if (gstin && gstin.trim().length > 0) {
+      gstinValidation = validateGSTIN(gstin);
     }
 
     const netAmountBeforeTax = Math.max(0, subtotal - discountAmount);
 
-    // 6. Calculate GST Tax
-    const settings = await HotelSetting.findOne() || { taxPercentage: 12 };
-    const taxPercentage = settings.taxPercentage || 12;
+    // 6. Calculate GST Tax (Official Rate = 5%)
+    const settings = await HotelSetting.findOne() || { taxPercentage: 5 };
+    const taxPercentage = settings.taxPercentage ?? 5;
     const taxAmount = Math.round((netAmountBeforeTax * taxPercentage) / 100);
 
-    const totalAmount = Math.round(netAmountBeforeTax + taxAmount);
+    const totalAmount = Math.max(0, Math.round(netAmountBeforeTax + taxAmount));
 
     return {
       numNights,
@@ -138,11 +176,15 @@ export class PricingEngine {
       mealPlanTotal,
       subtotal,
       couponCode: validCouponCode,
+      discountPercentage: validCouponCode ? discountPercentage : 0,
       discountAmount,
       taxPercentage,
       taxAmount,
       totalAmount,
+      gstin: gstinValidation?.normalizedGstin,
+      gstinValid: gstinValidation?.isValid,
+      couponError,
+      couponMessage,
     };
   }
 }
-

@@ -105,7 +105,7 @@ describe('Hotel Raama Private Feedback & Email Automation System Tests', () => {
     assert.match(mail.html, /Hi Ananya Rao/);
     assert.match(mail.html, /Thank you for staying at Hotel Raama/);
     assert.match(mail.html, /We would love to hear about your experience/);
-    assert.match(mail.html, /Give Your Feedback/);
+    assert.match(mail.html, /Give Us a Feedback/);
     assert.match(mail.html, /https:\/\/hotelraama\.com\/feedback\/a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0/);
     assert.match(mail.html, /Hassan, Karnataka/);
 

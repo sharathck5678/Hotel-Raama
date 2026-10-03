@@ -33,6 +33,7 @@ import { AdminDashboardView } from './pages/admin/AdminDashboardView';
 import { AdminOrdersView } from './pages/admin/AdminOrdersView';
 import { AdminMenuView } from './pages/admin/AdminMenuView';
 import { AdminBookingsView } from './pages/admin/AdminBookingsView';
+import { AdminInventoryView } from './pages/admin/AdminInventoryView';
 import { AdminRoomsView } from './pages/admin/AdminRoomsView';
 import { AdminCustomerHistoryView } from './pages/admin/AdminCustomerHistoryView';
 import { AdminFeedbackView } from './pages/admin/AdminFeedbackView';
@@ -175,6 +176,7 @@ export const App: React.FC = () => {
               <Route path="orders" element={<AdminOrdersView />} />
               <Route path="menu" element={<AdminMenuView />} />
               <Route path="bookings" element={<AdminBookingsView />} />
+              <Route path="inventory" element={<AdminInventoryView />} />
               <Route path="feedback" element={<AdminFeedbackView />} />
               <Route path="rooms" element={<AdminRoomsView />} />
               <Route path="qr-codes" element={<QrOrderingSectionPage />} />

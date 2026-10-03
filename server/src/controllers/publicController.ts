@@ -11,12 +11,13 @@ import { MenuItem } from '../models/MenuItem';
 import { Attraction } from '../models/Attraction';
 import { HotelSetting } from '../models/HotelSetting';
 import { AvailabilityEngine } from '../services/AvailabilityEngine';
-import { PricingEngine } from '../services/PricingEngine';
+import { PricingEngine, OFFICIAL_COUPONS } from '../services/PricingEngine';
 import { RazorpayService } from '../services/RazorpayService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
 import { EmailService } from '../services/EmailService';
 import { ensureDatabaseSeeded } from '../seed/seedDatabase';
 import { validateAadhar } from '../utils/aadharValidator';
+import { validateGSTIN } from '../utils/gstinValidator';
 
 export class PublicController {
   private static async resolveRoomTypeId(roomTypeId: any): Promise<string | null> {
@@ -60,7 +61,7 @@ export class PublicController {
    */
   static async checkAvailabilityAndPrice(req: Request, res: Response) {
     try {
-      const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType, extraPerson } = req.body;
+      const { roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType, extraPerson, gstin } = req.body;
 
       if (!roomTypeId || !checkIn || !checkOut) {
         return res.status(400).json({ success: false, message: 'roomTypeId, checkIn, and checkOut are required.' });
@@ -94,7 +95,8 @@ export class PublicController {
         mealSelection,
         couponCode,
         planType || 'NON_CP',
-        !!extraPerson
+        !!extraPerson,
+        gstin
       );
 
       return res.json({
@@ -128,6 +130,7 @@ export class PublicController {
         specialRequests,
         planType,
         extraPerson,
+        gstin,
       } = req.body;
 
       if (!guestName || !guestEmail || !guestPhone || !roomTypeId || !checkIn || !checkOut) {
@@ -164,7 +167,8 @@ export class PublicController {
         mealSelection,
         couponCode,
         planType || 'NON_CP',
-        !!extraPerson
+        !!extraPerson,
+        gstin
       );
 
       // Generate IDs
@@ -199,7 +203,10 @@ export class PublicController {
         extraPerson: !!extraPerson,
         extraPersonChargeSnapshot: pricing.extraPersonTotal,
         couponCodeSnapshot: pricing.couponCode,
+        discountPercentageSnapshot: pricing.discountPercentage || 0,
         discountAmountSnapshot: pricing.discountAmount,
+        gstin: pricing.gstin,
+        taxRateSnapshot: pricing.taxPercentage,
         taxAmountSnapshot: pricing.taxAmount,
         totalAmount: pricing.totalAmount,
         bookingStatus: 'PENDING',
@@ -577,10 +584,29 @@ export class PublicController {
       }
 
       if (!booking) {
-        console.warn(`[Razorpay Webhook] No matching booking found for order=${razorpayOrderId}, noteId=${noteBookingId}`);
+        // Check if this payment belongs to a QR food order
+        if (razorpayOrderId) {
+          const foodOrder = await Order.findOne({ razorpayOrderId });
+          if (foodOrder) {
+            if (foodOrder.paymentStatus !== 'PAID') {
+              foodOrder.paymentStatus = 'PAID';
+              if (razorpayPaymentId) foodOrder.razorpayPaymentId = razorpayPaymentId;
+              if (signature) foodOrder.razorpaySignature = signature;
+              await foodOrder.save();
+              console.log(`[Razorpay Webhook] Successfully reconciled food order ${foodOrder.orderId}`);
+            }
+            return res.status(200).json({
+              success: true,
+              message: 'Food order successfully reconciled.',
+              data: { orderId: foodOrder.orderId, status: foodOrder.status },
+            });
+          }
+        }
+
+        console.warn(`[Razorpay Webhook] No matching booking or food order found for order=${razorpayOrderId}, noteId=${noteBookingId}`);
         return res.status(200).json({
           success: true,
-          message: 'No matching booking found for reconciliation.',
+          message: 'No matching booking or order found for reconciliation.',
         });
       }
 
@@ -917,6 +943,108 @@ export class PublicController {
         success: false,
         code: 'SERVER_ERROR',
         message: 'An error occurred while saving your feedback. Please try again.',
+      });
+    }
+  }
+
+  /**
+   * POST /api/coupons/validate
+   * Authoritative backend validation of coupon code, GSTIN requirement, and calculated discount.
+   */
+  static async validateCoupon(req: Request, res: Response) {
+    try {
+      const { couponCode, gstin, roomTypeId, checkIn, checkOut, numGuests, mealSelection, planType, extraPerson } = req.body;
+
+      if (!couponCode || typeof couponCode !== 'string' || couponCode.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please enter a coupon code.',
+          data: { valid: false },
+        });
+      }
+
+      const rawCode = couponCode.trim();
+
+      // Check for attempted coupon stacking
+      if (rawCode.includes(',') || rawCode.includes('+') || rawCode.includes('&') || /\s+/.test(rawCode)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Only one coupon can be applied per booking.',
+          data: { valid: false },
+        });
+      }
+
+      const cleanCode = rawCode.toUpperCase();
+
+      // The ONLY permitted active coupons are WELCOME10 and WELCOME15
+      if (!(cleanCode in OFFICIAL_COUPONS)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid coupon code.',
+          data: { valid: false },
+        });
+      }
+
+      // GSTIN is strictly required for promotional coupons
+      if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'GSTIN is required to apply this coupon.',
+          data: { valid: false, gstinValid: false },
+        });
+      }
+
+      const gstinResult = validateGSTIN(gstin);
+      if (!gstinResult.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please enter a valid GSTIN.',
+          data: { valid: false, gstinValid: false, code: gstinResult.code },
+        });
+      }
+
+      const discountPercentage = OFFICIAL_COUPONS[cleanCode];
+
+      let pricingSummary = null;
+      let discountAmount = 0;
+
+      if (roomTypeId && checkIn && checkOut) {
+        const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
+        if (resolvedRoomTypeId) {
+          const pricing = await PricingEngine.calculateBookingPrice(
+            resolvedRoomTypeId,
+            new Date(checkIn),
+            new Date(checkOut),
+            numGuests || 1,
+            mealSelection,
+            cleanCode,
+            planType || 'NON_CP',
+            !!extraPerson,
+            gstinResult.normalizedGstin
+          );
+          pricingSummary = pricing;
+          discountAmount = pricing.discountAmount;
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`,
+        data: {
+          valid: true,
+          couponCode: cleanCode,
+          discountPercentage,
+          discountAmount,
+          gstinValid: true,
+          gstin: gstinResult.normalizedGstin,
+          message: `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`,
+          pricing: pricingSummary,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        success: false,
+        message: 'Unable to apply coupon. Please try again.',
       });
     }
   }

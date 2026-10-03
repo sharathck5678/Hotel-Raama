@@ -35,6 +35,7 @@ export const AdminLayout: React.FC = () => {
 
   const navItems = [
     { name: 'Overview', path: '/admin', icon: LayoutDashboard },
+    { name: 'Inventory Management', path: '/admin/inventory', icon: Building2 },
     { name: 'Kitchen Orders', path: '/admin/orders', icon: UtensilsCrossed },
     { name: 'Menu Catalog', path: '/admin/menu', icon: BookOpen },
     { name: 'Room Bookings', path: '/admin/bookings', icon: CalendarCheck },

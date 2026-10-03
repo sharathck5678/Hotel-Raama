@@ -104,6 +104,26 @@ export const checkAvailability = (payload: any) =>
     .then((res) => res.data)
     .catch(() => ({ success: true, data: mockCalculateAvailability(payload) }));
 
+export const validateCoupon = (payload: {
+  couponCode: string;
+  gstin?: string;
+  roomTypeId?: string;
+  checkIn?: string;
+  checkOut?: string;
+  numGuests?: number;
+  mealSelection?: any;
+  planType?: string;
+  extraPerson?: boolean;
+}) =>
+  api
+    .post('/coupons/validate', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Unable to apply coupon. Please try again.',
+      data: err.response?.data?.data,
+    }));
+
 export const createBookingHold = (payload: any) =>
   api
     .post('/bookings', payload)
@@ -461,6 +481,61 @@ export const updateRoomStatus = (id: string, status: string) =>
         data: updated,
       };
     });
+
+// Admin Inventory & Physical/Offline Bookings
+export const fetchInventoryStatus = (params?: { checkIn?: string; checkOut?: string }) =>
+  api
+    .get('/admin/inventory', { params })
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch inventory status.',
+    }));
+
+export const createOfflineBooking = (payload: {
+  roomId: string;
+  checkIn: string;
+  checkOut: string;
+  guestName?: string;
+  guestPhone?: string;
+  guestEmail?: string;
+  adminNotes?: string;
+}) =>
+  api
+    .post('/admin/inventory/offline-booking', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to create offline booking.',
+    }));
+
+export const fetchOfflineBookings = (params?: { status?: string }) =>
+  api
+    .get('/admin/inventory/offline-bookings', { params })
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch offline bookings.',
+      data: [],
+    }));
+
+export const updateOfflineBooking = (id: string, payload: any) =>
+  api
+    .patch(`/admin/inventory/offline-booking/${id}`, payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to update offline booking.',
+    }));
+
+export const cancelOfflineBooking = (id: string) =>
+  api
+    .post(`/admin/inventory/offline-booking/${id}/cancel`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to cancel offline booking.',
+    }));
 
 export const fetchAuditLogs = () =>
   api

@@ -45,7 +45,7 @@ export const AdminRoomsView: React.FC = () => {
       <ScrollReveal direction="up" duration={0.8}>
         <div className="border-b border-[#10184A]/15 pb-4">
           <h1 className="text-xl sm:text-2xl font-serif text-[#00174A]">Rooms & QR Ordering Directory</h1>
-          <p className="text-xs font-sans text-[#667085]">40 Rooms (1 to 40) + Sambhrama Banquet Hall & Board Room live status</p>
+          <p className="text-xs font-sans text-[#667085]">37 Guest Rooms (Floors 1-3) + Sambhrama Banquet Hall & Board Room live status</p>
         </div>
       </ScrollReveal>
 

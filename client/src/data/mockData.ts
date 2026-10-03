@@ -1,3 +1,5 @@
+import { validateGSTIN } from '../utils/gstinValidator';
+
 export const FALLBACK_HOTEL_INFO = {
   hotelName: 'Hotel Raama',
   tagline: 'Hospitality That Feels Like Home',
@@ -9,9 +11,18 @@ export const FALLBACK_HOTEL_INFO = {
   email: 'hotelraama.hsn@gmail.com',
   receptionWhatsapp: '917899511330',
   notificationEmail: 'admin@hotelraama.com',
-  taxPercentage: 12,
+  taxPercentage: 5,
   bookingHoldMinutes: 15,
 };
+
+export const HOTEL_FACILITIES = [
+  'Iron/Iron Boarding',
+  'Laundry Service',
+  '24Hour Hot Water',
+  'Free Wifi',
+  'Tv',
+  'Kettle',
+];
 
 export const FALLBACK_ROOM_TYPES = [
   {
@@ -23,7 +34,7 @@ export const FALLBACK_ROOM_TYPES = [
     cpPrice: 1350,
     maxOccupancy: 1,
     isAc: false,
-    amenities: ['Free Wi-Fi', 'TV', 'Hot Water', 'Work Desk'],
+    amenities: HOTEL_FACILITIES,
     images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'],
   },
   {
@@ -35,7 +46,7 @@ export const FALLBACK_ROOM_TYPES = [
     cpPrice: 1800,
     maxOccupancy: 2,
     isAc: false,
-    amenities: ['Free Wi-Fi', 'LED TV', '24/7 Hot Water', 'Daily Housekeeping'],
+    amenities: HOTEL_FACILITIES,
     images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'],
   },
   {
@@ -47,7 +58,7 @@ export const FALLBACK_ROOM_TYPES = [
     cpPrice: 2000,
     maxOccupancy: 1,
     isAc: true,
-    amenities: ['Air Conditioning', 'High Speed Wi-Fi', 'Smart TV', 'Room Service'],
+    amenities: HOTEL_FACILITIES,
     images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'],
   },
   {
@@ -59,7 +70,7 @@ export const FALLBACK_ROOM_TYPES = [
     cpPrice: 2500,
     maxOccupancy: 2,
     isAc: true,
-    amenities: ['Air Conditioning', 'King Bed', 'Tea/Coffee Maker', 'Minibar', 'Smart TV'],
+    amenities: HOTEL_FACILITIES,
     images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'],
   },
   {
@@ -71,7 +82,7 @@ export const FALLBACK_ROOM_TYPES = [
     cpPrice: 2750,
     maxOccupancy: 3,
     isAc: false,
-    amenities: ['3 Single Beds', 'Free Wi-Fi', 'Spacious Wardrobe', 'Bottled Water'],
+    amenities: HOTEL_FACILITIES,
     images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'],
   },
   {
@@ -81,10 +92,9 @@ export const FALLBACK_ROOM_TYPES = [
     description: 'Air-conditioned family room featuring premium bedding, extra seating, and deluxe amenities.',
     basePrice: 2800,
     cpPrice: 3200,
-
     maxOccupancy: 3,
     isAc: true,
-    amenities: ['Air Conditioning', '3 Beds', 'Smart TV', 'Tea/Coffee Station'],
+    amenities: HOTEL_FACILITIES,
     images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'],
   },
   {
@@ -96,37 +106,80 @@ export const FALLBACK_ROOM_TYPES = [
     cpPrice: 4000,
     maxOccupancy: 4,
     isAc: true,
-    amenities: ['Living Room Lounge', 'Jacuzzi / Bathtub', 'Fruit Basket', 'Express Check-in', 'Premium A/C'],
+    amenities: HOTEL_FACILITIES,
     images: ['/suite-room.png', '/hotel-corridor.jpg', '/suite-room-angle.png'],
   },
 ];
 
-// Generate Rooms 1 to 40 + Sambhrama Party Hall + Board Room
+// Official 37 Rooms + 1 Banquet Hall + 1 Conference Room (Total 39 Active Units/Venues)
 export const FALLBACK_ROOMS = (() => {
-
   const rooms: any[] = [];
-  const typeMapping = [
-    FALLBACK_ROOM_TYPES[0],
-    FALLBACK_ROOM_TYPES[1],
-    FALLBACK_ROOM_TYPES[2],
-    FALLBACK_ROOM_TYPES[3],
-    FALLBACK_ROOM_TYPES[4],
-    FALLBACK_ROOM_TYPES[5],
-    FALLBACK_ROOM_TYPES[6],
+  const typeMap: Record<string, any> = {
+    TRIPLE_EXEC: FALLBACK_ROOM_TYPES.find(r => r.code === 'TRIPLE_EXEC') || FALLBACK_ROOM_TYPES[5],
+    EXEC_DBL_AC: FALLBACK_ROOM_TYPES.find(r => r.code === 'EXEC_DBL_AC') || FALLBACK_ROOM_TYPES[3],
+    SUITE_ROOM: FALLBACK_ROOM_TYPES.find(r => r.code === 'SUITE_ROOM') || FALLBACK_ROOM_TYPES[6],
+    PREM_DBL_NONAC: FALLBACK_ROOM_TYPES.find(r => r.code === 'PREM_DBL_NONAC') || FALLBACK_ROOM_TYPES[1],
+    TRIPLE_PREM: FALLBACK_ROOM_TYPES.find(r => r.code === 'TRIPLE_PREM') || FALLBACK_ROOM_TYPES[4],
+  };
+
+  const officialSpecs = [
+    // FLOOR 1 (14 rooms - Note: 104 does not exist)
+    { roomNumber: '101', floor: 1, type: 'TRIPLE_EXEC' },
+    { roomNumber: '102', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '103', floor: 1, type: 'SUITE_ROOM' },
+    { roomNumber: '105', floor: 1, type: 'PREM_DBL_NONAC' },
+    { roomNumber: '106', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '107', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '108', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '109', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '110', floor: 1, type: 'TRIPLE_EXEC' },
+    { roomNumber: '111', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '112', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '113', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '114', floor: 1, type: 'EXEC_DBL_AC' },
+    { roomNumber: '115', floor: 1, type: 'EXEC_DBL_AC' },
+
+    // FLOOR 2 (18 rooms)
+    { roomNumber: '201', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '202', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '203', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '204', floor: 2, type: 'PREM_DBL_NONAC' },
+    { roomNumber: '205', floor: 2, type: 'SUITE_ROOM' },
+    { roomNumber: '206', floor: 2, type: 'TRIPLE_EXEC' },
+    { roomNumber: '207', floor: 2, type: 'PREM_DBL_NONAC' },
+    { roomNumber: '208', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '209', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '210', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '211', floor: 2, type: 'PREM_DBL_NONAC' },
+    { roomNumber: '212', floor: 2, type: 'TRIPLE_EXEC' },
+    { roomNumber: '213', floor: 2, type: 'TRIPLE_EXEC' },
+    { roomNumber: '214', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '215', floor: 2, type: 'EXEC_DBL_AC' },
+    { roomNumber: '216', floor: 2, type: 'PREM_DBL_NONAC' },
+    { roomNumber: '217', floor: 2, type: 'PREM_DBL_NONAC' },
+    { roomNumber: '218', floor: 2, type: 'EXEC_DBL_AC' },
+
+    // FLOOR 3 (5 rooms)
+    { roomNumber: '301', floor: 3, type: 'EXEC_DBL_AC' },
+    { roomNumber: '302', floor: 3, type: 'PREM_DBL_NONAC' },
+    { roomNumber: '303', floor: 3, type: 'EXEC_DBL_AC' },
+    { roomNumber: '304', floor: 3, type: 'EXEC_DBL_AC' },
+    { roomNumber: '305', floor: 3, type: 'TRIPLE_PREM' },
   ];
 
-  for (let i = 1; i <= 40; i++) {
-    const typeObj = typeMapping[(i - 1) % typeMapping.length];
+  for (const spec of officialSpecs) {
+    const typeObj = typeMap[spec.type] || FALLBACK_ROOM_TYPES[3];
     rooms.push({
-      _id: `room_${i}`,
-      roomNumber: `${i}`,
-      floor: i <= 20 ? 1 : 2,
+      _id: `room_${spec.roomNumber}`,
+      roomNumber: spec.roomNumber,
+      floor: spec.floor,
       status: 'AVAILABLE',
-      qrToken: `qr_token_room_${i}`,
+      qrToken: `qr_token_room_${spec.roomNumber}`,
       roomTypeId: {
         _id: typeObj._id,
         name: typeObj.name,
       },
+      isVenue: false,
     });
   }
 
@@ -140,6 +193,7 @@ export const FALLBACK_ROOMS = (() => {
       _id: 'rt_7',
       name: 'Grand Sambhrama Banquet Hall',
     },
+    isVenue: true,
   });
 
   rooms.push({
@@ -152,6 +206,7 @@ export const FALLBACK_ROOMS = (() => {
       _id: 'rt_4',
       name: 'Executive Board Room',
     },
+    isVenue: true,
   });
 
   return rooms;
@@ -5554,13 +5609,25 @@ export const mockCalculateAvailability = (payload: any) => {
   if (payload.mealSelection?.lunch) mealPlanTotal += 250 * totalGuests * numNights;
   if (payload.mealSelection?.dinner) mealPlanTotal += 300 * totalGuests * numNights;
 
+  const subtotal = roomTotal + extraPersonTotal + mealPlanTotal;
   let discountAmount = 0;
-  if (payload.couponCode === 'RAAMA5') {
-    discountAmount = Math.round((roomTotal + extraPersonTotal + mealPlanTotal) * 0.05);
+  let validCouponCode = '';
+  let discountPercentage = 0;
+
+  if (payload.couponCode && typeof payload.couponCode === 'string' && payload.couponCode.trim().length > 0) {
+    const cleanCode = payload.couponCode.trim().toUpperCase();
+    if (cleanCode === 'WELCOME10' || cleanCode === 'WELCOME15') {
+      const gstinCheck = validateGSTIN(payload.gstin);
+      if (gstinCheck.isValid) {
+        validCouponCode = cleanCode;
+        discountPercentage = cleanCode === 'WELCOME15' ? 15 : 10;
+        discountAmount = Math.round((subtotal * discountPercentage) / 100);
+      }
+    }
   }
 
-  const taxableAmount = Math.max(0, roomTotal + extraPersonTotal + mealPlanTotal - discountAmount);
-  const taxAmount = Math.round(taxableAmount * 0.12);
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = Math.round(taxableAmount * 0.05);
   const totalAmount = taxableAmount + taxAmount;
 
   return {
@@ -5573,8 +5640,11 @@ export const mockCalculateAvailability = (payload: any) => {
       extraPersonChargePerNight,
       extraPersonTotal,
       mealPlanTotal,
-      couponCode: discountAmount > 0 ? (payload.couponCode || '') : '',
+      subtotal,
+      couponCode: validCouponCode,
+      discountPercentage,
       discountAmount,
+      taxPercentage: 5,
       taxAmount,
       totalAmount,
     },

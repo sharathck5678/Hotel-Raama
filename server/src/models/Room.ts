@@ -15,6 +15,7 @@ export interface IRoom extends Document {
   status: RoomStatus;
   qrToken: string; // Token used for QR food ordering (/order/:token)
   isActive: boolean;
+  isVenue?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,10 +32,13 @@ const RoomSchema = new Schema<IRoom>(
     },
     qrToken: { type: String, required: true, unique: true },
     isActive: { type: Boolean, default: true },
+    isVenue: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
 RoomSchema.index({ status: 1 });
+RoomSchema.index({ isActive: 1, isVenue: 1 });
+RoomSchema.index({ roomTypeId: 1, isActive: 1 });
 
 export const Room = model<IRoom>('Room', RoomSchema);

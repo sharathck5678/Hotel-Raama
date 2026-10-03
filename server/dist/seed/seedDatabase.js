@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seed = exports.ensureDatabaseSeeded = exports.runSeedLogic = void 0;
+exports.seed = exports.ensureDatabaseSeeded = exports.runSeedLogic = exports.OFFICIAL_ROOMS_SPEC = exports.HOTEL_FACILITIES = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -17,15 +17,77 @@ const RoomType_1 = require("../models/RoomType");
 const Room_1 = require("../models/Room");
 const MenuCategory_1 = require("../models/MenuCategory");
 const MenuItem_1 = require("../models/MenuItem");
+const Booking_1 = require("../models/Booking");
+const Order_1 = require("../models/Order");
 dotenv_1.default.config();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/hotel_raama';
 const generateQrToken = (roomNum) => {
     const hash = crypto_1.default.createHash('sha256').update(`hotel_raama_room_${roomNum}_${Date.now()}_${Math.random()}`).digest('hex');
     return hash.substring(0, 16);
 };
+exports.HOTEL_FACILITIES = [
+    'Iron/Iron Boarding',
+    'Laundry Service',
+    '24Hour Hot Water',
+    'Free Wifi',
+    'Tv',
+    'Kettle',
+];
+/**
+ * OFFICIAL HOTEL RAAMA INVENTORY SPECIFICATION
+ * 37 Guest Rooms across Floors 1-3 (Note: Room 104 does not exist)
+ * 2 Dedicated Event Venues (Sambhrama Banquet Hall & Board Room)
+ *
+ * BUSINESS RULE (Confirmed by Hotel Management):
+ * Split-bed/twin-bed rooms (215, 303, 304) are intentionally classified as Executive Double A/C inventory.
+ * They use the same pricing, availability pool and booking rules as Executive Double A/C rooms.
+ * No separate SPLIT_BED_AC room type exists.
+ */
+exports.OFFICIAL_ROOMS_SPEC = [
+    // FLOOR 1 (14 rooms - Note: 104 does not exist)
+    { roomNumber: '101', floor: 1, typeCode: 'TRIPLE_EXEC', description: 'Triple Occupancy A/C' },
+    { roomNumber: '102', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '103', floor: 1, typeCode: 'SUITE_ROOM', description: 'Suite Room — Single or Double Occupancy A/C' },
+    { roomNumber: '105', floor: 1, typeCode: 'PREM_DBL_NONAC', description: 'Single or Double Occupancy Non A/C' },
+    { roomNumber: '106', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '107', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '108', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '109', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '110', floor: 1, typeCode: 'TRIPLE_EXEC', description: 'Triple Occupancy A/C' },
+    { roomNumber: '111', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '112', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '113', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '114', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '115', floor: 1, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    // FLOOR 2 (18 rooms)
+    { roomNumber: '201', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '202', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '203', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '204', floor: 2, typeCode: 'PREM_DBL_NONAC', description: 'Single or Double Occupancy Non A/C' },
+    { roomNumber: '205', floor: 2, typeCode: 'SUITE_ROOM', description: 'Suite Room — Single or Double Occupancy A/C' },
+    { roomNumber: '206', floor: 2, typeCode: 'TRIPLE_EXEC', description: 'Triple Occupancy A/C' },
+    { roomNumber: '207', floor: 2, typeCode: 'PREM_DBL_NONAC', description: 'Single or Double Occupancy Non A/C' },
+    { roomNumber: '208', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '209', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '210', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '211', floor: 2, typeCode: 'PREM_DBL_NONAC', description: 'Single or Double Occupancy Non A/C' },
+    { roomNumber: '212', floor: 2, typeCode: 'TRIPLE_EXEC', description: 'Triple Occupancy A/C' },
+    { roomNumber: '213', floor: 2, typeCode: 'TRIPLE_EXEC', description: 'Triple Occupancy A/C' },
+    { roomNumber: '214', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '215', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Executive Double A/C (Split Bed Configuration)' },
+    { roomNumber: '216', floor: 2, typeCode: 'PREM_DBL_NONAC', description: 'Single or Double Occupancy Non A/C' },
+    { roomNumber: '217', floor: 2, typeCode: 'PREM_DBL_NONAC', description: 'Single or Double Occupancy Non A/C' },
+    { roomNumber: '218', floor: 2, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    // FLOOR 3 (5 rooms)
+    { roomNumber: '301', floor: 3, typeCode: 'EXEC_DBL_AC', description: 'Single or Double Occupancy A/C' },
+    { roomNumber: '302', floor: 3, typeCode: 'PREM_DBL_NONAC', description: 'Single or Double Occupancy Non A/C' },
+    { roomNumber: '303', floor: 3, typeCode: 'EXEC_DBL_AC', description: 'Executive Double A/C (Split Bed Configuration)' },
+    { roomNumber: '304', floor: 3, typeCode: 'EXEC_DBL_AC', description: 'Executive Double A/C (Split Bed Configuration)' },
+    { roomNumber: '305', floor: 3, typeCode: 'TRIPLE_PREM', description: 'Triple Occupancy Non A/C' },
+];
 const runSeedLogic = async (clearExisting = false) => {
     try {
-        // 1. Clear existing data if requested
+        // 1. Clear existing data if requested (preserve rooms if historical bookings/orders exist)
         if (clearExisting) {
             console.log('Clearing existing collections...');
             await Admin_1.Admin.deleteMany({});
@@ -34,7 +96,14 @@ const runSeedLogic = async (clearExisting = false) => {
             await Coupon_1.Coupon.deleteMany({});
             await Attraction_1.Attraction.deleteMany({});
             await RoomType_1.RoomType.deleteMany({});
-            await Room_1.Room.deleteMany({});
+            const bookingCount = await Booking_1.Booking.countDocuments();
+            const orderCount = await Order_1.Order.countDocuments();
+            if (bookingCount === 0 && orderCount === 0) {
+                await Room_1.Room.deleteMany({});
+            }
+            else {
+                console.log(`[Seed] Preserving room records because ${bookingCount} bookings and ${orderCount} orders exist.`);
+            }
             await MenuCategory_1.MenuCategory.deleteMany({});
             await MenuItem_1.MenuItem.deleteMany({});
         }
@@ -66,7 +135,7 @@ const runSeedLogic = async (clearExisting = false) => {
                 email: 'hotelraama.hsn@gmail.com',
                 receptionWhatsapp: '917899511330',
                 notificationEmail: 'hotelraama.hsn@gmail.com',
-                taxPercentage: 12,
+                taxPercentage: 5,
                 bookingHoldMinutes: 15,
             });
             console.log('✓ Hotel settings created');
@@ -81,11 +150,13 @@ const runSeedLogic = async (clearExisting = false) => {
             await MealPlan_1.MealPlan.findOneAndUpdate({ type: mp.type }, mp, { upsert: true, new: true });
         }
         console.log('✓ Meal plans created/updated');
-        // 5. Coupons (Idempotent upsert by code)
-        const now = new Date();
-        const nextYear = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
-        await Coupon_1.Coupon.findOneAndUpdate({ code: 'RAAMA5' }, { code: 'RAAMA5', discountType: 'PERCENTAGE', discountValue: 5, minBookingAmount: 0, startDate: now, endDate: nextYear, maxUsage: 1000, isActive: true }, { upsert: true, new: true });
-        console.log('✓ Initial coupons created/updated');
+        // 5. Official Promotional Coupons (Idempotent upsert by code)
+        await Coupon_1.Coupon.deleteMany({ code: { $nin: ['WELCOME10', 'WELCOME15'] } });
+        const now = new Date(2020, 0, 1);
+        const futureDate = new Date(new Date().getFullYear() + 5, 11, 31);
+        await Coupon_1.Coupon.findOneAndUpdate({ code: 'WELCOME10' }, { code: 'WELCOME10', discountType: 'PERCENTAGE', discountValue: 10, minBookingAmount: 0, startDate: now, endDate: futureDate, maxUsage: 100000, isActive: true }, { upsert: true, new: true });
+        await Coupon_1.Coupon.findOneAndUpdate({ code: 'WELCOME15' }, { code: 'WELCOME15', discountType: 'PERCENTAGE', discountValue: 15, minBookingAmount: 0, startDate: now, endDate: futureDate, maxUsage: 100000, isActive: true }, { upsert: true, new: true });
+        console.log('✓ Official coupons created/updated: WELCOME10 (10%) and WELCOME15 (15%)');
         // 6. Attractions (Idempotent upsert by name)
         const attractionsData = [
             { name: 'Chennakeshava Temple, Belur', category: 'Hoysala Heritage', distance: '38 km', image: '/chennakeshava-temple-belur.png', description: 'Famous 12th-century Hoysala temple renowned for intricate stone carvings and architecture.', sortOrder: 1 },
@@ -99,15 +170,15 @@ const runSeedLogic = async (clearExisting = false) => {
             await Attraction_1.Attraction.findOneAndUpdate({ name: attr.name }, attr, { upsert: true, new: true });
         }
         console.log('✓ Hassan attractions created/updated');
-        // 7. Room Types & 40 Rooms (1 to 40) + 1 Sambhrama Party Hall
+        // 7. Room Types & Official 37 Guest Rooms + 2 Dedicated Venues
         const roomTypesData = [
-            { name: 'Premium Single Non A/C', code: 'PREM_SGL_NONAC', description: 'Comfortable single occupancy non-A/C room with queen bed, Wi-Fi, and city views.', basePrice: 1200, cpPrice: 1350, maxOccupancy: 1, isAc: false, amenities: ['Free Wi-Fi', 'TV', 'Hot Water', 'Work Desk'], images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'] },
-            { name: 'Premium Double Non A/C', code: 'PREM_DBL_NONAC', description: 'Spacious double occupancy non-A/C room with plush bedding and modern bathroom.', basePrice: 1600, cpPrice: 1800, maxOccupancy: 2, isAc: false, amenities: ['Free Wi-Fi', 'LED TV', '24/7 Hot Water', 'Daily Housekeeping'], images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'] },
-            { name: 'Executive Single A/C', code: 'EXEC_SGL_AC', description: 'Elegant single room with climate control A/C, ergonomic desk, and premium bath accessories.', basePrice: 1800, cpPrice: 2000, maxOccupancy: 1, isAc: true, amenities: ['Air Conditioning', 'High Speed Wi-Fi', 'Smart TV', 'Room Service'], images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'] },
-            { name: 'Executive Double A/C', code: 'EXEC_DBL_AC', description: 'Luxurious double A/C room equipped with king-size bed, seating area, and room dining.', basePrice: 2200, cpPrice: 2500, maxOccupancy: 2, isAc: true, amenities: ['Air Conditioning', 'King Bed', 'Tea/Coffee Maker', 'Minibar', 'Smart TV'], images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'] },
-            { name: 'Triple Occupancy Premium', code: 'TRIPLE_PREM', description: 'Generous room designed for families or small groups with 3 comfortable single beds.', basePrice: 2400, cpPrice: 2750, maxOccupancy: 3, isAc: false, amenities: ['3 Single Beds', 'Free Wi-Fi', 'Spacious Wardrobe', 'Bottled Water'], images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'] },
-            { name: 'Triple Occupancy Executive A/C', code: 'TRIPLE_EXEC', description: 'Air-conditioned family room featuring premium bedding, extra seating, and deluxe amenities.', basePrice: 2800, cpPrice: 3200, maxOccupancy: 3, isAc: true, amenities: ['Air Conditioning', '3 Beds', 'Smart TV', 'Tea/Coffee Station'], images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'] },
-            { name: 'Suite Room', code: 'SUITE_ROOM', description: 'Presidential suite with separate living lounge, master bedroom, luxury bathtub, and VIP service.', basePrice: 3500, cpPrice: 4000, maxOccupancy: 4, isAc: true, amenities: ['Living Room Lounge', 'Jacuzzi / Bathtub', 'Fruit Basket', 'Express Check-in', 'Premium A/C'], images: ['/suite-room.png', '/hotel-corridor.jpg', '/suite-room-angle.png'] },
+            { name: 'Premium Single Non A/C', code: 'PREM_SGL_NONAC', description: 'Comfortable single occupancy non-A/C room with queen bed, Wi-Fi, and city views.', basePrice: 1200, cpPrice: 1350, maxOccupancy: 1, isAc: false, amenities: exports.HOTEL_FACILITIES, images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'] },
+            { name: 'Premium Double Non A/C', code: 'PREM_DBL_NONAC', description: 'Spacious double occupancy non-A/C room with plush bedding and modern bathroom.', basePrice: 1600, cpPrice: 1800, maxOccupancy: 2, isAc: false, amenities: exports.HOTEL_FACILITIES, images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'] },
+            { name: 'Executive Single A/C', code: 'EXEC_SGL_AC', description: 'Elegant single room with climate control A/C, ergonomic desk, and premium bath accessories.', basePrice: 1800, cpPrice: 2000, maxOccupancy: 1, isAc: true, amenities: exports.HOTEL_FACILITIES, images: ['/single-occupancy-room.png', '/hotel-corridor.jpg', '/single-room-angle.jpg'] },
+            { name: 'Executive Double A/C', code: 'EXEC_DBL_AC', description: 'Luxurious double A/C room equipped with king-size bed, seating area, and room dining.', basePrice: 2200, cpPrice: 2500, maxOccupancy: 2, isAc: true, amenities: exports.HOTEL_FACILITIES, images: ['/double-occupancy-room.png', '/hotel-corridor.jpg', '/double-room-angle.png'] },
+            { name: 'Triple Occupancy Premium', code: 'TRIPLE_PREM', description: 'Generous room designed for families or small groups with 3 comfortable single beds.', basePrice: 2400, cpPrice: 2750, maxOccupancy: 3, isAc: false, amenities: exports.HOTEL_FACILITIES, images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'] },
+            { name: 'Triple Occupancy Executive A/C', code: 'TRIPLE_EXEC', description: 'Air-conditioned family room featuring premium bedding, extra seating, and deluxe amenities.', basePrice: 2800, cpPrice: 3200, maxOccupancy: 3, isAc: true, amenities: exports.HOTEL_FACILITIES, images: ['/triple-occupancy-ac.png', '/hotel-corridor.jpg', '/triple-room-angle.png'] },
+            { name: 'Suite Room', code: 'SUITE_ROOM', description: 'Presidential suite with separate living lounge, master bedroom, luxury bathtub, and VIP service.', basePrice: 3500, cpPrice: 4000, maxOccupancy: 4, isAc: true, amenities: exports.HOTEL_FACILITIES, images: ['/suite-room.png', '/hotel-corridor.jpg', '/suite-room-angle.png'] },
         ];
         const createdRoomTypes = [];
         for (const rt of roomTypesData) {
@@ -115,50 +186,100 @@ const runSeedLogic = async (clearExisting = false) => {
             createdRoomTypes.push(savedRt);
         }
         console.log(`✓ ${createdRoomTypes.length} room types created/updated`);
-        // Create 40 rooms (numbered 1 to 40) + 1 Sambhrama Party Hall
-        const existingRoomsCount = await Room_1.Room.countDocuments();
-        if (existingRoomsCount === 0 || clearExisting) {
-            if (clearExisting)
-                await Room_1.Room.deleteMany({});
-            const roomsToSeed = [];
-            const rtMap = new Map(createdRoomTypes.map(rt => [rt.code, rt._id]));
-            const typeCodes = ['PREM_SGL_NONAC', 'PREM_DBL_NONAC', 'EXEC_SGL_AC', 'EXEC_DBL_AC', 'TRIPLE_PREM', 'TRIPLE_EXEC', 'SUITE_ROOM'];
-            for (let i = 1; i <= 40; i++) {
-                const roomNum = `${i}`;
-                const code = typeCodes[(i - 1) % typeCodes.length];
-                const floor = i <= 20 ? 1 : 2;
-                roomsToSeed.push({
-                    roomNumber: roomNum,
-                    roomTypeId: rtMap.get(code),
-                    floor,
+        // 7. Official 37 Guest Rooms + 1 Banquet Hall + 1 Conference Room (Total 39 Active Units/Venues)
+        const rtMap = new Map(createdRoomTypes.map(rt => [rt.code, rt._id]));
+        const officialRoomNumbers = exports.OFFICIAL_ROOMS_SPEC.map(r => r.roomNumber);
+        const validVenueNames = ['Sambhrama Banquet Hall', 'Sambhrama Party Hall', 'Board Room'];
+        // 1. Production safety: Mark obsolete rooms (1-40) inactive instead of deleting to preserve historical bookings/orders
+        await Room_1.Room.updateMany({ roomNumber: { $nin: [...officialRoomNumbers, ...validVenueNames] } }, { $set: { isActive: false } });
+        // 2. Upsert each of the 37 official rooms
+        for (const spec of exports.OFFICIAL_ROOMS_SPEC) {
+            const typeId = rtMap.get(spec.typeCode);
+            if (!typeId) {
+                console.warn(`[Seed] Missing RoomType for code: ${spec.typeCode}`);
+                continue;
+            }
+            const existing = await Room_1.Room.findOne({ roomNumber: spec.roomNumber });
+            if (existing) {
+                existing.roomTypeId = typeId;
+                existing.floor = spec.floor;
+                existing.isActive = true;
+                existing.isVenue = false;
+                if (!existing.qrToken) {
+                    existing.qrToken = generateQrToken(spec.roomNumber);
+                }
+                await existing.save();
+            }
+            else {
+                await Room_1.Room.create({
+                    roomNumber: spec.roomNumber,
+                    roomTypeId: typeId,
+                    floor: spec.floor,
                     status: 'AVAILABLE',
-                    qrToken: generateQrToken(roomNum),
+                    qrToken: generateQrToken(spec.roomNumber),
+                    isActive: true,
+                    isVenue: false,
                 });
             }
-            // Add Sambhrama Party Hall QR
-            roomsToSeed.push({
-                roomNumber: 'Sambhrama Party Hall',
-                roomTypeId: rtMap.get('SUITE_ROOM'),
-                floor: 1,
-                status: 'AVAILABLE',
-                qrToken: generateQrToken('SambhramaPartyHall'),
-            });
-            // Add Board Room QR
-            roomsToSeed.push({
-                roomNumber: 'Board Room',
-                roomTypeId: rtMap.get('EXEC_DBL_AC') || rtMap.get('SUITE_ROOM'),
-                floor: 1,
-                status: 'AVAILABLE',
-                qrToken: generateQrToken('BoardRoom'),
-            });
-            for (const r of roomsToSeed) {
-                await Room_1.Room.findOneAndUpdate({ roomNumber: r.roomNumber }, r, { upsert: true, new: true });
-            }
-            console.log(`✓ Rooms created/updated (40 rooms numbered 1-40 + Sambhrama Party Hall + Board Room)`);
+        }
+        // 3. Ensure Sambhrama Banquet Hall exists as a dedicated special venue
+        const suiteType = rtMap.get('SUITE_ROOM') || Array.from(rtMap.values())[0];
+        const existingPartyHall = await Room_1.Room.findOne({
+            $or: [
+                { roomNumber: 'Sambhrama Banquet Hall' },
+                { roomNumber: 'Sambhrama Party Hall' },
+                { qrToken: 'qr_token_party_hall' },
+            ],
+        });
+        if (existingPartyHall) {
+            existingPartyHall.roomNumber = 'Sambhrama Banquet Hall';
+            existingPartyHall.floor = 1;
+            existingPartyHall.isActive = true;
+            existingPartyHall.isVenue = true;
+            existingPartyHall.qrToken = existingPartyHall.qrToken || 'qr_token_party_hall';
+            await existingPartyHall.save();
         }
         else {
-            console.log(`✓ Rooms already exist (${existingRoomsCount} rooms), skipping.`);
+            await Room_1.Room.create({
+                roomNumber: 'Sambhrama Banquet Hall',
+                roomTypeId: suiteType,
+                floor: 1,
+                status: 'AVAILABLE',
+                qrToken: 'qr_token_party_hall',
+                isActive: true,
+                isVenue: true,
+            });
         }
+        // 4. Ensure Board Room exists as a dedicated special venue
+        const execType = rtMap.get('EXEC_DBL_AC') || suiteType;
+        const existingBoardRoom = await Room_1.Room.findOne({
+            $or: [
+                { roomNumber: 'Board Room' },
+                { qrToken: 'qr_token_board_room' },
+            ],
+        });
+        if (existingBoardRoom) {
+            existingBoardRoom.roomNumber = 'Board Room';
+            existingBoardRoom.floor = 1;
+            existingBoardRoom.isActive = true;
+            existingBoardRoom.isVenue = true;
+            existingBoardRoom.qrToken = existingBoardRoom.qrToken || 'qr_token_board_room';
+            await existingBoardRoom.save();
+        }
+        else {
+            await Room_1.Room.create({
+                roomNumber: 'Board Room',
+                roomTypeId: execType,
+                floor: 1,
+                status: 'AVAILABLE',
+                qrToken: 'qr_token_board_room',
+                isActive: true,
+                isVenue: true,
+            });
+        }
+        const activeRoomsCount = await Room_1.Room.countDocuments({ isActive: true, isVenue: { $ne: true } });
+        const activeVenuesCount = await Room_1.Room.countDocuments({ isActive: true, isVenue: true });
+        console.log(`✓ Official inventory seeded: ${activeRoomsCount} guest rooms + ${activeVenuesCount} special venues (Total ${activeRoomsCount + activeVenuesCount} active units)`);
         // 8. Menu Categories & Items
         const existingMenuItemsCount = await MenuItem_1.MenuItem.countDocuments();
         if (existingMenuItemsCount === 0 || clearExisting) {

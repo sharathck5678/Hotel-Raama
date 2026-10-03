@@ -39,6 +39,9 @@ class InvoicePdfService {
                 if (booking.guestAadhar) {
                     doc.text(`Aadhaar: ${booking.guestAadhar}`);
                 }
+                if (booking.gstin) {
+                    doc.text(`GSTIN: ${booking.gstin}`);
+                }
                 doc.moveDown(2);
                 // Table Header
                 const tableTop = doc.y + 10;
@@ -56,6 +59,13 @@ class InvoicePdfService {
                 doc.text(`${booking.numNights}`, 430, rowTop);
                 const roomSubtotal = ((booking.roomPricePerNightSnapshot || 0) * (booking.numNights || 1)).toFixed(2);
                 doc.text(`Rs. ${roomSubtotal}`, 480, rowTop);
+                if (booking.extraPerson && (booking.extraPersonChargeSnapshot || 0) > 0) {
+                    rowTop += 20;
+                    doc.text(`Extra Person Charge`, 50, rowTop);
+                    doc.text(`+1 Extra Guest`, 250, rowTop);
+                    doc.text(`${booking.numNights || 1}`, 430, rowTop);
+                    doc.text(`Rs. ${(booking.extraPersonChargeSnapshot || 0).toFixed(2)}`, 480, rowTop);
+                }
                 if (booking.mealPlanSelection && (booking.mealPlanSelection.pricePerNight || 0) > 0) {
                     rowTop += 20;
                     doc.text(`Meal Plan Additions`, 50, rowTop);
@@ -68,12 +78,27 @@ class InvoicePdfService {
                 doc.strokeColor('#DDDDDD').lineWidth(0.5).moveTo(40, rowTop).lineTo(570, rowTop).stroke();
                 rowTop += 10;
                 // Totals summary
-                const discountVal = (booking.discountAmountSnapshot || 0).toFixed(2);
-                doc.font('Helvetica').text(`Discount Applied:`, 350, rowTop);
-                doc.text(`- Rs. ${discountVal}`, 480, rowTop);
+                const subtotal = (booking.roomPricePerNightSnapshot || 0) * (booking.numNights || 1) +
+                    (booking.extraPersonChargeSnapshot || 0) +
+                    (booking.mealPlanSelection?.pricePerNight || 0) * (booking.numNights || 1);
+                doc.font('Helvetica').text(`Subtotal:`, 350, rowTop);
+                doc.text(`Rs. ${subtotal.toFixed(2)}`, 480, rowTop);
                 rowTop += 15;
+                if (booking.discountAmountSnapshot && booking.discountAmountSnapshot > 0) {
+                    const couponLabel = booking.couponCodeSnapshot
+                        ? `Discount (${booking.couponCodeSnapshot}):`
+                        : `Discount Applied:`;
+                    doc.font('Helvetica').text(couponLabel, 350, rowTop);
+                    doc.text(`- Rs. ${(booking.discountAmountSnapshot || 0).toFixed(2)}`, 480, rowTop);
+                    rowTop += 15;
+                    const taxableVal = Math.max(0, subtotal - (booking.discountAmountSnapshot || 0));
+                    doc.font('Helvetica').text(`Taxable Amount:`, 350, rowTop);
+                    doc.text(`Rs. ${taxableVal.toFixed(2)}`, 480, rowTop);
+                    rowTop += 15;
+                }
+                const taxRate = booking.taxRateSnapshot ?? 5;
                 const taxVal = (booking.taxAmountSnapshot || 0).toFixed(2);
-                doc.text(`GST (12%):`, 350, rowTop);
+                doc.font('Helvetica').text(`GST (${taxRate}%):`, 350, rowTop);
                 doc.text(`Rs. ${taxVal}`, 480, rowTop);
                 rowTop += 20;
                 const totalVal = (booking.totalAmount || 0).toFixed(2);

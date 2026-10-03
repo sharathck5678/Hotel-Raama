@@ -15,9 +15,11 @@ import { MealPlan } from '../models/MealPlan';
 import { AuditLog } from '../models/AuditLog';
 import { HotelSetting } from '../models/HotelSetting';
 import { Feedback } from '../models/Feedback';
+import crypto from 'crypto';
 import { EmailService } from '../services/EmailService';
 import { SocketService } from '../services/SocketService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
+import { AvailabilityEngine } from '../services/AvailabilityEngine';
 import { ensureDatabaseSeeded, runSeedLogic } from '../seed/seedDatabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'raama_super_secret_jwt_key_2026_production';
@@ -129,9 +131,9 @@ export class AdminController {
    */
   static async getDashboardMetrics(req: AuthRequest, res: Response) {
     try {
-      const totalRooms = await Room.countDocuments({ isActive: true });
-      const occupiedRooms = await Room.countDocuments({ status: 'OCCUPIED' });
-      const reservedRooms = await Room.countDocuments({ status: 'RESERVED' });
+      const totalRooms = await Room.countDocuments({ isActive: true, isVenue: { $ne: true } });
+      const occupiedRooms = await Room.countDocuments({ status: 'OCCUPIED', isActive: true, isVenue: { $ne: true } });
+      const reservedRooms = await Room.countDocuments({ status: 'RESERVED', isActive: true, isVenue: { $ne: true } });
       
       const occupancyRate = totalRooms > 0 ? Math.round(((occupiedRooms + reservedRooms) / totalRooms) * 100) : 0;
 
@@ -474,7 +476,15 @@ export class AdminController {
    */
   static async getRooms(req: AuthRequest, res: Response) {
     try {
-      const rooms = await Room.find().populate('roomTypeId');
+      const rooms = await Room.find({ isActive: true }).populate('roomTypeId').lean();
+      rooms.sort((a, b) => {
+        const numA = parseInt(a.roomNumber, 10);
+        const numB = parseInt(b.roomNumber, 10);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        if (!isNaN(numA)) return -1;
+        if (!isNaN(numB)) return 1;
+        return a.roomNumber.localeCompare(b.roomNumber);
+      });
       return res.json({ success: true, data: rooms });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch rooms.' });
@@ -880,6 +890,325 @@ export class AdminController {
         success: false,
         message: error.message || 'Internal error dispatching feedback request.',
       });
+    }
+  }
+
+  /**
+   * GET /api/admin/inventory
+   * Retrieves physical room status for all 37 active guest rooms for a selected date range.
+   * Strictly returns only TWO statuses: 'AVAILABLE' or 'OCCUPIED'.
+   */
+  static async getInventoryStatus(req: AuthRequest, res: Response) {
+    try {
+      const { checkIn, checkOut } = req.query;
+
+      let checkInDate: Date;
+      let checkOutDate: Date;
+
+      const now = new Date();
+      if (checkIn && typeof checkIn === 'string' && checkOut && typeof checkOut === 'string') {
+        const [ciY, ciM, ciD] = checkIn.split('-').map(Number);
+        const [coY, coM, coD] = checkOut.split('-').map(Number);
+        if (!isNaN(ciY) && !isNaN(ciM) && !isNaN(ciD) && !isNaN(coY) && !isNaN(coM) && !isNaN(coD)) {
+          checkInDate = new Date(Date.UTC(ciY, ciM - 1, ciD, 0, 0, 0, 0));
+          checkOutDate = new Date(Date.UTC(coY, coM - 1, coD, 0, 0, 0, 0));
+        } else {
+          checkInDate = new Date(checkIn);
+          checkOutDate = new Date(checkOut);
+        }
+      } else {
+        // Default to today and tomorrow (UTC midnight)
+        checkInDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+        checkOutDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+      }
+
+      if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+        return res.status(400).json({ success: false, message: 'Invalid check-in or check-out date format.' });
+      }
+
+      if (checkOutDate <= checkInDate) {
+        return res.status(400).json({ success: false, message: 'Check-out date must be strictly after check-in date.' });
+      }
+
+      const result = await AvailabilityEngine.getPhysicalInventoryStatus(checkInDate, checkOutDate);
+      return res.json({ success: true, data: result });
+    } catch (error: any) {
+      console.error('[AdminController] Error fetching inventory status:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to fetch inventory status.' });
+    }
+  }
+
+  /**
+   * POST /api/admin/inventory/offline-booking
+   * Manually records a physical/walk-in booking directly into the Booking architecture.
+   */
+  static async createOfflineBooking(req: AuthRequest, res: Response) {
+    try {
+      const { roomId, checkIn, checkOut, guestName, guestPhone, guestEmail, adminNotes } = req.body;
+
+      if (!roomId || !checkIn || !checkOut) {
+        return res.status(400).json({ success: false, message: 'roomId, checkIn, and checkOut are required.' });
+      }
+
+      let checkInDate: Date;
+      let checkOutDate: Date;
+      if (typeof checkIn === 'string' && typeof checkOut === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(checkIn) && /^\d{4}-\d{2}-\d{2}$/.test(checkOut)) {
+        const [ciY, ciM, ciD] = checkIn.split('-').map(Number);
+        const [coY, coM, coD] = checkOut.split('-').map(Number);
+        checkInDate = new Date(Date.UTC(ciY, ciM - 1, ciD, 0, 0, 0, 0));
+        checkOutDate = new Date(Date.UTC(coY, coM - 1, coD, 0, 0, 0, 0));
+      } else {
+        checkInDate = new Date(checkIn);
+        checkOutDate = new Date(checkOut);
+      }
+
+      if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+        return res.status(400).json({ success: false, message: 'Invalid check-in or check-out date.' });
+      }
+
+      if (checkOutDate <= checkInDate) {
+        return res.status(400).json({ success: false, message: 'Check-out must be strictly after check-in.' });
+      }
+
+      // 1. Verify Room exists and is an active guest room
+      const room = await Room.findById(roomId).populate('roomTypeId');
+      if (!room) {
+        return res.status(404).json({ success: false, message: 'Room not found.' });
+      }
+
+      if (!room.isActive) {
+        return res.status(400).json({ success: false, message: 'Cannot book an inactive or legacy room.' });
+      }
+
+      if (room.isVenue) {
+        return res.status(400).json({ success: false, message: 'Cannot book a venue (Banquet Hall / Board Room) as a guest room.' });
+      }
+
+      if (room.roomNumber === '104') {
+        return res.status(400).json({ success: false, message: 'Room 104 does not exist.' });
+      }
+
+      // 2. Strict concurrency & date-overlap check on this physical room
+      const { available, conflictingBooking } = await AvailabilityEngine.isPhysicalRoomAvailable(
+        room._id,
+        checkInDate,
+        checkOutDate
+      );
+
+      if (!available) {
+        return res.status(409).json({
+          success: false,
+          message: `Room #${room.roomNumber} is already occupied for these dates (Booking: ${conflictingBooking?.bookingId || 'Active Reservation'}).`,
+        });
+      }
+
+      // 3. Compute duration & snapshot rates
+      const numNights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const rt = room.roomTypeId as any;
+      const basePrice = rt?.basePrice || 2200;
+      const totalAmount = basePrice * numNights;
+      const bookingId = `HR-OFF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const trackingToken = crypto.randomBytes(16).toString('hex');
+
+      // 4. Create confirmed offline booking record
+      const booking = await Booking.create({
+        bookingId,
+        source: 'OFFLINE',
+        guestName: (guestName && guestName.trim()) || 'Walk-in Guest',
+        guestEmail: (guestEmail && guestEmail.trim()) || 'offline@hotelraama.com',
+        guestPhone: (guestPhone && guestPhone.trim()) || 'Offline Guest',
+        roomTypeId: rt?._id || room.roomTypeId,
+        assignedRoomId: room._id,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        numGuests: 2,
+        numNights,
+        roomPricePerNightSnapshot: basePrice,
+        totalAmount,
+        bookingStatus: 'CONFIRMED',
+        paymentStatus: 'PAID',
+        trackingToken,
+        adminNotes: adminNotes?.trim() || undefined,
+        createdBy: req.admin?.email || 'admin',
+      });
+
+      // 5. Audit Log
+      await AuditLog.create({
+        adminId: req.admin!.id,
+        adminEmail: req.admin!.email,
+        action: 'CREATE_OFFLINE_BOOKING',
+        entity: 'Booking',
+        entityId: booking._id.toString(),
+        details: {
+          bookingId: booking.bookingId,
+          roomNumber: room.roomNumber,
+          checkIn: checkInDate,
+          checkOut: checkOutDate,
+          guestName: booking.guestName,
+        },
+      });
+
+      const populatedBooking = await Booking.findById(booking._id).populate('roomTypeId assignedRoomId');
+
+      return res.status(201).json({
+        success: true,
+        message: `Physical booking ${booking.bookingId} created for Room #${room.roomNumber}.`,
+        data: populatedBooking,
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Error creating offline booking:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to create offline booking.' });
+    }
+  }
+
+  /**
+   * GET /api/admin/inventory/offline-bookings
+   */
+  static async getOfflineBookings(req: AuthRequest, res: Response) {
+    try {
+      const { status } = req.query;
+      const filter: any = { source: 'OFFLINE' };
+      if (status && typeof status === 'string' && status !== 'ALL') {
+        filter.bookingStatus = status;
+      }
+
+      const bookings = await Booking.find(filter)
+        .populate('roomTypeId assignedRoomId')
+        .sort({ createdAt: -1 });
+
+      return res.json({ success: true, data: bookings });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: 'Failed to fetch offline bookings.' });
+    }
+  }
+
+  /**
+   * PATCH /api/admin/inventory/offline-booking/:id
+   */
+  static async updateOfflineBooking(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { roomId, checkIn, checkOut, guestName, guestPhone, guestEmail, adminNotes, bookingStatus } = req.body;
+
+      const booking = await Booking.findOne({ _id: id, source: 'OFFLINE' });
+      if (!booking) {
+        return res.status(404).json({ success: false, message: 'Offline booking not found.' });
+      }
+
+      let targetRoomId = booking.assignedRoomId;
+      let checkInDate = booking.checkIn;
+      let checkOutDate = booking.checkOut;
+      let datesOrRoomChanged = false;
+
+      if (roomId && roomId.toString() !== booking.assignedRoomId?.toString()) {
+        const room = await Room.findById(roomId);
+        if (!room || !room.isActive || room.isVenue || room.roomNumber === '104') {
+          return res.status(400).json({ success: false, message: 'Invalid target room.' });
+        }
+        targetRoomId = room._id as any;
+        booking.assignedRoomId = room._id as any;
+        booking.roomTypeId = room.roomTypeId;
+        datesOrRoomChanged = true;
+      }
+
+      if (checkIn && checkOut) {
+        let ci: Date;
+        let co: Date;
+        if (typeof checkIn === 'string' && typeof checkOut === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(checkIn) && /^\d{4}-\d{2}-\d{2}$/.test(checkOut)) {
+          const [ciY, ciM, ciD] = checkIn.split('-').map(Number);
+          const [coY, coM, coD] = checkOut.split('-').map(Number);
+          ci = new Date(Date.UTC(ciY, ciM - 1, ciD, 0, 0, 0, 0));
+          co = new Date(Date.UTC(coY, coM - 1, coD, 0, 0, 0, 0));
+        } else {
+          ci = new Date(checkIn);
+          co = new Date(checkOut);
+        }
+
+        if (isNaN(ci.getTime()) || isNaN(co.getTime()) || co <= ci) {
+          return res.status(400).json({ success: false, message: 'Invalid check-in or check-out dates.' });
+        }
+
+        checkInDate = ci;
+        checkOutDate = co;
+        booking.checkIn = ci;
+        booking.checkOut = co;
+        booking.numNights = Math.max(1, Math.round((co.getTime() - ci.getTime()) / (1000 * 60 * 60 * 24)));
+        booking.totalAmount = booking.roomPricePerNightSnapshot * booking.numNights;
+        datesOrRoomChanged = true;
+      }
+
+      if (datesOrRoomChanged && targetRoomId && booking.bookingStatus !== 'CANCELLED') {
+        const { available, conflictingBooking } = await AvailabilityEngine.isPhysicalRoomAvailable(
+          targetRoomId,
+          checkInDate,
+          checkOutDate,
+          booking._id
+        );
+
+        if (!available) {
+          return res.status(409).json({
+            success: false,
+            message: `Room is already occupied for these dates (Booking: ${conflictingBooking?.bookingId}).`,
+          });
+        }
+      }
+
+      if (guestName !== undefined) booking.guestName = guestName.trim();
+      if (guestPhone !== undefined) booking.guestPhone = guestPhone.trim();
+      if (guestEmail !== undefined) booking.guestEmail = guestEmail.trim();
+      if (adminNotes !== undefined) booking.adminNotes = adminNotes.trim();
+      if (bookingStatus && ['CONFIRMED', 'CANCELLED', 'CHECKED_IN', 'CHECKED_OUT'].includes(bookingStatus)) {
+        booking.bookingStatus = bookingStatus as any;
+      }
+
+      await booking.save();
+
+      await AuditLog.create({
+        adminId: req.admin!.id,
+        adminEmail: req.admin!.email,
+        action: 'UPDATE_OFFLINE_BOOKING',
+        entity: 'Booking',
+        entityId: booking._id.toString(),
+        details: { bookingId: booking.bookingId, changes: req.body },
+      });
+
+      const updated = await Booking.findById(booking._id).populate('roomTypeId assignedRoomId');
+      return res.json({ success: true, message: 'Offline booking updated successfully.', data: updated });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message || 'Failed to update offline booking.' });
+    }
+  }
+
+  /**
+   * POST /api/admin/inventory/offline-booking/:id/cancel
+   */
+  static async cancelOfflineBooking(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const booking = await Booking.findOne({ _id: id, source: 'OFFLINE' }).populate('assignedRoomId');
+      if (!booking) {
+        return res.status(404).json({ success: false, message: 'Offline booking not found.' });
+      }
+
+      booking.bookingStatus = 'CANCELLED';
+      await booking.save();
+
+      await AuditLog.create({
+        adminId: req.admin!.id,
+        adminEmail: req.admin!.email,
+        action: 'CANCEL_OFFLINE_BOOKING',
+        entity: 'Booking',
+        entityId: booking._id.toString(),
+        details: { bookingId: booking.bookingId, reason: req.body.reason || 'Admin cancelled' },
+      });
+
+      return res.json({
+        success: true,
+        message: `Offline booking ${booking.bookingId} cancelled. Physical room availability restored.`,
+        data: booking,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message || 'Failed to cancel offline booking.' });
     }
   }
 }

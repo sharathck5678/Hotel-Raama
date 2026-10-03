@@ -1,5 +1,22 @@
 import { Schema, model, Document } from 'mongoose';
 
+/**
+ * HOTEL RAAMA ROOM TYPE SPECIFICATIONS & INVENTORY RULES:
+ * - Total Active Guest Rooms: 37 across Floors 1-3.
+ * - Categories:
+ *   - TRIPLE_EXEC (5 rooms): 101, 110, 206, 212, 213
+ *   - TRIPLE_PREM (1 room): 305
+ *   - SUITE_ROOM (2 rooms): 103, 205
+ *   - PREM_DBL_NONAC (7 rooms): 105, 204, 207, 211, 216, 217, 302
+ *   - EXEC_DBL_AC (22 rooms): 102, 106, 107, 108, 109, 111, 112, 113, 114, 115,
+ *                             201, 202, 203, 208, 209, 210, 214, 215, 218,
+ *                             301, 303, 304
+ * 
+ * BUSINESS RULE (Confirmed by Hotel Management):
+ * Split-bed/twin-bed rooms are intentionally classified as Executive Double A/C inventory.
+ * They use the same pricing, availability pool and booking rules as Executive Double A/C rooms.
+ * No separate SPLIT_BED_AC room type exists.
+ */
 export interface IRoomType extends Document {
   name: string; // e.g. "Executive Double A/C"
   code: string; // e.g. "EXEC_DBL_AC"

@@ -82,30 +82,62 @@ initFeedbackSchedulerJob();
 import { Room } from './models/Room';
 import { RoomType } from './models/RoomType';
 import { Coupon } from './models/Coupon';
+import { HotelSetting } from './models/HotelSetting';
 
-// Helper to ensure coupons in active database
+// Helper to ensure official coupons in active database (WELCOME10 and WELCOME15 only)
 const ensureCoupons = async () => {
   try {
-    await Coupon.deleteMany({ code: { $ne: 'RAAMA5' } });
-    const existing = await Coupon.findOne({ code: 'RAAMA5' });
-    if (!existing) {
-      const now = new Date();
-      const nextYear = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
-      await Coupon.create({
-        code: 'RAAMA5',
+    // Delete any old corporate/promotional coupons such as RAAMA5, HotelRaama5, etc.
+    await Coupon.deleteMany({ code: { $nin: ['WELCOME10', 'WELCOME15'] } });
+
+    const now = new Date(2020, 0, 1);
+    const futureDate = new Date(new Date().getFullYear() + 5, 11, 31);
+
+    // Ensure WELCOME10 (10% discount)
+    await Coupon.findOneAndUpdate(
+      { code: 'WELCOME10' },
+      {
+        code: 'WELCOME10',
         discountType: 'PERCENTAGE',
-        discountValue: 5,
+        discountValue: 10,
         minBookingAmount: 0,
-        startDate: new Date(2020, 0, 1),
-        endDate: nextYear,
-        maxUsage: 10000,
-        usedCount: 0,
+        startDate: now,
+        endDate: futureDate,
+        maxUsage: 100000,
         isActive: true,
-      });
-      console.log('[Setup] Created RAAMA5 5% coupon entry.');
-    }
+      },
+      { upsert: true, new: true }
+    );
+
+    // Ensure WELCOME15 (15% discount)
+    await Coupon.findOneAndUpdate(
+      { code: 'WELCOME15' },
+      {
+        code: 'WELCOME15',
+        discountType: 'PERCENTAGE',
+        discountValue: 15,
+        minBookingAmount: 0,
+        startDate: now,
+        endDate: futureDate,
+        maxUsage: 100000,
+        isActive: true,
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log('[Setup] Verified active coupons: WELCOME10 (10%) and WELCOME15 (15%).');
   } catch (err) {
     console.warn('[Setup] Coupon sync warning:', err);
+  }
+};
+
+// Helper to ensure HotelSetting tax percentage is configured to official 5% GST
+const ensureHotelSettings = async () => {
+  try {
+    await HotelSetting.updateMany({}, { $set: { taxPercentage: 5 } });
+    console.log('[Setup] Verified HotelSetting tax rate at 5% GST.');
+  } catch (err) {
+    console.warn('[Setup] HotelSetting sync warning:', err);
   }
 };
 
@@ -130,9 +162,13 @@ const ensureSpecialVenues = async () => {
           status: 'AVAILABLE',
           qrToken: 'qr_token_party_hall',
           isActive: true,
+          isVenue: true,
         });
         console.log('[Setup] Created Sambhrama Banquet Hall QR code entry.');
       }
+    } else if (!existingPartyHall.isVenue) {
+      existingPartyHall.isVenue = true;
+      await existingPartyHall.save();
     }
 
     const existingBoardRoom = await Room.findOne({
@@ -152,12 +188,36 @@ const ensureSpecialVenues = async () => {
           status: 'AVAILABLE',
           qrToken: 'qr_token_board_room',
           isActive: true,
+          isVenue: true,
         });
         console.log('[Setup] Created Board Room QR code entry.');
       }
+    } else if (!existingBoardRoom.isVenue) {
+      existingBoardRoom.isVenue = true;
+      await existingBoardRoom.save();
     }
   } catch (err) {
     console.warn('[Setup] Special venue check warning:', err);
+  }
+};
+
+// Helper to ensure all room types have the official hotel facilities
+const ensureRoomAmenities = async () => {
+  try {
+    const HOTEL_FACILITIES = [
+      'Iron/Iron Boarding',
+      'Laundry Service',
+      '24Hour Hot Water',
+      'Free Wifi',
+      'Tv',
+      'Kettle',
+    ];
+    const updateResult = await RoomType.updateMany({}, { $set: { amenities: HOTEL_FACILITIES } });
+    if (updateResult.modifiedCount > 0) {
+      console.log(`[Setup] Synced ${updateResult.modifiedCount} room types with official hotel facilities.`);
+    }
+  } catch (err) {
+    console.warn('[Setup] Room facilities sync warning:', err);
   }
 };
 
@@ -169,7 +229,9 @@ mongoose
   .then(async () => {
     console.log('[MongoDB] Connected successfully to hotel_raama database.');
     await ensureDatabaseSeeded();
+    await ensureRoomAmenities();
     await ensureSpecialVenues();
+    await ensureHotelSettings();
     await ensureCoupons();
     httpServer.listen(PORT, () => {
       console.log(`[Server] Hotel Raama Backend API running at http://localhost:${PORT}`);

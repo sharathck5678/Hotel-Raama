@@ -14,7 +14,7 @@
 
 <p align="center">
   <b>A full-stack, editorial luxury hotel management web platform engineered for Hotel Raama, Hassan, Karnataka.</b><br>
-  Combines an Awwwards-inspired luxury guest reservation portal, 41-endpoint contactless QR room & party hall dining system, real-time Kitchen Display System (KDS), and high-security administrative operations console.
+  Combines an Awwwards-inspired luxury guest reservation portal, 39-endpoint contactless QR room & venue dining system, real-time Kitchen Display System (KDS), and high-security administrative operations console.
 </p>
 
 [Key Features](#-key-features) •
@@ -35,7 +35,7 @@
 - [Overview](#-overview)
 - [Key Features](#-key-features)
   - [1. Luxury Guest Portal & Room Booking](#1-luxury-guest-portal--room-booking)
-  - [2. 41-Endpoint QR Dining & Bar Ordering](#2-41-endpoint-qr-dining--bar-ordering)
+  - [2. 39-Endpoint QR Dining & Bar Ordering](#2-39-endpoint-qr-dining--bar-ordering)
   - [3. Kitchen Display System (KDS) & Operations](#3-kitchen-display-system-kds--operations)
   - [4. Automated Billing & PDF Invoice Generation](#4-automated-billing--pdf-invoice-generation)
 - [System Architecture](#-system-architecture)
@@ -80,10 +80,10 @@
 - **Flexible Payment Gateway**: Integration with Razorpay (Cards, UPI, NetBanking) with offline "Pay at Reception" fallback.
 - **Instant Digital Tracking**: Guests receive a secure tracking token (`TRK-XXXXXX`) to inspect live booking statuses anytime.
 
-### 2. 41-Endpoint QR Dining & Bar Ordering
+### 2. 39-Endpoint QR Dining & Bar Ordering
 - **Dedicated QR Endpoints**:
-  - **40 Rooms**: Room #1 through Room #40 with independent room-service QR routing.
-  - **1 Sambhrama Party Hall**: Tailored banquet/event QR ordering station.
+  - **37 Guest Rooms**: 37 physical guest rooms across Floors 1–3 with independent room-service QR routing.
+  - **2 Event Venues**: Sambhrama Banquet Hall and Board Room with dedicated venue QR ordering stations.
 - **Curated Multi-Cuisine Menu**: Multi-category offerings (South Indian, North Indian, Tandoori, Chinese, Beverages, Desserts, and LLB Bar).
 - **Interactive Cart & Dietary Badges**: Quick filtering for Pure Veg, Non-Veg, Chef Specials, and customizable spice levels/special requests.
 - **Live Order Progress Tracker**: Real-time 4-step progress visualization:
@@ -115,7 +115,7 @@
 flowchart TD
     subgraph ClientLayer ["Client Layer (React 18 + Vite + Tailwind)"]
         A[Guest Web Portal / Room Booking]
-        B[41-Room QR Ordering Mobile Web]
+        B[39-Destination QR Ordering Mobile Web]
         C[Protected Admin & KDS Console]
     end
 
@@ -185,7 +185,7 @@ RAAMA/
 │   │   ├── middleware/                   # JWT auth, rate limiters, error handlers
 │   │   ├── models/                       # Mongoose schemas (Room, Booking, Order, Admin)
 │   │   ├── routes/                       # Express route definitions
-│   │   ├── seed/                         # Database seeder (40 Rooms + Sambhrama + Menu)
+│   │   ├── seed/                         # Database seeder (37 Guest Rooms + 2 Venues + Menu)
 │   │   ├── services/                     # SocketService, RazorpayService, PDFInvoiceService
 │   │   └── index.ts                      # Express & HTTP server entry point
 │   ├── .env.example                      # Server environment variable template
@@ -294,7 +294,7 @@ cd Hotel-Raama
 
 ### Step 4: Seed the Database
 
-Populate your database with the master hotel dataset (Room categories, 40 room QR tokens, Sambhrama Party Hall QR code, and full multi-cuisine menu catalog):
+Populate your database with the master hotel dataset (Room categories, 37 guest room QR tokens, 2 venue QR codes, and full multi-cuisine menu catalog):
 
 ```bash
 cd ../server
@@ -349,7 +349,7 @@ Visit the application in your browser:
 
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `GET` | `/api/qr/all-codes` | List all 41 generated QR codes and validation tokens | No |
+| `GET` | `/api/qr/all-codes` | List all 39 generated QR codes and validation tokens | No |
 | `GET` | `/api/qr/validate/:token` | Validate room QR token & fetch room destination data | No |
 | `POST` | `/api/orders` | Submit new food/beverage order from room/hall | No |
 | `POST` | `/api/orders/verify-payment` | Verify Razorpay payment for QR food order | No |
@@ -368,7 +368,7 @@ Visit the application in your browser:
 | `GET` | `/api/admin/orders` | Fetch active kitchen orders for Kitchen Display Board | Yes (Admin) |
 | `PATCH` | `/api/admin/orders/:id/status` | Advance order state (`COOKING`, `SERVED`, `COMPLETED`) | Yes (Admin) |
 | `PATCH` | `/api/admin/orders/:id/payment` | Mark order payment as `PAID` via Cash/POS | Yes (Admin) |
-| `GET` | `/api/admin/rooms` | View status of all 40 rooms (Available, Occupied, Maintenance) | Yes (Admin) |
+| `GET` | `/api/admin/rooms` | View status of all 37 guest rooms & 2 venues (Available, Occupied, Maintenance) | Yes (Admin) |
 | `PATCH` | `/api/admin/rooms/:id/status` | Toggle individual room operational status | Yes (Admin) |
 | `GET` | `/api/admin/reports/customer-history` | Aggregate guest CRM data, lifetime value & orders | Yes (Admin) |
 | `GET` | `/api/admin/audit-logs` | Retrieve chronological security audit trail | Yes (Admin) |
@@ -435,7 +435,7 @@ VITE_RAZORPAY_KEY_ID=rzp_test_mock_key_id
 ## 🗄️ Database Models & Schema
 
 - **`RoomType`**: Room category specifications (Deluxe, Executive, Suite), bed capacity, amenities, base tariffs, and CP meal supplements.
-- **`Room`**: Physical room entities (1 to 40) with dedicated `qrToken`, floor numbering, and operational availability status.
+- **`Room`**: Physical room entities (37 guest rooms across Floors 1–3 + 2 venues) with dedicated `qrToken`, floor numbering, and operational availability status.
 - **`Booking`**: Guest reservation records with check-in/check-out dates, guest details, plan type (CP / Non-CP), payment ledger, and 15-minute hold timestamps.
 - **`MenuCategory` & `MenuItem`**: Hierarchical restaurant catalog containing item pricing, dietary tags (`VEG`, `NON_VEG`, `BAR`), descriptions, and preparation times.
 - **`Order`**: Room-service and banquet dining orders linking ordered items, quantities, room number, live status, and billing breakdown.
