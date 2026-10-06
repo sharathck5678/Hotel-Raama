@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, CreditCard, ChevronLeft, ChevronRight, ChevronDown, FileText } from 'lucide-react';
+import { Check, X, CreditCard, ChevronLeft, ChevronRight, ChevronDown, FileText, Calendar, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchRoomTypes, checkAvailability, validateCoupon, createBookingHold, verifyBookingPayment, cancelBookingHold } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
@@ -159,9 +159,11 @@ export const RoomsPage: React.FC = () => {
   const [loadingRooms, setLoadingRooms] = useState<boolean>(true);
   const [filterAc, setFilterAc] = useState<string>('all');
   const [selectedRoom, setSelectedRoom] = useState<any | null>(null);
-  const [planType, setPlanType] = useState<'NON_CP' | 'CP'>('NON_CP');
+  const [planType, setPlanType] = useState<'NON_CP' | 'CP'>(
+    (searchParams.get('plan') as 'NON_CP' | 'CP') || 'NON_CP'
+  );
 
-  // Booking Modal Form State
+  // Booking & Stay State
   const [checkIn, setCheckIn] = useState<string>(searchParams.get('checkIn') || '');
   const [checkOut, setCheckOut] = useState<string>(searchParams.get('checkOut') || '');
   const [numGuests, setNumGuests] = useState<number>(parseInt(searchParams.get('guests') || '2', 10));
@@ -187,31 +189,39 @@ export const RoomsPage: React.FC = () => {
   const [calcResult, setCalcResult] = useState<any | null>(null);
   const [submittingBooking, setSubmittingBooking] = useState(false);
 
+  // Initialize and synchronize default stay dates and searchParams
   useEffect(() => {
-    // Default dates
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date();
-    dayAfter.setDate(dayAfter.getDate() + 2);
+    const qCheckIn = searchParams.get('checkIn');
+    const qCheckOut = searchParams.get('checkOut');
+    const qGuests = searchParams.get('guests');
+    const qPlan = searchParams.get('plan');
 
-    if (!checkIn) setCheckIn(tomorrow.toISOString().split('T')[0]);
-    if (!checkOut) setCheckOut(dayAfter.toISOString().split('T')[0]);
+    if (qCheckIn) {
+      setCheckIn(qCheckIn);
+    } else if (!checkIn) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setCheckIn(tomorrow.toISOString().split('T')[0]);
+    }
 
-    setLoadingRooms(true);
-    fetchRoomTypes()
-      .then((res) => {
-        if (res.success) {
-          setRoomTypes(res.data);
-          const preselectId = searchParams.get('select');
-          if (preselectId) {
-            const found = res.data.find((r: any) => r._id === preselectId);
-            if (found) setSelectedRoom(found);
-          }
-        }
-      })
-      .finally(() => setLoadingRooms(false));
+    if (qCheckOut) {
+      setCheckOut(qCheckOut);
+    } else if (!checkOut) {
+      const dayAfter = new Date();
+      dayAfter.setDate(dayAfter.getDate() + 2);
+      setCheckOut(dayAfter.toISOString().split('T')[0]);
+    }
 
-    // Ensure Razorpay Script is available
+    if (qGuests) {
+      setNumGuests(parseInt(qGuests, 10));
+    }
+    if (qPlan === 'CP' || qPlan === 'NON_CP') {
+      setPlanType(qPlan);
+    }
+  }, [searchParams]);
+
+  // Ensure Razorpay Script is available
+  useEffect(() => {
     if (!window.Razorpay && !document.querySelector('script[src*="checkout.razorpay.com"]')) {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -219,6 +229,48 @@ export const RoomsPage: React.FC = () => {
       document.body.appendChild(script);
     }
   }, []);
+
+  // Fetch Authoritative Date-Wise Room Types & Rates whenever dates, plan, or guests change
+  useEffect(() => {
+    if (!checkIn || !checkOut) return;
+    const inD = new Date(checkIn);
+    const outD = new Date(checkOut);
+    if (isNaN(inD.getTime()) || isNaN(outD.getTime()) || outD <= inD) return;
+
+    let isMounted = true;
+    setLoadingRooms(true);
+
+    fetchRoomTypes({
+      checkIn,
+      checkOut,
+      planType,
+      guests: numGuests,
+    })
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.success && Array.isArray(res.data)) {
+          setRoomTypes(res.data);
+          const preselectId = searchParams.get('select');
+          if (preselectId && !selectedRoom) {
+            const found = res.data.find((r: any) => r._id === preselectId);
+            if (found) setSelectedRoom(found);
+          } else if (selectedRoom) {
+            const found = res.data.find((r: any) => r._id === selectedRoom._id);
+            if (found) setSelectedRoom(found);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load room rates:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingRooms(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [checkIn, checkOut, planType, numGuests]);
 
   // Ensure numGuests stays within maxOccupancy of the selected room & reset terms agreement on room select
   useEffect(() => {
@@ -513,7 +565,7 @@ export const RoomsPage: React.FC = () => {
           </span>
           <h1 className="editorial-section-title text-[#00174A]">Rooms & Luxury Suites</h1>
           <p className="font-sans text-xs sm:text-sm text-[#666666] mt-3 max-w-xl mx-auto leading-relaxed">
-            Guaranteed direct tariffs. Transparent 5% GST breakdown, CP (Breakfast included) or EP (Room Only) options.
+            Guaranteed direct tariffs.
           </p>
 
           {/* Filter Buttons */}
@@ -534,7 +586,7 @@ export const RoomsPage: React.FC = () => {
                 : 'bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] hover:border-[#00174A]'
                 }`}
             >
-              Air Conditioned (A/C)
+              Executive Air Conditioned (A/C)
             </button>
             <button
               onClick={() => setFilterAc('nonac')}
@@ -545,6 +597,83 @@ export const RoomsPage: React.FC = () => {
             >
               Non-A/C Premium
             </button>
+          </div>
+
+          {/* Stay Dates & Rate Plan Bar */}
+          <div className="mt-8 bg-white/80 backdrop-blur-xs p-4 sm:p-5 rounded-sm border border-[#cbc0ad] shadow-sm max-w-4xl mx-auto text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+              <div>
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#00174A] mb-1.5 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#D6B369]" /> Check-In
+                </label>
+                <input
+                  type="date"
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  className="w-full bg-white text-[#00174A] border border-[#cbc0ad] rounded-sm px-3 py-2 text-xs font-sans font-semibold focus:border-[#00174A] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#00174A] mb-1.5 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-[#D6B369]" /> Check-Out
+                </label>
+                <input
+                  type="date"
+                  value={checkOut}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                  className="w-full bg-white text-[#00174A] border border-[#cbc0ad] rounded-sm px-3 py-2 text-xs font-sans font-semibold focus:border-[#00174A] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#00174A] mb-1.5 flex items-center gap-1.5">
+                  <Users size={13} className="text-[#D6B369]" /> Guests
+                </label>
+                <select
+                  value={numGuests}
+                  onChange={(e) => setNumGuests(parseInt(e.target.value, 10))}
+                  className="w-full bg-white text-[#00174A] border border-[#cbc0ad] rounded-sm px-3 py-2 text-xs font-sans font-semibold focus:border-[#00174A] focus:outline-none cursor-pointer"
+                >
+                  <option value={1}>1 Guest</option>
+                  <option value={2}>2 Guests</option>
+                  <option value={3}>3 Guests</option>
+                  <option value={4}>4 Guests / Family</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.14em] text-[#00174A] mb-1.5">
+                  Rate Plan
+                </label>
+                <div className="flex rounded-sm border border-[#cbc0ad] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setPlanType('NON_CP')}
+                    className={`flex-1 py-2 text-[11px] font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                      planType === 'NON_CP'
+                        ? 'bg-[#00174A] text-white'
+                        : 'bg-white text-[#666666] hover:bg-[#FAF9F6]'
+                    }`}
+                  >
+                    EP (Room Only)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPlanType('CP')}
+                    className={`flex-1 py-2 text-[11px] font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                      planType === 'CP'
+                        ? 'bg-[#00174A] text-white'
+                        : 'bg-white text-[#666666] hover:bg-[#FAF9F6]'
+                    }`}
+                  >
+                    CP (+Breakfast)
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </ScrollReveal>
@@ -600,28 +729,46 @@ export const RoomsPage: React.FC = () => {
                 <div className="p-7 pt-0 border-t border-[#cbc0ad] mt-4 space-y-4">
                   <div className="flex justify-between items-center bg-[#0B1849]/5 p-3.5 rounded-sm border border-[#cbc0ad] text-xs">
                     <div>
-                      <span className="text-[#666666] text-[10px] font-sans uppercase tracking-wider block font-semibold">EP Plan (Room Only)</span>
-                      <span className="text-[10px] font-sans text-[#666666]">Standard Direct Tariff</span>
+                      <span className="text-[#666666] text-[10px] font-sans uppercase tracking-wider block font-semibold">
+                        {planType === 'CP' ? 'CP Plan (With Breakfast)' : 'EP Plan (Room Only)'}
+                      </span>
+                      <span className="text-[10px] font-sans text-[#666666]">
+                        {room.hasVaryingRates
+                          ? `${room.numNights || 1} nights • ₹${room.roomTotal} room total`
+                          : (room.numNights && room.numNights > 1
+                              ? `${room.numNights} nights • ₹${room.roomTotal} room total`
+                              : 'Standard Direct Tariff')}
+                      </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-xl font-serif font-bold text-[#333333]">₹{room.basePrice}</span>
+                      <span className="text-xl font-serif font-bold text-[#333333]">
+                        {room.hasVaryingRates
+                          ? `₹${room.minRate}–₹${room.maxRate}`
+                          : `₹${room.dateWiseRate ?? (planType === 'CP' ? (room.cpPrice || room.basePrice) : room.basePrice)}`}
+                      </span>
                       <span className="text-[10px] font-sans text-[#666666]"> / night + GST</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-sans uppercase tracking-wider text-[#666666] font-semibold">Instant Reservation</span>
+                    <span className="text-[10px] font-sans uppercase tracking-wider text-[#666666] font-semibold">
+                      {room.isAvailable === false ? (
+                        <span className="text-rose-600 font-bold">Sold Out</span>
+                      ) : (
+                        'Instant Reservation'
+                      )}
+                    </span>
                     <button
+                      disabled={room.isAvailable === false}
                       onClick={() => {
                         setSelectedRoom(room);
-                        setPlanType('NON_CP');
                         setExtraPerson(false);
                         const maxAllowed = room.maxOccupancy || 2;
                         setNumGuests((prev) => (prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev));
                       }}
-                      className="px-5 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer"
+                      className="px-5 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Select & Book
+                      {room.isAvailable === false ? 'Unavailable' : 'Select & Book'}
                     </button>
                   </div>
                 </div>
@@ -651,7 +798,7 @@ export const RoomsPage: React.FC = () => {
                 <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
                 <h2 className="text-3xl font-serif text-[#00174A]">{selectedRoom.name}</h2>
                 <p className="text-xs font-sans text-[#666666] mt-1">
-                  Base Rate: ₹{selectedRoom.basePrice} / night · Max Occupancy: {selectedRoom.maxOccupancy || 2} {selectedRoom.maxOccupancy === 1 ? 'Guest' : 'Guests'}
+                  Rate: ₹{calcResult?.pricing?.roomPricePerNight ?? selectedRoom.dateWiseRate ?? (planType === 'CP' ? (selectedRoom.cpPrice || selectedRoom.basePrice) : selectedRoom.basePrice)} / night · Max Occupancy: {selectedRoom.maxOccupancy || 2} {selectedRoom.maxOccupancy === 1 ? 'Guest' : 'Guests'}
                 </p>
               </div>
 
@@ -734,7 +881,9 @@ export const RoomsPage: React.FC = () => {
                   >
                     <span className="text-xs font-sans font-bold text-[#00174A] flex items-center justify-between">
                       🏨 EP Plan (Room Only)
-                      <span className="text-sm font-serif font-extrabold">₹{selectedRoom.basePrice}</span>
+                      <span className="text-sm font-serif font-extrabold">
+                        ₹{selectedRoom.epRate || selectedRoom.basePrice}
+                      </span>
                     </span>
                     <span className="text-[10px] font-sans text-[#666666]">Standard rate, breakfast not included</span>
                   </button>
@@ -749,7 +898,9 @@ export const RoomsPage: React.FC = () => {
                   >
                     <span className="text-xs font-sans font-bold text-[#00174A] flex items-center justify-between">
                       🍳 CP Plan (With Breakfast)
-                      <span className="text-sm font-serif font-extrabold">₹{selectedRoom.cpPrice || selectedRoom.basePrice + 150}</span>
+                      <span className="text-sm font-serif font-extrabold">
+                        ₹{selectedRoom.cpRate || selectedRoom.cpPrice || selectedRoom.basePrice + 150}
+                      </span>
                     </span>
                     <span className="text-[10px] font-sans text-[#666666]">Morning breakfast included</span>
                   </button>
@@ -987,9 +1138,25 @@ export const RoomsPage: React.FC = () => {
               {calcResult && calcResult.pricing && (
                 <div className="p-4 bg-white/80 rounded-sm border border-[#cbc0ad] space-y-2 text-xs font-sans">
                   <div className="flex justify-between text-[#333333]">
-                    <span>Room Charges ({calcResult.pricing.numNights} night{calcResult.pricing.numNights > 1 ? 's' : ''} x ₹{calcResult.pricing.roomPricePerNight}):</span>
-                    <span>₹{calcResult.pricing.roomTotal}</span>
+                    <span>
+                      Room Charges ({calcResult.pricing.numNights} night{calcResult.pricing.numNights > 1 ? 's' : ''}
+                      {calcResult.pricing.nightlyRates && calcResult.pricing.nightlyRates.length > 1
+                        ? ` • avg ₹${calcResult.pricing.roomPricePerNight}/night`
+                        : ` x ₹${calcResult.pricing.roomPricePerNight}`}):
+                    </span>
+                    <span className="font-semibold">₹{calcResult.pricing.roomTotal}</span>
                   </div>
+
+                  {calcResult.pricing.nightlyRates && calcResult.pricing.nightlyRates.length > 1 && (
+                    <div className="pl-3 py-1 space-y-1 border-l-2 border-[#D6B369]/50 text-[11px] text-[#666666]">
+                      {calcResult.pricing.nightlyRates.map((nr: any, i: number) => (
+                        <div key={i} className="flex justify-between">
+                          <span>Night {i + 1} ({nr.date}):</span>
+                          <span>₹{nr.rate} {nr.isCustomRate ? '(Date rate)' : ''}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {calcResult.pricing.extraPersonTotal > 0 && (
                     <div className="flex justify-between text-emerald-800 font-semibold">
                       <span>Extra Person ({calcResult.pricing.numNights} night{calcResult.pricing.numNights > 1 ? 's' : ''} x ₹600):</span>
@@ -1131,6 +1298,13 @@ export const RoomsPage: React.FC = () => {
                           <span className="font-bold text-[#00174A] block mb-0.5">10. Management Rights</span>
                           <p className="text-[#555555] leading-relaxed">
                             Hotel management reserves the right to cancel or terminate a guest's stay in cases of misconduct, inappropriate behaviour, violation of hotel rules, or activities considered suspicious or contrary to hotel policies, subject to applicable laws and regulations.
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-bold text-[#00174A] block mb-0.5">11. Jurisdiction</span>
+                          <p className="text-[#555555] leading-relaxed">
+                            Any dispute or legal proceedings arising out of or in connection with the services of Hotel Raama shall, subject to applicable law, be brought before the competent courts having jurisdiction in Hassan, Karnataka, India.
                           </p>
                         </div>
                       </div>

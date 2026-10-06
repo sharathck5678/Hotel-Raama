@@ -6,10 +6,14 @@ const router = Router();
 
 router.get('/rooms', PublicController.getRoomTypes);
 router.post('/availability/check', PublicController.checkAvailabilityAndPrice);
+router.post('/bookings/check-availability', PublicController.checkAvailabilityAndPrice);
 router.post('/coupons/validate', PublicController.validateCoupon);
 router.post('/bookings', bookingLimiter, PublicController.createBooking);
+router.post('/bookings/create', bookingLimiter, PublicController.createBooking);
+router.post('/bookings/hold', bookingLimiter, PublicController.createBooking);
 router.post('/bookings/verify-payment', PublicController.verifyPayment);
 router.post('/bookings/cancel', PublicController.cancelBooking);
+router.post('/bookings/release-hold', PublicController.cancelBooking);
 router.get('/bookings/track/:token', PublicController.trackBooking);
 router.get('/menu', PublicController.getMenu);
 router.get('/party-packages', PublicController.getPartyPackages);

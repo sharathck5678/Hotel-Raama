@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Building2,
   CheckCircle2,
@@ -11,6 +12,7 @@ import {
   CalendarRange,
   Edit2,
   Trash2,
+  Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -21,6 +23,8 @@ import {
   cancelOfflineBooking,
 } from '../../services/api';
 import { ScrollReveal } from '../../components/ScrollReveal';
+import { AdminAvailabilityRatesView } from './AdminAvailabilityRatesView';
+import { AdminBaseRatesView } from './AdminBaseRatesView';
 
 export interface IInventoryRoom {
   _id: string;
@@ -75,7 +79,19 @@ export interface IOfflineBookingRecord {
   createdAt: string;
 }
 
-export const AdminInventoryView: React.FC = () => {
+export interface AdminInventoryViewProps {
+  initialTab?: 'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES';
+}
+
+export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialTab }) => {
+  const location = useLocation();
+  const [mainTab, setMainTab] = useState<'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES'>(() => {
+    if (initialTab) return initialTab;
+    if (location.pathname.includes('base-rates')) return 'BASE_RATES';
+    if (location.pathname.includes('availability')) return 'AVAILABILITY';
+    return 'PHYSICAL';
+  });
+
   // Date range state (default today and tomorrow)
   const getTodayStr = () => new Date().toISOString().split('T')[0];
   const getTomorrowStr = () => {
@@ -344,14 +360,19 @@ export const AdminInventoryView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {mainTab === 'PHYSICAL' && (
+              <button
+                onClick={() => openAddModalForRoom()}
+                className="px-4 py-2 bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#D6B369]/90 text-xs font-bold uppercase tracking-wider rounded-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <Plus size={16} /> Add Physical Booking
+              </button>
+            )}
             <button
-              onClick={() => openAddModalForRoom()}
-              className="px-4 py-2 bg-[#D6B369] text-[#00174A] hover:bg-[#E8C56A] active:bg-[#D6B369]/90 text-xs font-bold uppercase tracking-wider rounded-sm flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-            >
-              <Plus size={16} /> Add Physical Booking
-            </button>
-            <button
-              onClick={() => loadInventory(checkIn, checkOut)}
+              onClick={() => {
+                loadInventory(checkIn, checkOut);
+                loadOfflineBookings();
+              }}
               title="Refresh inventory"
               className="p-2 bg-white border border-[#10184A]/20 hover:border-[#D6B369] text-[#00174A] rounded-sm transition-colors cursor-pointer"
             >
@@ -359,10 +380,53 @@ export const AdminInventoryView: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Primary Tabs: [ PHYSICAL ROOMS (37) ] [ AVAILABILITY & RATES ] [ BASE RATES ] */}
+        <div className="flex items-center gap-2 mt-4 pt-1 flex-wrap">
+          <button
+            onClick={() => setMainTab('PHYSICAL')}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-t-sm transition-all cursor-pointer border-b-2 ${
+              mainTab === 'PHYSICAL'
+                ? 'border-[#D6B369] bg-[#00174A] text-[#FAF9F6] shadow-sm'
+                : 'border-transparent bg-white/70 hover:bg-white text-[#00174A]/80 hover:text-[#00174A]'
+            }`}
+          >
+            <Building2 size={15} className={mainTab === 'PHYSICAL' ? 'text-[#D6B369]' : 'text-[#667085]'} />
+            Physical Rooms (37)
+          </button>
+          <button
+            onClick={() => setMainTab('AVAILABILITY')}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-t-sm transition-all cursor-pointer border-b-2 ${
+              mainTab === 'AVAILABILITY'
+                ? 'border-[#D6B369] bg-[#00174A] text-[#FAF9F6] shadow-sm'
+                : 'border-transparent bg-white/70 hover:bg-white text-[#00174A]/80 hover:text-[#00174A]'
+            }`}
+          >
+            <CalendarRange size={15} className={mainTab === 'AVAILABILITY' ? 'text-[#D6B369]' : 'text-[#667085]'} />
+            Availability & Rates
+          </button>
+          <button
+            onClick={() => setMainTab('BASE_RATES')}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-t-sm transition-all cursor-pointer border-b-2 ${
+              mainTab === 'BASE_RATES'
+                ? 'border-[#D6B369] bg-[#00174A] text-[#FAF9F6] shadow-sm'
+                : 'border-transparent bg-white/70 hover:bg-white text-[#00174A]/80 hover:text-[#00174A]'
+            }`}
+          >
+            <Tag size={15} className={mainTab === 'BASE_RATES' ? 'text-[#D6B369]' : 'text-[#667085]'} />
+            Base Rates
+          </button>
+        </div>
       </ScrollReveal>
 
-      {/* Metrics Bar */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 font-sans">
+      {mainTab === 'AVAILABILITY' ? (
+        <AdminAvailabilityRatesView initialStartDate={new Date(checkIn)} />
+      ) : mainTab === 'BASE_RATES' ? (
+        <AdminBaseRatesView />
+      ) : (
+        <>
+          {/* Metrics Bar */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 font-sans">
         <div className="bg-white p-3.5 sm:p-4 rounded-sm border border-[#10184A]/15 shadow-xs flex items-center justify-between">
           <div>
             <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-[#667085]">Total Rooms</p>
@@ -815,6 +879,8 @@ export const AdminInventoryView: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+        </>
       )}
 
       {/* MODAL 1: ADD PHYSICAL BOOKING */}

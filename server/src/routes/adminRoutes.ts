@@ -34,11 +34,22 @@ router.patch('/orders/:id/payment', AdminController.updateOrderPayment);
 // Rooms & Inventory Management
 router.get('/rooms', AdminController.getRooms);
 router.patch('/rooms/:id/status', AdminController.updateRoomStatus);
+router.get('/room-types', AdminController.getRoomTypes);
+router.patch('/room-types/:id/base-rates', AdminController.updateRoomTypeBaseRates);
 router.get('/inventory', AdminController.getInventoryStatus);
 router.post('/inventory/offline-booking', AdminController.createOfflineBooking);
 router.get('/inventory/offline-bookings', AdminController.getOfflineBookings);
 router.patch('/inventory/offline-booking/:id', AdminController.updateOfflineBooking);
 router.post('/inventory/offline-booking/:id/cancel', AdminController.cancelOfflineBooking);
+
+// Date-Wise Inventory, Rates & Restrictions Layer
+router.get('/inventory/date-wise', AdminController.getDateWiseInventory);
+router.get('/inventory/rate-plans', AdminController.getRatePlans);
+router.post('/rates/bulk-update', AdminController.bulkUpdateRates);
+router.post('/inventory/bulk-update', AdminController.bulkUpdateInventory);
+router.post('/restrictions/bulk-update', AdminController.bulkUpdateRestrictions);
+router.post('/inventory/quick-update', AdminController.quickUpdateCell);
+router.post('/inventory/cell-update', AdminController.quickUpdateCell);
 
 // Reports & Billing
 router.get('/reports/customer-history', AdminController.getCustomerHistory);

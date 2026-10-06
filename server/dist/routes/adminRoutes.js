@@ -28,11 +28,21 @@ router.patch('/orders/:id/payment', adminController_1.AdminController.updateOrde
 // Rooms & Inventory Management
 router.get('/rooms', adminController_1.AdminController.getRooms);
 router.patch('/rooms/:id/status', adminController_1.AdminController.updateRoomStatus);
+router.get('/room-types', adminController_1.AdminController.getRoomTypes);
+router.patch('/room-types/:id/base-rates', adminController_1.AdminController.updateRoomTypeBaseRates);
 router.get('/inventory', adminController_1.AdminController.getInventoryStatus);
 router.post('/inventory/offline-booking', adminController_1.AdminController.createOfflineBooking);
 router.get('/inventory/offline-bookings', adminController_1.AdminController.getOfflineBookings);
 router.patch('/inventory/offline-booking/:id', adminController_1.AdminController.updateOfflineBooking);
 router.post('/inventory/offline-booking/:id/cancel', adminController_1.AdminController.cancelOfflineBooking);
+// Date-Wise Inventory, Rates & Restrictions Layer
+router.get('/inventory/date-wise', adminController_1.AdminController.getDateWiseInventory);
+router.get('/inventory/rate-plans', adminController_1.AdminController.getRatePlans);
+router.post('/rates/bulk-update', adminController_1.AdminController.bulkUpdateRates);
+router.post('/inventory/bulk-update', adminController_1.AdminController.bulkUpdateInventory);
+router.post('/restrictions/bulk-update', adminController_1.AdminController.bulkUpdateRestrictions);
+router.post('/inventory/quick-update', adminController_1.AdminController.quickUpdateCell);
+router.post('/inventory/cell-update', adminController_1.AdminController.quickUpdateCell);
 // Reports & Billing
 router.get('/reports/customer-history', adminController_1.AdminController.getCustomerHistory);
 router.get('/billing/invoice/:type/:id', adminController_1.AdminController.downloadInvoicePdf);

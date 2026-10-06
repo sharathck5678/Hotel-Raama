@@ -7,7 +7,7 @@ exports.InvoicePdfService = void 0;
 const pdfkit_1 = __importDefault(require("pdfkit"));
 class InvoicePdfService {
     /**
-     * Generate PDF buffer for Booking Tax Invoice
+     * Generate PDF buffer for Booking Tax Invoice (Pure White, Printer-Friendly)
      */
     static async generateBookingInvoicePdf(booking, roomTypeName) {
         return new Promise((resolve, reject) => {
@@ -17,14 +17,14 @@ class InvoicePdfService {
                 doc.on('data', buffers.push.bind(buffers));
                 doc.on('end', () => resolve(Buffer.concat(buffers)));
                 // Header
-                doc.fillColor('#07111F').fontSize(22).font('Helvetica-Bold').text('HOTEL RAAMA', { align: 'left' });
-                doc.fillColor('#666666').fontSize(9).font('Helvetica').text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201');
+                doc.fillColor('#111111').fontSize(22).font('Helvetica-Bold').text('HOTEL RAAMA', { align: 'left' });
+                doc.fillColor('#555555').fontSize(9).font('Helvetica').text('B.M. Road, Thanneeruhalla, Hassan, Karnataka - 573201');
                 doc.text('Phone: +91 78995 11330 | Email: hotelraama.hsn@gmail.com');
                 doc.moveDown();
                 // Title
-                doc.fillColor('#C9A227').fontSize(16).font('Helvetica-Bold').text('OFFICIAL BOOKING INVOICE', { align: 'right' });
+                doc.fillColor('#111111').fontSize(15).font('Helvetica-Bold').text('OFFICIAL BOOKING INVOICE', { align: 'right' });
                 doc.moveDown(0.5);
-                doc.strokeColor('#E2C46B').lineWidth(1).moveTo(40, doc.y).lineTo(570, doc.y).stroke();
+                doc.strokeColor('#BDBDBD').lineWidth(0.5).moveTo(40, doc.y).lineTo(570, doc.y).stroke();
                 doc.moveDown(1);
                 // Booking info grid
                 const startY = doc.y;
@@ -43,10 +43,10 @@ class InvoicePdfService {
                     doc.text(`GSTIN: ${booking.gstin}`);
                 }
                 doc.moveDown(2);
-                // Table Header
+                // Table Header (Pure white with thin gray border)
                 const tableTop = doc.y + 10;
-                doc.fillColor('#0B1D33').rect(40, tableTop, 530, 24).fill();
-                doc.fillColor('#FFFFFF').fontSize(10).font('Helvetica-Bold');
+                doc.strokeColor('#BDBDBD').lineWidth(0.5).rect(40, tableTop, 530, 24).stroke();
+                doc.fillColor('#111111').fontSize(10).font('Helvetica-Bold');
                 doc.text('Description', 50, tableTop + 7);
                 doc.text('Dates / Details', 250, tableTop + 7);
                 doc.text('Nights', 420, tableTop + 7);
@@ -102,11 +102,11 @@ class InvoicePdfService {
                 doc.text(`Rs. ${taxVal}`, 480, rowTop);
                 rowTop += 20;
                 const totalVal = (booking.totalAmount || 0).toFixed(2);
-                doc.fillColor('#07111F').font('Helvetica-Bold').fontSize(12);
+                doc.fillColor('#111111').font('Helvetica-Bold').fontSize(12);
                 doc.text(`Total Amount Paid:`, 350, rowTop);
-                doc.fillColor('#C9A227').text(`Rs. ${totalVal}`, 480, rowTop);
+                doc.text(`Rs. ${totalVal}`, 480, rowTop);
                 // Footer
-                doc.fillColor('#777777').fontSize(9).font('Helvetica').text('Thank you for choosing Hotel Raama, Hassan!', 40, 720, { align: 'center' });
+                doc.fillColor('#666666').fontSize(9).font('Helvetica').text('Thank you for choosing Hotel Raama, Hassan!', 40, 720, { align: 'center' });
                 doc.text('This is a computer-generated invoice and requires no signature.', 40, 735, { align: 'center' });
                 doc.end();
             }
@@ -116,7 +116,7 @@ class InvoicePdfService {
         });
     }
     /**
-     * Generate PDF buffer for QR Food Order Invoice
+     * Generate PDF buffer for QR Food Order Invoice (Pure White, Printer-Friendly)
      */
     static async generateOrderInvoicePdf(order) {
         return new Promise((resolve, reject) => {
@@ -126,12 +126,12 @@ class InvoicePdfService {
                 doc.on('data', buffers.push.bind(buffers));
                 doc.on('end', () => resolve(Buffer.concat(buffers)));
                 // Header
-                doc.fillColor('#07111F').fontSize(20).font('Helvetica-Bold').text('HOTEL RAAMA - ROOM SERVICE', { align: 'left' });
-                doc.fillColor('#666666').fontSize(9).font('Helvetica').text('Room Service & Dining Invoice');
+                doc.fillColor('#111111').fontSize(20).font('Helvetica-Bold').text('HOTEL RAAMA - ROOM SERVICE', { align: 'left' });
+                doc.fillColor('#555555').fontSize(9).font('Helvetica').text('Room Service & Dining Invoice');
                 doc.moveDown();
-                doc.fillColor('#C9A227').fontSize(14).font('Helvetica-Bold').text(`ORDER #${order.orderId}`, { align: 'right' });
+                doc.fillColor('#111111').fontSize(14).font('Helvetica-Bold').text(`ORDER #${order.orderId}`, { align: 'right' });
                 doc.moveDown(0.5);
-                doc.strokeColor('#E2C46B').lineWidth(1).moveTo(40, doc.y).lineTo(570, doc.y).stroke();
+                doc.strokeColor('#BDBDBD').lineWidth(0.5).moveTo(40, doc.y).lineTo(570, doc.y).stroke();
                 doc.moveDown(1);
                 const startY = doc.y;
                 doc.fillColor('#333333').fontSize(10).font('Helvetica-Bold').text(`Room Number: ${order.roomNumber}`, 40, startY);
@@ -139,10 +139,10 @@ class InvoicePdfService {
                 doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`);
                 doc.text(`Payment Status: ${order.paymentStatus.toUpperCase()}`);
                 doc.moveDown(2);
-                // Table Header
+                // Table Header (Pure white with thin gray border, no navy fill)
                 const tableTop = doc.y + 10;
-                doc.fillColor('#0B1D33').rect(40, tableTop, 530, 24).fill();
-                doc.fillColor('#FFFFFF').fontSize(10).font('Helvetica-Bold');
+                doc.strokeColor('#BDBDBD').lineWidth(0.5).rect(40, tableTop, 530, 24).stroke();
+                doc.fillColor('#111111').fontSize(10).font('Helvetica-Bold');
                 doc.text('Item Name', 50, tableTop + 7);
                 doc.text('Price (INR)', 320, tableTop + 7);
                 doc.text('Qty', 420, tableTop + 7);
@@ -160,10 +160,10 @@ class InvoicePdfService {
                 }
                 doc.strokeColor('#DDDDDD').lineWidth(0.5).moveTo(40, rowTop).lineTo(570, rowTop).stroke();
                 rowTop += 15;
-                doc.fillColor('#07111F').font('Helvetica-Bold').fontSize(12);
+                doc.fillColor('#111111').font('Helvetica-Bold').fontSize(12);
                 doc.text(`Total Bill:`, 350, rowTop);
-                doc.fillColor('#C9A227').text(`Rs. ${order.totalAmount.toFixed(2)}`, 480, rowTop);
-                doc.fillColor('#777777').fontSize(9).font('Helvetica').text('Hotel Raama Room Service - Bon Appétit!', 40, 720, { align: 'center' });
+                doc.text(`Rs. ${order.totalAmount.toFixed(2)}`, 480, rowTop);
+                doc.fillColor('#666666').fontSize(9).font('Helvetica').text('Hotel Raama Room Service - Bon Appétit!', 40, 720, { align: 'center' });
                 doc.end();
             }
             catch (err) {

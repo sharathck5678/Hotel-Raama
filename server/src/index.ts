@@ -131,11 +131,27 @@ const ensureCoupons = async () => {
   }
 };
 
-// Helper to ensure HotelSetting tax percentage is configured to official 5% GST
-const ensureHotelSettings = async () => {
+// Helper to ensure HotelSetting exists and preserves custom tax percentage
+export const ensureHotelSettings = async () => {
   try {
-    await HotelSetting.updateMany({}, { $set: { taxPercentage: 5 } });
-    console.log('[Setup] Verified HotelSetting tax rate at 5% GST.');
+    const existing = await HotelSetting.findOne();
+    const envTax = process.env.TAX_PERCENTAGE !== undefined && process.env.TAX_PERCENTAGE.trim() !== ''
+      ? Number(process.env.TAX_PERCENTAGE)
+      : NaN;
+    const defaultTax = !isNaN(envTax) && envTax >= 0 ? envTax : 5;
+
+    if (!existing) {
+      await HotelSetting.create({
+        taxPercentage: defaultTax,
+      });
+      console.log(`[Setup] Initialized default HotelSetting with taxPercentage: ${defaultTax}%.`);
+    } else if (existing.taxPercentage === undefined || existing.taxPercentage === null || isNaN(existing.taxPercentage)) {
+      existing.taxPercentage = defaultTax;
+      await existing.save();
+      console.log(`[Setup] Configured missing HotelSetting tax rate to ${defaultTax}%.`);
+    } else {
+      console.log(`[Setup] Preserved existing HotelSetting tax rate at ${existing.taxPercentage}%.`);
+    }
   } catch (err) {
     console.warn('[Setup] HotelSetting sync warning:', err);
   }

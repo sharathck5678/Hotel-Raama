@@ -6,19 +6,24 @@ const RoomType_1 = require("../models/RoomType");
 const MealPlan_1 = require("../models/MealPlan");
 const Coupon_1 = require("../models/Coupon");
 const HotelSetting_1 = require("../models/HotelSetting");
+const DailyRate_1 = require("../models/DailyRate");
 const gstinValidator_1 = require("../utils/gstinValidator");
+const AvailabilityEngine_1 = require("./AvailabilityEngine");
 exports.OFFICIAL_COUPONS = {
     WELCOME10: 10,
     WELCOME15: 15,
 };
 class PricingEngine {
     static async calculateBookingPrice(roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType = 'NON_CP', extraPerson = false, gstin) {
-        // 1. Calculate number of nights
-        const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
-        const numNights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        // 1. Calculate stay nights
+        const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(checkIn, checkOut);
+        const numNights = Math.max(1, stayDates.length);
         // 2. Fetch RoomType rate
         let roomType = null;
-        if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+        if (roomTypeId instanceof mongoose_1.Types.ObjectId) {
+            roomType = await RoomType_1.RoomType.findById(roomTypeId);
+        }
+        else if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
             roomType = await RoomType_1.RoomType.findById(roomTypeId);
         }
         if (!roomType) {
@@ -37,17 +42,82 @@ class PricingEngine {
         if (!roomType) {
             throw new Error('Invalid Room Type');
         }
-        const roomPricePerNight = planType === 'CP' ? (roomType.cpPrice || roomType.basePrice) : roomType.basePrice;
-        const roomTotal = roomPricePerNight * numNights;
-        // 3. Extra Person Charge (₹600 per night)
-        const extraPersonChargePerNight = extraPerson ? 600 : 0;
-        const extraPersonTotal = extraPersonChargePerNight * numNights;
-        // 4. Fetch Meal Plans and calculate total
+        const ratePlanCode = planType === 'CP' ? 'BREAKFAST_INCLUDED' : 'ROOM_ONLY';
+        // 3. Fetch any custom DailyRate records for this room type, rate plan, and stay dates
+        const customRates = await DailyRate_1.DailyRate.find({
+            roomTypeId: roomType._id,
+            ratePlanCode,
+            date: { $in: stayDates },
+        }).lean();
+        const customRateMap = new Map();
+        for (const cr of customRates) {
+            customRateMap.set(cr.date, cr);
+        }
+        // 4. Calculate per-night room price across all stay dates
+        let roomTotal = 0;
+        let extraPersonTotal = 0;
+        const nightlyRates = [];
+        const defaultBase = planType === 'CP' ? (roomType.cpPrice || roomType.basePrice) : roomType.basePrice;
+        const isSingleCategory = roomType.code.includes('SGL');
+        const defaultSingle = isSingleCategory ? defaultBase : Math.max(0, defaultBase - 200);
+        const defaultDouble = defaultBase;
+        const defaultTriple = roomType.maxOccupancy >= 3 ? defaultBase : defaultBase + 600;
+        for (const nightStr of stayDates) {
+            const cr = customRateMap.get(nightStr);
+            let nightPrice = defaultDouble;
+            let extraCharge = extraPerson ? 600 : 0;
+            let isCustom = false;
+            if (cr) {
+                isCustom = true;
+                if (numGuests === 1) {
+                    nightPrice = cr.singleAdult ?? defaultSingle;
+                }
+                else if (numGuests === 2) {
+                    nightPrice = cr.doubleAdult ?? defaultDouble;
+                }
+                else {
+                    // 3 or more guests
+                    if (roomType.maxOccupancy >= 3) {
+                        nightPrice = cr.tripleAdult ?? defaultTriple;
+                    }
+                    else {
+                        nightPrice = (cr.doubleAdult ?? defaultDouble) + (cr.extraAdultRate ?? 600);
+                    }
+                }
+                if (extraPerson) {
+                    extraCharge = cr.extraAdultRate ?? 600;
+                }
+            }
+            else {
+                if (numGuests === 1) {
+                    nightPrice = defaultSingle;
+                }
+                else if (numGuests === 2) {
+                    nightPrice = defaultDouble;
+                }
+                else {
+                    nightPrice = defaultTriple;
+                }
+                if (extraPerson) {
+                    extraCharge = 600;
+                }
+            }
+            roomTotal += nightPrice;
+            extraPersonTotal += extraCharge;
+            nightlyRates.push({
+                date: nightStr,
+                rate: nightPrice,
+                isCustomRate: isCustom,
+            });
+        }
+        const roomPricePerNight = Math.round(roomTotal / numNights);
+        const extraPersonChargePerNight = Math.round(extraPersonTotal / numNights);
+        // 5. Fetch Meal Plans and calculate total
         let mealPlanPricePerNight = 0;
         const totalDiningGuests = numGuests + (extraPerson ? 1 : 0);
         if (mealSelection) {
             const mealPlans = await MealPlan_1.MealPlan.find({ isActive: true });
-            const mealMap = new Map(mealPlans.map(m => [m.type, m.pricePerPersonPerNight]));
+            const mealMap = new Map(mealPlans.map((m) => [m.type, m.pricePerPersonPerNight]));
             if (mealSelection.breakfast && mealMap.has('BREAKFAST')) {
                 mealPlanPricePerNight += mealMap.get('BREAKFAST') * totalDiningGuests;
             }
@@ -60,7 +130,7 @@ class PricingEngine {
         }
         const mealPlanTotal = mealPlanPricePerNight * numNights;
         const subtotal = roomTotal + extraPersonTotal + mealPlanTotal;
-        // 5. Authoritative Server-Side Coupon & GSTIN Validation
+        // 6. Authoritative Server-Side Coupon & GSTIN Validation
         let discountAmount = 0;
         let discountPercentage = 0;
         let validCouponCode;
@@ -80,17 +150,14 @@ class PricingEngine {
                     couponError = 'Invalid coupon code.';
                 }
                 else {
-                    // Verify against Coupon model in DB if exists (or verify active status)
                     const dbCoupon = await Coupon_1.Coupon.findOne({
                         code: cleanCode,
                         isActive: true,
                     });
-                    // Check if coupon exists in DB and is active (or seed if not yet created)
                     if (dbCoupon && !dbCoupon.isActive) {
                         couponError = 'Invalid coupon code.';
                     }
                     else {
-                        // Validate GSTIN requirement for coupon application
                         gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
                         if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
                             couponError = 'GSTIN is required to apply this coupon.';
@@ -99,7 +166,6 @@ class PricingEngine {
                             couponError = 'Please enter a valid GSTIN.';
                         }
                         else {
-                            // GSTIN is valid and coupon is eligible
                             validCouponCode = cleanCode;
                             discountPercentage = exports.OFFICIAL_COUPONS[cleanCode];
                             discountAmount = Math.round((subtotal * discountPercentage) / 100);
@@ -114,9 +180,20 @@ class PricingEngine {
             gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
         }
         const netAmountBeforeTax = Math.max(0, subtotal - discountAmount);
-        // 6. Calculate GST Tax (Official Rate = 5%)
-        const settings = await HotelSetting_1.HotelSetting.findOne() || { taxPercentage: 5 };
-        const taxPercentage = settings.taxPercentage ?? 5;
+        // 7. Calculate GST Tax
+        // Precedence: Existing DB HotelSetting -> process.env.TAX_PERCENTAGE (if valid number) -> default 5%
+        const settings = await HotelSetting_1.HotelSetting.findOne();
+        let taxPercentage;
+        if (settings && typeof settings.taxPercentage === 'number' && !isNaN(settings.taxPercentage) && settings.taxPercentage >= 0) {
+            taxPercentage = settings.taxPercentage;
+        }
+        else if (process.env.TAX_PERCENTAGE !== undefined && process.env.TAX_PERCENTAGE.trim() !== '') {
+            const parsedEnvTax = Number(process.env.TAX_PERCENTAGE);
+            taxPercentage = (!isNaN(parsedEnvTax) && parsedEnvTax >= 0) ? parsedEnvTax : 5;
+        }
+        else {
+            taxPercentage = 5;
+        }
         const taxAmount = Math.round((netAmountBeforeTax * taxPercentage) / 100);
         const totalAmount = Math.max(0, Math.round(netAmountBeforeTax + taxAmount));
         return {
@@ -139,6 +216,7 @@ class PricingEngine {
             gstinValid: gstinValidation?.isValid,
             couponError,
             couponMessage,
+            nightlyRates,
         };
     }
 }

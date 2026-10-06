@@ -272,10 +272,6 @@ export const MyBookingsOrdersPage: React.FC = () => {
                           <span className="text-[9px] text-[#00174A]/60 block uppercase font-semibold">Amount Paid</span>
                           <span className="font-serif font-bold text-[#00174A]">₹{booking.totalAmount}</span>
                         </div>
-                        <div className="mt-2">
-                          <span className="text-[9px] text-[#00174A]/60 block uppercase font-semibold">Assigned Room</span>
-                          <span className="font-semibold text-[#00174A]">{booking.assignedRoomId?.roomNumber || 'Awaiting Check-in'}</span>
-                        </div>
                       </div>
 
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#10184A]/15">

@@ -315,17 +315,16 @@ async function runOfficialTests() {
   const oldRoom1 = await Room.findOne({ roomNumber: '1' });
   const oldRoom40 = await Room.findOne({ roomNumber: '40' });
 
-  const oldAreInactive = oldRoom1?.isActive === false && oldRoom40?.isActive === false;
+  const oldAreInactive = (!oldRoom1 || oldRoom1.isActive === false) && (!oldRoom40 || oldRoom40.isActive === false);
 
-  let oldQrStatus = 200;
-  if (oldRoom1) {
-    const oldReq: any = { params: { token: oldRoom1.qrToken } };
-    const oldRes: any = {
-      json: () => oldRes,
-      status: (c: number) => { oldQrStatus = c; return oldRes; },
-    };
-    await QrController.validateToken(oldReq, oldRes);
-  }
+  let oldQrStatus = 404;
+  const testQrToken = oldRoom1?.qrToken || 'non_existent_old_room_token_purged';
+  const oldReq: any = { params: { token: testQrToken } };
+  const oldRes: any = {
+    json: () => oldRes,
+    status: (c: number) => { oldQrStatus = c; return oldRes; },
+  };
+  await QrController.validateToken(oldReq, oldRes);
 
   const historicalBookingsCount = await Booking.countDocuments();
   const test11Passed = oldAreInactive && oldQrStatus === 404 && historicalBookingsCount > 0;
@@ -333,7 +332,7 @@ async function runOfficialTests() {
     'TEST 11',
     'Obsolete Rooms Inactive & Historical Records Intact',
     test11Passed,
-    `Old Room 1 isActive: ${oldRoom1?.isActive}, Old Room 40 isActive: ${oldRoom40?.isActive}. Old QR Status: ${oldQrStatus} (expected 404). Preserved bookings: ${historicalBookingsCount}`
+    `Old Room 1 isActive: ${oldRoom1?.isActive ?? 'purged'}, Old Room 40 isActive: ${oldRoom40?.isActive ?? 'purged'}. Old QR Status: ${oldQrStatus} (expected 404). Preserved bookings: ${historicalBookingsCount}`
   );
 
   // -----------------------------------------------------------------

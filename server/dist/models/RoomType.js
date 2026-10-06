@@ -5,6 +5,7 @@ const mongoose_1 = require("mongoose");
 const RoomTypeSchema = new mongoose_1.Schema({
     name: { type: String, required: true, trim: true },
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    inventoryGroup: { type: String, trim: true, uppercase: true },
     description: { type: String, required: true },
     basePrice: { type: Number, required: true, min: 0 },
     cpPrice: { type: Number, required: true, min: 0 },

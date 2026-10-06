@@ -11,10 +11,14 @@ const Admin_1 = require("../models/Admin");
 const Booking_1 = require("../models/Booking");
 const Order_1 = require("../models/Order");
 const Room_1 = require("../models/Room");
+const RoomType_1 = require("../models/RoomType");
 const MenuItem_1 = require("../models/MenuItem");
 const MenuCategory_1 = require("../models/MenuCategory");
 const AuditLog_1 = require("../models/AuditLog");
 const Feedback_1 = require("../models/Feedback");
+const DailyRate_1 = require("../models/DailyRate");
+const DailyInventory_1 = require("../models/DailyInventory");
+const RatePlanService_1 = require("../services/RatePlanService");
 const crypto_1 = __importDefault(require("crypto"));
 const EmailService_1 = require("../services/EmailService");
 const SocketService_1 = require("../services/SocketService");
@@ -466,6 +470,147 @@ class AdminController {
         }
         catch (error) {
             return res.status(500).json({ success: false, message: 'Failed to update room.' });
+        }
+    }
+    /**
+     * GET /api/admin/room-types
+     * Returns all active room categories with base pricing (EP basePrice and CP cpPrice)
+     */
+    static async getRoomTypes(req, res) {
+        try {
+            let roomTypes = await RoomType_1.RoomType.find({ isActive: true }).sort({ basePrice: 1, name: 1 });
+            if (roomTypes.length === 0) {
+                await (0, seedDatabase_1.ensureDatabaseSeeded)();
+                roomTypes = await RoomType_1.RoomType.find({ isActive: true }).sort({ basePrice: 1, name: 1 });
+            }
+            return res.json({ success: true, data: roomTypes });
+        }
+        catch (error) {
+            console.error('[AdminController] Error fetching room types:', error);
+            return res.status(500).json({ success: false, message: 'Failed to fetch room categories.' });
+        }
+    }
+    /**
+     * PATCH /api/admin/room-types/:id/base-rates
+     * Permanently updates the default/base price of a room category (RoomType.basePrice / cpPrice)
+     * This updates ONLY the RoomType model. Does NOT modify or overwrite any DailyRate documents.
+     */
+    static async updateRoomTypeBaseRates(req, res) {
+        try {
+            const { id } = req.params;
+            const { basePrice, cpPrice } = req.body;
+            if (basePrice === undefined && cpPrice === undefined) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'At least one of basePrice or cpPrice must be provided.',
+                });
+            }
+            // Find room category by ID or code (supports 24-char ObjectId or room type code)
+            let roomType = null;
+            if (mongoose_1.default.Types.ObjectId.isValid(id) && id.length === 24) {
+                roomType = await RoomType_1.RoomType.findById(id);
+            }
+            if (!roomType) {
+                roomType = await RoomType_1.RoomType.findOne({ code: id });
+            }
+            if (!roomType) {
+                return res.status(404).json({ success: false, message: 'Room category not found.' });
+            }
+            const auditChanges = [];
+            // Validate basePrice (EP / Room Only)
+            if (basePrice !== undefined) {
+                const numBase = Number(basePrice);
+                if (typeof basePrice === 'boolean' ||
+                    basePrice === null ||
+                    basePrice === '' ||
+                    isNaN(numBase) ||
+                    !isFinite(numBase) ||
+                    numBase <= 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Enter a valid base rate greater than ₹0.',
+                    });
+                }
+                const roundedBase = Math.round(numBase);
+                if (roundedBase <= 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Enter a valid base rate greater than ₹0.',
+                    });
+                }
+                auditChanges.push({
+                    plan: 'ROOM_ONLY',
+                    oldRate: roomType.basePrice,
+                    newRate: roundedBase,
+                });
+                roomType.basePrice = roundedBase;
+            }
+            // Validate cpPrice (CP / Breakfast Included)
+            if (cpPrice !== undefined) {
+                const numCp = Number(cpPrice);
+                if (typeof cpPrice === 'boolean' ||
+                    cpPrice === null ||
+                    cpPrice === '' ||
+                    isNaN(numCp) ||
+                    !isFinite(numCp) ||
+                    numCp <= 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Enter a valid base rate greater than ₹0.',
+                    });
+                }
+                const roundedCp = Math.round(numCp);
+                if (roundedCp <= 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Enter a valid base rate greater than ₹0.',
+                    });
+                }
+                auditChanges.push({
+                    plan: 'BREAKFAST_INCLUDED',
+                    oldRate: roomType.cpPrice,
+                    newRate: roundedCp,
+                });
+                roomType.cpPrice = roundedCp;
+            }
+            await roomType.save();
+            // Audit Log for each plan changed
+            if (req.admin) {
+                for (const change of auditChanges) {
+                    try {
+                        await AuditLog_1.AuditLog.create({
+                            adminId: req.admin.id,
+                            adminEmail: req.admin.email,
+                            action: 'BASE_RATE_UPDATED',
+                            entity: 'RoomType',
+                            entityId: roomType._id.toString(),
+                            details: {
+                                roomCategory: roomType.name,
+                                roomTypeCode: roomType.code,
+                                plan: change.plan,
+                                oldRate: change.oldRate,
+                                newRate: change.newRate,
+                                ip: req.ip,
+                            },
+                        });
+                    }
+                    catch (auditErr) {
+                        console.error('[AdminController] Base rate audit log creation error (non-fatal):', auditErr);
+                    }
+                }
+            }
+            return res.json({
+                success: true,
+                message: 'Base rate updated successfully.',
+                data: roomType,
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Error updating base rates:', error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Failed to update base rate.',
+            });
         }
     }
     /**
@@ -1115,6 +1260,534 @@ class AdminController {
         }
         catch (error) {
             return res.status(500).json({ success: false, message: error.message || 'Failed to cancel offline booking.' });
+        }
+    }
+    /**
+     * GET /api/admin/inventory/date-wise
+     * Returns date-wise availability and rates grid across all room categories
+     */
+    static async getDateWiseInventory(req, res) {
+        try {
+            const { startDate, endDate, roomTypeId, ratePlanCode } = req.query;
+            const now = new Date();
+            let start;
+            let end;
+            if (startDate && typeof startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+                const [sy, sm, sd] = startDate.split('-').map(Number);
+                start = new Date(Date.UTC(sy, sm - 1, sd, 0, 0, 0, 0));
+            }
+            else {
+                start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+            }
+            if (endDate && typeof endDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+                const [ey, em, ed] = endDate.split('-').map(Number);
+                end = new Date(Date.UTC(ey, em - 1, ed, 0, 0, 0, 0));
+            }
+            else {
+                // Default to 14 days
+                end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() + 14, 0, 0, 0, 0));
+            }
+            if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+                return res.status(400).json({ success: false, message: 'Invalid start date or end date range.' });
+            }
+            const typeFilter = typeof roomTypeId === 'string' ? roomTypeId : 'ALL';
+            const planCode = typeof ratePlanCode === 'string' ? ratePlanCode : 'ROOM_ONLY';
+            const data = await AvailabilityEngine_1.AvailabilityEngine.getDateWiseGridData(start, end, typeFilter, planCode);
+            return res.json({ success: true, data });
+        }
+        catch (error) {
+            console.error('[AdminController] Error fetching date-wise inventory:', error);
+            return res.status(500).json({ success: false, message: error.message || 'Failed to fetch date-wise inventory.' });
+        }
+    }
+    /**
+     * GET /api/admin/inventory/rate-plans
+     */
+    static async getRatePlans(req, res) {
+        try {
+            const plans = await RatePlanService_1.RatePlanService.getActiveRatePlans();
+            return res.json({ success: true, data: plans });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: 'Failed to fetch rate plans.' });
+        }
+    }
+    /**
+     * POST /api/admin/rates/bulk-update
+     * Bulk updates date-wise pricing for a room category and rate plan
+     */
+    static async bulkUpdateRates(req, res) {
+        try {
+            const { roomTypeId, ratePlanCode, startDate, endDate, singleAdult, doubleAdult, tripleAdult, childRate, extraAdultRate, } = req.body;
+            if (!roomTypeId || !startDate || !endDate) {
+                return res.status(400).json({ success: false, message: 'roomTypeId, startDate, and endDate are required.' });
+            }
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || endDate < startDate) {
+                return res.status(400).json({ success: false, message: 'Invalid date range. End date must be on or after start date.' });
+            }
+            const roomType = await RoomType_1.RoomType.findById(roomTypeId);
+            if (!roomType) {
+                return res.status(404).json({ success: false, message: 'Room category not found.' });
+            }
+            const planCode = ratePlanCode || 'ROOM_ONLY';
+            const activePlans = await RatePlanService_1.RatePlanService.getActiveRatePlans();
+            const plan = activePlans.find((p) => p.code === planCode) || activePlans[0];
+            const sAdult = Number(singleAdult ?? (doubleAdult !== undefined ? doubleAdult : roomType.basePrice));
+            const dAdult = Number(doubleAdult ?? roomType.basePrice);
+            const tAdult = Number(tripleAdult ?? (dAdult + 600));
+            const cRate = Number(childRate ?? 0);
+            const eaRate = Number(extraAdultRate ?? 600);
+            if (isNaN(sAdult) || isNaN(dAdult) || isNaN(tAdult) || sAdult < 0 || dAdult < 0 || tAdult < 0) {
+                return res.status(400).json({ success: false, message: 'Rates must be valid non-negative numbers.' });
+            }
+            const stayDates = AvailabilityEngine_1.AvailabilityEngine.getDateRangeStrings(startDate, endDate);
+            const bulkOps = stayDates.map((dateStr) => {
+                const [y, m, d] = dateStr.split('-').map(Number);
+                const dateVal = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+                return {
+                    updateOne: {
+                        filter: {
+                            roomTypeId: roomType._id,
+                            ratePlanId: plan._id,
+                            date: dateStr,
+                        },
+                        update: {
+                            $set: {
+                                ratePlanCode: plan.code,
+                                dateValue: dateVal,
+                                singleAdult: sAdult,
+                                doubleAdult: dAdult,
+                                tripleAdult: tAdult,
+                                childRate: cRate,
+                                extraAdultRate: eaRate,
+                                updatedBy: req.admin?.email || 'admin',
+                            },
+                            $setOnInsert: {
+                                createdBy: req.admin?.email || 'admin',
+                            },
+                        },
+                        upsert: true,
+                    },
+                };
+            });
+            if (bulkOps.length > 0) {
+                await DailyRate_1.DailyRate.bulkWrite(bulkOps);
+            }
+            // Record Audit Log
+            await AuditLog_1.AuditLog.create({
+                adminId: req.admin.id,
+                adminEmail: req.admin.email,
+                action: 'BULK_RATE_UPDATE',
+                entity: 'DailyRate',
+                entityId: roomType._id.toString(),
+                details: {
+                    roomCategory: roomType.name,
+                    roomTypeCode: roomType.code,
+                    ratePlanCode: plan.code,
+                    startDate,
+                    endDate,
+                    datesCount: bulkOps.length,
+                    rates: { singleAdult: sAdult, doubleAdult: dAdult, tripleAdult: tAdult, childRate: cRate, extraAdultRate: eaRate },
+                },
+            });
+            return res.json({
+                success: true,
+                message: `Updated rates for ${roomType.name} (${plan.name}) across ${bulkOps.length} date(s) from ${startDate} to ${endDate}.`,
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Bulk rate update error:', error);
+            return res.status(500).json({ success: false, message: error.message || 'Failed to bulk update rates.' });
+        }
+    }
+    /**
+     * POST /api/admin/inventory/bulk-update
+     * Bulk updates sellable inventory override for a room category
+     */
+    static async bulkUpdateInventory(req, res) {
+        try {
+            const { roomTypeId, startDate, endDate, inventoryOverride, notes } = req.body;
+            if (!roomTypeId || !startDate || !endDate) {
+                return res.status(400).json({ success: false, message: 'roomTypeId, startDate, and endDate are required.' });
+            }
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || endDate < startDate) {
+                return res.status(400).json({ success: false, message: 'Invalid date range.' });
+            }
+            const roomType = await RoomType_1.RoomType.findById(roomTypeId);
+            if (!roomType) {
+                return res.status(404).json({ success: false, message: 'Room category not found.' });
+            }
+            const { pooledTypeIds, poolRooms, poolRoomIds, totalPhysical } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(roomTypeId);
+            const stayDates = AvailabilityEngine_1.AvailabilityEngine.getDateRangeStrings(startDate, endDate);
+            const hasOverride = inventoryOverride !== null && inventoryOverride !== undefined && inventoryOverride !== '';
+            const overrideVal = hasOverride ? Number(inventoryOverride) : null;
+            if (overrideVal !== null) {
+                if (isNaN(overrideVal) || overrideVal < 0) {
+                    return res.status(400).json({ success: false, message: 'Sellable inventory override cannot be negative.' });
+                }
+                if (overrideVal > totalPhysical) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Sellable inventory override (${overrideVal}) cannot exceed the total physical rooms count (${totalPhysical}) for ${roomType.name}.`,
+                    });
+                }
+                // Safety check: ensure override does not violate booked rooms (available < booked) across shared pool
+                const conflictingBookings = await Booking_1.Booking.find({
+                    $and: [
+                        {
+                            $or: [
+                                { assignedRoomId: { $in: poolRoomIds } },
+                                { roomTypeId: { $in: pooledTypeIds } },
+                            ],
+                        },
+                        { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                    ],
+                }).lean();
+                for (const dateStr of stayDates) {
+                    const bookedOnNight = conflictingBookings.filter((b) => {
+                        const bInStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkIn));
+                        const bOutStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkOut));
+                        return bInStr <= dateStr && bOutStr > dateStr;
+                    }).length;
+                    if (overrideVal < bookedOnNight) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Cannot set sellable inventory to ${overrideVal} on ${dateStr}. There are already ${bookedOnNight} confirmed bookings for this date (override cannot be lower than booked rooms).`,
+                        });
+                    }
+                }
+            }
+            // Synchronize DailyInventory across all pooled room types in this shared inventory group
+            const bulkOps = [];
+            for (const pTypeId of pooledTypeIds) {
+                for (const dateStr of stayDates) {
+                    const [y, m, d] = dateStr.split('-').map(Number);
+                    const dateVal = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+                    bulkOps.push({
+                        updateOne: {
+                            filter: {
+                                roomTypeId: pTypeId,
+                                date: dateStr,
+                            },
+                            update: {
+                                $set: {
+                                    dateValue: dateVal,
+                                    inventoryOverride: overrideVal,
+                                    ...(notes !== undefined ? { notes: notes.trim() } : {}),
+                                    updatedBy: req.admin?.email || 'admin',
+                                },
+                                $setOnInsert: {
+                                    stopSell: false,
+                                    minStay: 1,
+                                    blockedRooms: 0,
+                                    createdBy: req.admin?.email || 'admin',
+                                },
+                            },
+                            upsert: true,
+                        },
+                    });
+                }
+            }
+            if (bulkOps.length > 0) {
+                await DailyInventory_1.DailyInventory.bulkWrite(bulkOps);
+            }
+            await AuditLog_1.AuditLog.create({
+                adminId: req.admin.id,
+                adminEmail: req.admin.email,
+                action: 'BULK_INVENTORY_UPDATE',
+                entity: 'DailyInventory',
+                entityId: roomType._id.toString(),
+                details: {
+                    roomCategory: roomType.name,
+                    startDate,
+                    endDate,
+                    datesCount: bulkOps.length,
+                    inventoryOverride: overrideVal,
+                    totalPhysicalRooms: totalPhysical,
+                },
+            });
+            return res.json({
+                success: true,
+                message: `Sellable inventory updated for ${roomType.name} across ${bulkOps.length} date(s) from ${startDate} to ${endDate}.`,
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Bulk inventory update error:', error);
+            return res.status(500).json({ success: false, message: error.message || 'Failed to bulk update inventory.' });
+        }
+    }
+    /**
+     * POST /api/admin/restrictions/bulk-update
+     * Bulk updates Stop Sell and/or Minimum Stay restrictions
+     */
+    static async bulkUpdateRestrictions(req, res) {
+        try {
+            const { roomTypeId, startDate, endDate, stopSell, minStay, blockedRooms, notes } = req.body;
+            if (!roomTypeId || !startDate || !endDate) {
+                return res.status(400).json({ success: false, message: 'roomTypeId, startDate, and endDate are required.' });
+            }
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate) || endDate < startDate) {
+                return res.status(400).json({ success: false, message: 'Invalid date range.' });
+            }
+            const roomType = await RoomType_1.RoomType.findById(roomTypeId);
+            if (!roomType) {
+                return res.status(404).json({ success: false, message: 'Room category not found.' });
+            }
+            if (minStay !== undefined && (isNaN(Number(minStay)) || Number(minStay) < 1)) {
+                return res.status(400).json({ success: false, message: 'Minimum stay must be at least 1 night.' });
+            }
+            const stayDates = AvailabilityEngine_1.AvailabilityEngine.getDateRangeStrings(startDate, endDate);
+            const updateFields = {
+                updatedBy: req.admin?.email || 'admin',
+            };
+            if (stopSell !== undefined)
+                updateFields.stopSell = Boolean(stopSell);
+            if (minStay !== undefined)
+                updateFields.minStay = Number(minStay);
+            if (blockedRooms !== undefined && !isNaN(Number(blockedRooms))) {
+                updateFields.blockedRooms = Math.max(0, Number(blockedRooms));
+            }
+            if (notes !== undefined)
+                updateFields.notes = String(notes).trim();
+            const { pooledTypeIds } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(roomTypeId);
+            const bulkOps = [];
+            for (const pTypeId of pooledTypeIds) {
+                for (const dateStr of stayDates) {
+                    const [y, m, d] = dateStr.split('-').map(Number);
+                    const dateVal = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+                    bulkOps.push({
+                        updateOne: {
+                            filter: {
+                                roomTypeId: pTypeId,
+                                date: dateStr,
+                            },
+                            update: {
+                                $set: {
+                                    ...updateFields,
+                                    dateValue: dateVal,
+                                },
+                                $setOnInsert: {
+                                    inventoryOverride: null,
+                                    blockedRooms: 0,
+                                    createdBy: req.admin?.email || 'admin',
+                                },
+                            },
+                            upsert: true,
+                        },
+                    });
+                }
+            }
+            if (bulkOps.length > 0) {
+                await DailyInventory_1.DailyInventory.bulkWrite(bulkOps);
+            }
+            await AuditLog_1.AuditLog.create({
+                adminId: req.admin.id,
+                adminEmail: req.admin.email,
+                action: 'BULK_RESTRICTIONS_UPDATE',
+                entity: 'DailyInventory',
+                entityId: roomType._id.toString(),
+                details: {
+                    roomCategory: roomType.name,
+                    startDate,
+                    endDate,
+                    datesCount: bulkOps.length,
+                    stopSell,
+                    minStay,
+                },
+            });
+            return res.json({
+                success: true,
+                message: `Restrictions updated for ${roomType.name} across ${bulkOps.length} date(s) from ${startDate} to ${endDate}.`,
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Bulk restrictions update error:', error);
+            return res.status(500).json({ success: false, message: error.message || 'Failed to bulk update restrictions.' });
+        }
+    }
+    /**
+     * POST /api/admin/inventory/quick-update
+     * Updates an individual date cell's rates, inventory override, and restrictions
+     */
+    static async quickUpdateCell(req, res) {
+        try {
+            const { roomTypeId, date, ratePlanCode, rates, inventoryOverride, blockedRooms, stopSell, minStay, notes, } = req.body;
+            if (!roomTypeId || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                return res.status(400).json({ success: false, message: 'roomTypeId and valid date (YYYY-MM-DD) are required.' });
+            }
+            const roomType = await RoomType_1.RoomType.findById(roomTypeId);
+            if (!roomType) {
+                return res.status(404).json({ success: false, message: 'Room category not found.' });
+            }
+            const [y, m, d] = date.split('-').map(Number);
+            const dateVal = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+            // 1. Update Rates if provided
+            if (rates && typeof rates === 'object') {
+                const planCode = ratePlanCode || 'ROOM_ONLY';
+                const activePlans = await RatePlanService_1.RatePlanService.getActiveRatePlans();
+                const plan = activePlans.find((p) => p.code === planCode) || activePlans[0];
+                const sAdult = Number(rates.singleAdult ?? roomType.basePrice);
+                const dAdult = Number(rates.doubleAdult ?? roomType.basePrice);
+                const tAdult = Number(rates.tripleAdult ?? (dAdult + 600));
+                const cRate = Number(rates.childRate ?? 0);
+                const eaRate = Number(rates.extraAdultRate ?? 600);
+                await DailyRate_1.DailyRate.findOneAndUpdate({
+                    roomTypeId: roomType._id,
+                    ratePlanId: plan._id,
+                    date,
+                }, {
+                    $set: {
+                        ratePlanCode: plan.code,
+                        dateValue: dateVal,
+                        singleAdult: sAdult,
+                        doubleAdult: dAdult,
+                        tripleAdult: tAdult,
+                        childRate: cRate,
+                        extraAdultRate: eaRate,
+                        updatedBy: req.admin?.email || 'admin',
+                    },
+                    $setOnInsert: {
+                        createdBy: req.admin?.email || 'admin',
+                    },
+                }, { upsert: true, new: true });
+                await AuditLog_1.AuditLog.create({
+                    adminId: req.admin.id,
+                    adminEmail: req.admin.email,
+                    action: 'RATE_UPDATED',
+                    entity: 'DailyRate',
+                    entityId: roomType._id.toString(),
+                    details: {
+                        roomCategory: roomType.name,
+                        date,
+                        ratePlanCode: plan.code,
+                        rates: { singleAdult: sAdult, doubleAdult: dAdult, tripleAdult: tAdult },
+                    },
+                });
+            }
+            // 2. Update Inventory / Restrictions if provided
+            const invFields = {
+                dateValue: dateVal,
+                updatedBy: req.admin?.email || 'admin',
+            };
+            let hasInvChange = false;
+            if (inventoryOverride !== undefined) {
+                hasInvChange = true;
+                const { pooledTypeIds } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(roomTypeId);
+                const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+                const physicalRooms = await Room_1.Room.find({
+                    roomTypeId: { $in: pooledTypeIds },
+                    isActive: true,
+                    isVenue: { $ne: true },
+                    roomNumber: { $in: officialRoomNumbers },
+                });
+                const totalPhysical = physicalRooms.length;
+                if (inventoryOverride !== null && inventoryOverride !== '') {
+                    const num = Number(inventoryOverride);
+                    if (isNaN(num) || !Number.isInteger(num) || num < 0 || num > totalPhysical) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Enter a number between 0 and ${totalPhysical}.`,
+                        });
+                    }
+                    // Count already confirmed bookings for this room category/pool on this date
+                    const poolRoomIds = physicalRooms.map((r) => r._id);
+                    const [yr, mo, da] = date.split('-').map(Number);
+                    const startOfNight = new Date(Date.UTC(yr, mo - 1, da, 0, 0, 0, 0));
+                    const endOfNight = new Date(Date.UTC(yr, mo - 1, da, 23, 59, 59, 999));
+                    const confirmedBookings = await Booking_1.Booking.find({
+                        $and: [
+                            {
+                                $or: [
+                                    { assignedRoomId: { $in: poolRoomIds } },
+                                    { roomTypeId: { $in: pooledTypeIds } },
+                                ],
+                            },
+                            { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                        ],
+                        checkIn: { $lte: endOfNight },
+                        checkOut: { $gt: startOfNight },
+                    });
+                    let confirmedCount = 0;
+                    for (const b of confirmedBookings) {
+                        const bInStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkIn));
+                        const bOutStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkOut));
+                        if (bInStr <= date && bOutStr > date) {
+                            confirmedCount++;
+                        }
+                    }
+                    if (num < confirmedCount) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Online inventory cannot be lower than the ${confirmedCount} rooms already booked for this date.`,
+                        });
+                    }
+                    invFields.inventoryOverride = num;
+                }
+                else {
+                    invFields.inventoryOverride = null;
+                }
+            }
+            if (stopSell !== undefined) {
+                hasInvChange = true;
+                invFields.stopSell = Boolean(stopSell);
+            }
+            if (minStay !== undefined) {
+                hasInvChange = true;
+                const ms = Number(minStay);
+                if (ms < 1) {
+                    return res.status(400).json({ success: false, message: 'Minimum stay must be at least 1 night.' });
+                }
+                invFields.minStay = ms;
+            }
+            if (blockedRooms !== undefined) {
+                hasInvChange = true;
+                const br = Number(blockedRooms);
+                invFields.blockedRooms = isNaN(br) || br < 0 ? 0 : br;
+            }
+            if (notes !== undefined) {
+                hasInvChange = true;
+                invFields.notes = String(notes).trim();
+            }
+            if (hasInvChange) {
+                const { pooledTypeIds } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(roomTypeId);
+                const invOps = pooledTypeIds.map((pId) => ({
+                    updateOne: {
+                        filter: {
+                            roomTypeId: pId,
+                            date,
+                        },
+                        update: {
+                            $set: invFields,
+                            $setOnInsert: {
+                                createdBy: req.admin?.email || 'admin',
+                                blockedRooms: 0,
+                            },
+                        },
+                        upsert: true,
+                    },
+                }));
+                await DailyInventory_1.DailyInventory.bulkWrite(invOps);
+                await AuditLog_1.AuditLog.create({
+                    adminId: req.admin.id,
+                    adminEmail: req.admin.email,
+                    action: 'INVENTORY_RESTRICTION_UPDATED',
+                    entity: 'DailyInventory',
+                    entityId: roomType._id.toString(),
+                    details: {
+                        roomCategory: roomType.name,
+                        date,
+                        updates: invFields,
+                    },
+                });
+            }
+            return res.json({
+                success: true,
+                message: `Updated availability and rates for ${roomType.name} on ${date}.`,
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Quick cell update error:', error);
+            return res.status(500).json({ success: false, message: error.message || 'Failed to update cell.' });
         }
     }
 }

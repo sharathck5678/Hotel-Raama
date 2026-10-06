@@ -5,6 +5,7 @@ import { IBooking, Booking } from '../models/Booking';
 import { HotelSetting } from '../models/HotelSetting';
 import { RoomType } from '../models/RoomType';
 import { InvoicePdfService } from './InvoicePdfService';
+import { IEmailProvider, ResendEmailProvider, NodemailerEmailProvider } from './email';
 
 export interface EmailResult {
   success: boolean;
@@ -14,6 +15,38 @@ export interface EmailResult {
 
 export class EmailService {
   private static transporter: nodemailer.Transporter | null = null;
+  private static customEmailProvider: IEmailProvider | null = null;
+
+  /**
+   * Explicitly set email provider (for unit testing with mocks or custom providers)
+   */
+  public static setEmailProvider(provider: IEmailProvider | null): void {
+    this.customEmailProvider = provider;
+  }
+
+  /**
+   * Resolve active email delivery provider.
+   * Priority:
+   * 1. Explicitly configured custom email provider (e.g. in unit tests)
+   * 2. Resend HTTPS API provider (when RESEND_API_KEY is configured)
+   * 3. Nodemailer SMTP provider (legacy fallback when SMTP credentials are present or custom transporter set)
+   * 4. Resend provider default
+   */
+  public static getEmailProvider(): IEmailProvider {
+    if (this.customEmailProvider) {
+      return this.customEmailProvider;
+    }
+
+    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()) {
+      return new ResendEmailProvider();
+    }
+
+    if (this.transporter || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD)) {
+      return new NodemailerEmailProvider(this.transporter);
+    }
+
+    return new ResendEmailProvider();
+  }
 
   /**
    * Helper to mask Aadhaar number to prevent exposing sensitive personal data
@@ -69,10 +102,15 @@ export class EmailService {
   }
 
   /**
-   * Set custom transporter (useful for isolated unit testing)
+   * Set custom transporter (useful for isolated unit testing & backward compatibility)
    */
   public static setTransporter(customTransporter: nodemailer.Transporter | null) {
     this.transporter = customTransporter;
+    if (customTransporter) {
+      this.customEmailProvider = new NodemailerEmailProvider(customTransporter);
+    } else {
+      this.customEmailProvider = null;
+    }
   }
 
   /**
@@ -119,7 +157,7 @@ export class EmailService {
     booking: IBooking,
     roomTypeName: string = 'Room'
   ): Promise<EmailResult> {
-    const transporter = this.getTransporter();
+    const provider = this.getEmailProvider();
     const recipient = await this.resolveHotelNotificationEmail();
     const sender = this.resolveSenderEmail();
     const maskedAadhaar = this.maskAadhaar(booking.guestAadhar);
@@ -262,15 +300,16 @@ ${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmo
 ===============================================
     `.trim();
 
-    if (!transporter) {
+    if (!provider.isConfigured()) {
       console.warn(
-        `[EmailService] SMTP not configured. Skipped sending hotel booking email for booking ${booking.bookingId}. (Target: ${recipient})`
+        `[EmailService] Email provider (${provider.providerName}) not configured. Skipped sending hotel booking email for booking ${booking.bookingId}. (Target: ${recipient})`
       );
-      return { success: false, error: 'SMTP credentials not configured on server.' };
+      return { success: false, error: `${provider.providerName} credentials not configured on server.` };
     }
 
     try {
-      const info = await transporter.sendMail({
+      console.log(`[EmailService] Sending hotel booking notification for ${booking.bookingId} to ${recipient}...`);
+      const result = await provider.sendEmail({
         from: sender,
         to: recipient,
         subject,
@@ -278,11 +317,16 @@ ${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmo
         html: htmlContent,
       });
 
-      console.log(`[EmailService] Hotel notification sent for ${booking.bookingId} to ${recipient} (msgId: ${info.messageId})`);
-      return { success: true, messageId: info.messageId };
+      if (result.success) {
+        console.log(`[EmailService] Hotel notification sent successfully for ${booking.bookingId} to ${recipient} (msgId: ${result.messageId}) [Provider: ${provider.providerName}]`);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.error(`[EmailService] ${provider.providerName} request failed for hotel notification ${booking.bookingId}:`, result.error);
+        return { success: false, error: result.error };
+      }
     } catch (err: any) {
       console.error(`[EmailService Error] Failed to send hotel notification for ${booking.bookingId}:`, err.message || err);
-      return { success: false, error: err.message || 'SMTP delivery failed' };
+      return { success: false, error: err.message || 'Email delivery failed' };
     }
   }
 
@@ -294,8 +338,12 @@ ${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmo
     roomTypeName: string = 'Executive Room',
     pdfBuffer?: Buffer
   ): Promise<EmailResult> {
-    const transporter = this.getTransporter();
-    const recipient = booking.guestEmail;
+    const provider = this.getEmailProvider();
+    const recipient = booking.guestEmail?.trim();
+    if (!recipient) {
+      console.warn(`[EmailService] Guest email is missing for booking ${booking.bookingId}. Skipped sending.`);
+      return { success: false, error: 'Guest email is missing on booking record.' };
+    }
     const sender = this.resolveSenderEmail();
     const trackingUrl = this.getTrackingUrl(booking.trackingToken);
 
@@ -432,11 +480,11 @@ Email: hotelraama.hsn@gmail.com
 ==================================
     `.trim();
 
-    if (!transporter) {
+    if (!provider.isConfigured()) {
       console.warn(
-        `[EmailService] SMTP not configured. Skipped sending guest confirmation email for booking ${booking.bookingId}. (Target: ${recipient})`
+        `[EmailService] Email provider (${provider.providerName}) not configured. Skipped sending guest confirmation email for booking ${booking.bookingId}. (Target: ${recipient})`
       );
-      return { success: false, error: 'SMTP credentials not configured on server.' };
+      return { success: false, error: `${provider.providerName} credentials not configured on server.` };
     }
 
     try {
@@ -449,7 +497,8 @@ Email: hotelraama.hsn@gmail.com
         });
       }
 
-      const info = await transporter.sendMail({
+      console.log(`[EmailService] Sending guest confirmation for ${booking.bookingId} to ${recipient}...`);
+      const result = await provider.sendEmail({
         from: sender,
         to: recipient,
         subject,
@@ -458,11 +507,16 @@ Email: hotelraama.hsn@gmail.com
         attachments,
       });
 
-      console.log(`[EmailService] Guest confirmation sent for ${booking.bookingId} to ${recipient} (msgId: ${info.messageId})`);
-      return { success: true, messageId: info.messageId };
+      if (result.success) {
+        console.log(`[EmailService] Guest confirmation sent successfully for ${booking.bookingId} to ${recipient} (msgId: ${result.messageId}) [Provider: ${provider.providerName}]`);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.error(`[EmailService] ${provider.providerName} request failed for guest confirmation ${booking.bookingId}:`, result.error);
+        return { success: false, error: result.error };
+      }
     } catch (err: any) {
       console.error(`[EmailService Error] Failed to send guest confirmation for ${booking.bookingId}:`, err.message || err);
-      return { success: false, error: err.message || 'SMTP delivery failed' };
+      return { success: false, error: err.message || 'Email delivery failed' };
     }
   }
 
@@ -691,8 +745,12 @@ Email: hotelraama.hsn@gmail.com
     booking: IBooking,
     token: string
   ): Promise<EmailResult> {
-    const transporter = this.getTransporter();
-    const recipient = booking.guestEmail;
+    const provider = this.getEmailProvider();
+    const recipient = booking.guestEmail?.trim();
+    if (!recipient) {
+      console.warn(`[EmailService] Guest email is missing for booking ${booking.bookingId}. Skipped sending feedback request.`);
+      return { success: false, error: 'Guest email is missing on booking record.' };
+    }
     const sender = this.resolveSenderEmail();
     const feedbackUrl = this.getFeedbackUrl(token);
 
@@ -773,15 +831,16 @@ Hassan, Karnataka
 </html>
     `.trim();
 
-    if (!transporter) {
+    if (!provider.isConfigured()) {
       console.warn(
-        `[EmailService] SMTP not configured. Skipped sending feedback request to ${recipient}.`
+        `[EmailService] Email provider (${provider.providerName}) not configured. Skipped sending feedback request to ${recipient}.`
       );
-      return { success: false, error: 'SMTP credentials not configured on server.' };
+      return { success: false, error: `${provider.providerName} credentials not configured on server.` };
     }
 
     try {
-      const info = await transporter.sendMail({
+      console.log(`[EmailService] Sending customer feedback request for ${booking.bookingId} to ${recipient}...`);
+      const result = await provider.sendEmail({
         from: sender,
         to: recipient,
         subject,
@@ -789,11 +848,16 @@ Hassan, Karnataka
         html: htmlContent,
       });
 
-      console.log(`[EmailService] Feedback request email sent for booking ${booking.bookingId} to ${recipient} (msgId: ${info.messageId})`);
-      return { success: true, messageId: info.messageId };
+      if (result.success) {
+        console.log(`[EmailService] Customer feedback request sent successfully for booking ${booking.bookingId} to ${recipient} (msgId: ${result.messageId}) [Provider: ${provider.providerName}]`);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.error(`[EmailService] ${provider.providerName} request failed for customer feedback request ${booking.bookingId}:`, result.error);
+        return { success: false, error: result.error };
+      }
     } catch (err: any) {
       console.error(`[EmailService Error] Failed to send feedback request for ${booking.bookingId}:`, err.message || err);
-      return { success: false, error: err.message || 'SMTP delivery failed' };
+      return { success: false, error: err.message || 'Email delivery failed' };
     }
   }
 
@@ -804,7 +868,7 @@ Hassan, Karnataka
     feedback: any,
     booking?: IBooking | null
   ): Promise<EmailResult> {
-    const transporter = this.getTransporter();
+    const provider = this.getEmailProvider();
     const recipient = process.env.ADMIN_EMAIL?.trim() || await this.resolveHotelNotificationEmail();
     const sender = this.resolveSenderEmail();
 
@@ -928,13 +992,14 @@ ${adminFeedbackUrl}
 </html>
     `.trim();
 
-    if (!transporter) {
-      console.warn(`[EmailService] SMTP not configured. Skipped sending admin feedback alert for booking ${feedback.bookingId}.`);
-      return { success: false, error: 'SMTP credentials not configured on server.' };
+    if (!provider.isConfigured()) {
+      console.warn(`[EmailService] Email provider (${provider.providerName}) not configured. Skipped sending admin feedback alert for booking ${feedback.bookingId}.`);
+      return { success: false, error: `${provider.providerName} credentials not configured on server.` };
     }
 
     try {
-      const info = await transporter.sendMail({
+      console.log(`[EmailService] Sending admin feedback alert for booking ${feedback.bookingId} to ${recipient}...`);
+      const result = await provider.sendEmail({
         from: sender,
         to: recipient,
         subject,
@@ -942,11 +1007,16 @@ ${adminFeedbackUrl}
         html: htmlContent,
       });
 
-      console.log(`[EmailService] Admin feedback alert sent for ${feedback.bookingId} to ${recipient} (msgId: ${info.messageId})`);
-      return { success: true, messageId: info.messageId };
+      if (result.success) {
+        console.log(`[EmailService] Admin feedback alert sent successfully for ${feedback.bookingId} to ${recipient} (msgId: ${result.messageId}) [Provider: ${provider.providerName}]`);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.error(`[EmailService] ${provider.providerName} request failed for admin feedback alert ${feedback.bookingId}:`, result.error);
+        return { success: false, error: result.error };
+      }
     } catch (err: any) {
       console.error(`[EmailService Error] Failed to send admin feedback alert for ${feedback.bookingId}:`, err.message || err);
-      return { success: false, error: err.message || 'SMTP delivery failed' };
+      return { success: false, error: err.message || 'Email delivery failed' };
     }
   }
 

@@ -123,6 +123,16 @@ export const TermsOfBookingPage: React.FC = () => {
             </p>
           </section>
 
+          {/* Jurisdiction */}
+          <section className="space-y-2">
+            <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A] border-b border-[#10184A]/15 pb-2">
+              Jurisdiction
+            </h2>
+            <p>
+              Any dispute or legal proceedings arising out of or in connection with the services of Hotel Raama shall, subject to applicable law, be brought before the competent courts having jurisdiction in Hassan, Karnataka, India.
+            </p>
+          </section>
+
           {/* Contact */}
           <section className="space-y-3 pt-4 border-t border-[#10184A]/15">
             <h2 className="text-base sm:text-lg font-serif font-bold text-[#00174A]">

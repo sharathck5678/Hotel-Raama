@@ -10,12 +10,13 @@ import { MenuCategory } from '../models/MenuCategory';
 import { MenuItem } from '../models/MenuItem';
 import { Attraction } from '../models/Attraction';
 import { HotelSetting } from '../models/HotelSetting';
+import { DailyInventory } from '../models/DailyInventory';
 import { AvailabilityEngine } from '../services/AvailabilityEngine';
 import { PricingEngine, OFFICIAL_COUPONS } from '../services/PricingEngine';
 import { RazorpayService } from '../services/RazorpayService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
 import { EmailService } from '../services/EmailService';
-import { ensureDatabaseSeeded } from '../seed/seedDatabase';
+import { ensureDatabaseSeeded, OFFICIAL_ROOMS_SPEC } from '../seed/seedDatabase';
 import { validateAadhar } from '../utils/aadharValidator';
 import { validateGSTIN } from '../utils/gstinValidator';
 
@@ -50,6 +51,107 @@ export class PublicController {
         await ensureDatabaseSeeded();
         roomTypes = await RoomType.find({ isActive: true });
       }
+
+      const { checkIn, checkOut, planType, guests } = req.query;
+      if (checkIn && checkOut && typeof checkIn === 'string' && typeof checkOut === 'string') {
+        const checkInDate = new Date(checkIn);
+        const checkOutDate = new Date(checkOut);
+        if (!isNaN(checkInDate.getTime()) && !isNaN(checkOutDate.getTime()) && checkOutDate > checkInDate) {
+          const requestedPlan = (planType === 'CP' ? 'CP' : 'NON_CP') as 'NON_CP' | 'CP';
+          const queryGuests = guests ? Math.max(1, parseInt(guests as string, 10) || 1) : 1;
+
+          const enrichedRoomTypes = await Promise.all(
+            roomTypes.map(async (rt) => {
+              const rtObj = rt.toObject ? rt.toObject() : { ...rt };
+              const applicableGuests = Math.min(queryGuests, rt.maxOccupancy || 1);
+
+              try {
+                // Authoritative stay pricing using PricingEngine
+                const pricing = await PricingEngine.calculateBookingPrice(
+                  rt._id,
+                  checkInDate,
+                  checkOutDate,
+                  applicableGuests,
+                  undefined,
+                  undefined,
+                  requestedPlan,
+                  false
+                );
+
+                // Authoritative stay pricing for EP (Room only)
+                const epPricing = await PricingEngine.calculateBookingPrice(
+                  rt._id,
+                  checkInDate,
+                  checkOutDate,
+                  applicableGuests,
+                  undefined,
+                  undefined,
+                  'NON_CP',
+                  false
+                );
+
+                // Authoritative stay pricing for CP (Breakfast included)
+                const cpPricing = await PricingEngine.calculateBookingPrice(
+                  rt._id,
+                  checkInDate,
+                  checkOutDate,
+                  applicableGuests,
+                  undefined,
+                  undefined,
+                  'CP',
+                  false
+                );
+
+                // Authoritative availability using AvailabilityEngine
+                const availability = await AvailabilityEngine.checkAvailability(
+                  rt._id.toString(),
+                  checkInDate,
+                  checkOutDate
+                );
+
+                const nightlyRates = pricing.nightlyRates || [];
+                const rates = nightlyRates.map((r: any) => r.rate);
+                const minRate = rates.length > 0 ? Math.min(...rates) : pricing.roomPricePerNight;
+                const maxRate = rates.length > 0 ? Math.max(...rates) : pricing.roomPricePerNight;
+                const hasVaryingRates = minRate !== maxRate;
+
+                return {
+                  ...rtObj,
+                  dateWiseRate: pricing.roomPricePerNight,
+                  roomTotal: pricing.roomTotal,
+                  numNights: pricing.numNights,
+                  minRate,
+                  maxRate,
+                  hasVaryingRates,
+                  nightlyRates,
+                  epRate: epPricing.roomPricePerNight,
+                  epTotal: epPricing.roomTotal,
+                  cpRate: cpPricing.roomPricePerNight,
+                  cpTotal: cpPricing.roomTotal,
+                  isAvailable: availability.isAvailable,
+                  availableRooms: availability.availableRooms,
+                };
+              } catch (err) {
+                return {
+                  ...rtObj,
+                  dateWiseRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                  roomTotal: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                  numNights: 1,
+                  minRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                  maxRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                  hasVaryingRates: false,
+                  epRate: rt.basePrice,
+                  cpRate: rt.cpPrice || rt.basePrice,
+                  isAvailable: true,
+                };
+              }
+            })
+          );
+
+          return res.json({ success: true, data: enrichedRoomTypes });
+        }
+      }
+
       return res.json({ success: true, data: roomTypes });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch rooms.' });
@@ -155,7 +257,10 @@ export class PublicController {
       // 1. Transactional Availability Check
       const availability = await AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
       if (!availability.isAvailable) {
-        return res.status(400).json({ success: false, message: 'Selected room type is fully booked for these dates.' });
+        return res.status(400).json({
+          success: false,
+          message: availability.restrictionError || 'Selected room type is fully booked for these dates.',
+        });
       }
 
       // 2. Strict Server-side Price Engine Calculation
@@ -216,6 +321,97 @@ export class PublicController {
         expiresAt,
       });
 
+      // 5. Authoritative Concurrency / Overbooking Protection
+      // Verify that this reservation hold did not exceed sellable capacity on any stay night
+      const stayDates = AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
+      const { pooledTypeIds, poolRooms, poolRoomIds, totalPhysical } = await AvailabilityEngine.resolvePooledRoomTypes(resolvedRoomTypeId);
+      const todayStr = AvailabilityEngine.formatDateStr(new Date());
+      const maintenanceCount = poolRooms.filter((r) => r.status === 'MAINTENANCE' || r.status === 'OUT_OF_SERVICE').length;
+
+      const dailyInvs = await DailyInventory.find({
+        roomTypeId: { $in: pooledTypeIds },
+        date: { $in: stayDates },
+      }).lean();
+
+      // Aggregate DailyInventory records per stay date across all pooled room types
+      const dailyInvMap = new Map<string, {
+        stopSell: boolean;
+        minStay: number;
+        blockedRooms: number;
+        inventoryOverride: number | null;
+      }>();
+
+      for (const nightStr of stayDates) {
+        const invsForDate = dailyInvs.filter((inv) => inv.date === nightStr);
+        const isStopSell = invsForDate.some((inv) => !!inv.stopSell);
+        const minStay = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.minStay || 1)) : 1;
+        const blockedRooms = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.blockedRooms || 0)) : 0;
+        const overrides = invsForDate
+          .map((inv) => inv.inventoryOverride)
+          .filter((o) => o !== undefined && o !== null) as number[];
+        const inventoryOverride = overrides.length > 0 ? Math.min(...overrides) : null;
+        dailyInvMap.set(nightStr, { stopSell: isStopSell, minStay, blockedRooms, inventoryOverride });
+      }
+
+      const priorBookings = await Booking.find({
+        _id: { $lt: booking._id },
+        $and: [
+          {
+            $or: [
+              { assignedRoomId: { $in: poolRoomIds } },
+              { roomTypeId: { $in: pooledTypeIds } },
+            ],
+          },
+          {
+            $or: [
+              { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+              { bookingStatus: 'PENDING', expiresAt: { $gt: new Date() } },
+            ],
+          },
+        ],
+      }).lean();
+
+      let isOverbooked = false;
+      for (const nightStr of stayDates) {
+        let sellableCap = totalPhysical;
+        const inv = dailyInvMap.get(nightStr);
+        if (inv?.stopSell) {
+          isOverbooked = true;
+          break;
+        }
+        if (inv?.inventoryOverride !== undefined && inv?.inventoryOverride !== null) {
+          sellableCap = Math.min(totalPhysical, Math.max(0, inv.inventoryOverride));
+        }
+
+        const maintToday = nightStr === todayStr ? maintenanceCount : 0;
+        const blockedOnNight = Math.min(totalPhysical, Math.max(0, (inv?.blockedRooms || 0) + maintToday));
+        const netSellable = Math.max(0, sellableCap - blockedOnNight);
+
+        // Count active bookings created prior to this booking overlapping this night across shared pool
+        const activeCount = priorBookings.filter((b) => {
+          const bInStr = AvailabilityEngine.formatDateStr(new Date(b.checkIn));
+          const bOutStr = AvailabilityEngine.formatDateStr(new Date(b.checkOut));
+          return bInStr <= nightStr && bOutStr > nightStr;
+        }).length;
+
+        // If existing bookings already met or exceeded sellable capacity, this new hold causes an overbooking
+        if (activeCount >= netSellable) {
+          isOverbooked = true;
+          break;
+        }
+      }
+
+      if (isOverbooked) {
+        // Immediate rollback of overbooked hold
+        await Booking.findByIdAndUpdate(booking._id, {
+          bookingStatus: 'CANCELLED',
+          paymentStatus: 'FAILED',
+        });
+        return res.status(409).json({
+          success: false,
+          message: 'ROOM_NO_LONGER_AVAILABLE',
+        });
+      }
 
       return res.status(201).json({
         success: true,

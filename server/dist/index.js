@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.httpServer = exports.app = void 0;
+exports.httpServer = exports.app = exports.ensureHotelSettings = void 0;
 const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const mongoose_1 = __importDefault(require("mongoose"));
@@ -113,16 +113,34 @@ const ensureCoupons = async () => {
         console.warn('[Setup] Coupon sync warning:', err);
     }
 };
-// Helper to ensure HotelSetting tax percentage is configured to official 5% GST
+// Helper to ensure HotelSetting exists and preserves custom tax percentage
 const ensureHotelSettings = async () => {
     try {
-        await HotelSetting_1.HotelSetting.updateMany({}, { $set: { taxPercentage: 5 } });
-        console.log('[Setup] Verified HotelSetting tax rate at 5% GST.');
+        const existing = await HotelSetting_1.HotelSetting.findOne();
+        const envTax = process.env.TAX_PERCENTAGE !== undefined && process.env.TAX_PERCENTAGE.trim() !== ''
+            ? Number(process.env.TAX_PERCENTAGE)
+            : NaN;
+        const defaultTax = !isNaN(envTax) && envTax >= 0 ? envTax : 5;
+        if (!existing) {
+            await HotelSetting_1.HotelSetting.create({
+                taxPercentage: defaultTax,
+            });
+            console.log(`[Setup] Initialized default HotelSetting with taxPercentage: ${defaultTax}%.`);
+        }
+        else if (existing.taxPercentage === undefined || existing.taxPercentage === null || isNaN(existing.taxPercentage)) {
+            existing.taxPercentage = defaultTax;
+            await existing.save();
+            console.log(`[Setup] Configured missing HotelSetting tax rate to ${defaultTax}%.`);
+        }
+        else {
+            console.log(`[Setup] Preserved existing HotelSetting tax rate at ${existing.taxPercentage}%.`);
+        }
     }
     catch (err) {
         console.warn('[Setup] HotelSetting sync warning:', err);
     }
 };
+exports.ensureHotelSettings = ensureHotelSettings;
 // Helper to ensure special venue QR codes always exist in active database
 const ensureSpecialVenues = async () => {
     try {
@@ -213,7 +231,7 @@ mongoose_1.default
     await (0, seedDatabase_1.ensureDatabaseSeeded)();
     await ensureRoomAmenities();
     await ensureSpecialVenues();
-    await ensureHotelSettings();
+    await (0, exports.ensureHotelSettings)();
     await ensureCoupons();
     httpServer.listen(PORT, () => {
         console.log(`[Server] Hotel Raama Backend API running at http://localhost:${PORT}`);

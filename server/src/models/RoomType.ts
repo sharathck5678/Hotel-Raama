@@ -20,6 +20,7 @@ import { Schema, model, Document } from 'mongoose';
 export interface IRoomType extends Document {
   name: string; // e.g. "Executive Double A/C"
   code: string; // e.g. "EXEC_DBL_AC"
+  inventoryGroup?: string; // e.g. "EXECUTIVE_AC", "PREMIUM_NONAC" (shared physical inventory pool)
   description: string;
   basePrice: number; // Non-CP Plan (Room Only)
   cpPrice: number; // CP Plan (Breakfast Included)
@@ -36,6 +37,7 @@ const RoomTypeSchema = new Schema<IRoomType>(
   {
     name: { type: String, required: true, trim: true },
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    inventoryGroup: { type: String, trim: true, uppercase: true },
     description: { type: String, required: true },
     basePrice: { type: Number, required: true, min: 0 },
     cpPrice: { type: Number, required: true, min: 0 },

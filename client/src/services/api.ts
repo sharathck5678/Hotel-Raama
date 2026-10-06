@@ -87,9 +87,9 @@ const getFriendlyErrorMessage = (err: any, fallback: string): string => {
 
 // --- GUEST APIS WITH AUTOMATIC PERSISTENT FALLBACKS ---
 
-export const fetchRoomTypes = () =>
+export const fetchRoomTypes = (params?: { checkIn?: string; checkOut?: string; planType?: string; guests?: number }) =>
   api
-    .get('/rooms')
+    .get('/rooms', { params })
     .then((res) => {
       if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
         return res.data;
@@ -535,6 +535,129 @@ export const cancelOfflineBooking = (id: string) =>
     .catch((err) => ({
       success: false,
       message: err.response?.data?.message || 'Failed to cancel offline booking.',
+    }));
+
+// Date-Wise Inventory & Rate Management APIs
+export const fetchDateWiseInventory = (params?: {
+  startDate?: string;
+  endDate?: string;
+  roomTypeId?: string;
+  ratePlanCode?: string;
+}) =>
+  api
+    .get('/admin/inventory/date-wise', { params })
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch date-wise inventory.',
+    }));
+
+export const fetchRatePlans = () =>
+  api
+    .get('/admin/inventory/rate-plans')
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch rate plans.',
+      data: [],
+    }));
+
+export const bulkUpdateRates = (payload: {
+  roomTypeId: string;
+  ratePlanCode: string;
+  startDate: string;
+  endDate: string;
+  singleAdult: number;
+  doubleAdult: number;
+  tripleAdult: number;
+  childRate?: number;
+  extraAdultRate?: number;
+}) =>
+  api
+    .post('/admin/rates/bulk-update', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to bulk update rates.',
+    }));
+
+export const bulkUpdateInventory = (payload: {
+  roomTypeId: string;
+  startDate: string;
+  endDate: string;
+  inventoryOverride?: number | null;
+  notes?: string;
+}) =>
+  api
+    .post('/admin/inventory/bulk-update', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to bulk update inventory.',
+    }));
+
+export const bulkUpdateRestrictions = (payload: {
+  roomTypeId: string;
+  startDate: string;
+  endDate: string;
+  stopSell?: boolean;
+  minStay?: number;
+  notes?: string;
+}) =>
+  api
+    .post('/admin/restrictions/bulk-update', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to bulk update restrictions.',
+    }));
+
+export const quickUpdateInventoryCell = (payload: {
+  roomTypeId: string;
+  date: string;
+  ratePlanCode?: string;
+  rates?: any;
+  inventoryOverride?: number | null;
+  stopSell?: boolean;
+  minStay?: number;
+  notes?: string;
+}) =>
+  api
+    .post('/admin/inventory/quick-update', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to update cell.',
+    }));
+
+export const updateInventoryCell = quickUpdateInventoryCell;
+
+// --- ADMIN ROOM TYPES & BASE RATES ---
+export const fetchAdminRoomTypes = () =>
+  api
+    .get('/admin/room-types')
+    .then((res) => {
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        return res.data;
+      }
+      return { success: true, data: FALLBACK_ROOM_TYPES };
+    })
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch room categories.',
+      data: FALLBACK_ROOM_TYPES,
+    }));
+
+export const updateAdminRoomTypeBaseRates = (
+  id: string,
+  payload: { basePrice?: number; cpPrice?: number }
+) =>
+  api
+    .patch(`/admin/room-types/${id}/base-rates`, payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to update base rate.',
     }));
 
 export const fetchAuditLogs = () =>
