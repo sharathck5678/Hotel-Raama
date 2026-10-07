@@ -14,8 +14,9 @@ const Order_1 = require("../models/Order");
 const MenuCategory_1 = require("../models/MenuCategory");
 const MenuItem_1 = require("../models/MenuItem");
 const Attraction_1 = require("../models/Attraction");
-const HotelSetting_1 = require("../models/HotelSetting");
+const HotelSettingService_1 = require("../services/HotelSettingService");
 const DailyInventory_1 = require("../models/DailyInventory");
+const DailyRate_1 = require("../models/DailyRate");
 const AvailabilityEngine_1 = require("../services/AvailabilityEngine");
 const PricingEngine_1 = require("../services/PricingEngine");
 const RazorpayService_1 = require("../services/RazorpayService");
@@ -29,7 +30,7 @@ class PublicController {
         if (!roomTypeId)
             return null;
         if (typeof roomTypeId === 'string' && mongoose_1.default.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
-            const foundById = await RoomType_1.RoomType.findById(roomTypeId);
+            const foundById = await RoomType_1.RoomType.findById(roomTypeId).select('_id').lean();
             if (foundById)
                 return foundById._id.toString();
         }
@@ -43,7 +44,7 @@ class PublicController {
             rt_7: 'SUITE_ROOM',
         };
         const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
-        const found = await RoomType_1.RoomType.findOne({ code: searchCode });
+        const found = await RoomType_1.RoomType.findOne({ code: searchCode }).select('_id').lean();
         return found ? found._id.toString() : null;
     }
     /**
@@ -51,10 +52,10 @@ class PublicController {
      */
     static async getRoomTypes(req, res) {
         try {
-            let roomTypes = await RoomType_1.RoomType.find({ isActive: true });
+            let roomTypes = await RoomType_1.RoomType.find({ isActive: true }).lean();
             if (roomTypes.length === 0) {
                 await (0, seedDatabase_1.ensureDatabaseSeeded)();
-                roomTypes = await RoomType_1.RoomType.find({ isActive: true });
+                roomTypes = await RoomType_1.RoomType.find({ isActive: true }).lean();
             }
             const { checkIn, checkOut, planType, guests } = req.query;
             if (checkIn && checkOut && typeof checkIn === 'string' && typeof checkOut === 'string') {
@@ -63,18 +64,72 @@ class PublicController {
                 if (!isNaN(checkInDate.getTime()) && !isNaN(checkOutDate.getTime()) && checkOutDate > checkInDate) {
                     const requestedPlan = (planType === 'CP' ? 'CP' : 'NON_CP');
                     const queryGuests = guests ? Math.max(1, parseInt(guests, 10) || 1) : 1;
+                    // ==========================================
+                    // PHASE 2B: BATCH DATA FETCHING
+                    // ==========================================
+                    const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
+                    const allRoomTypeIds = roomTypes.map((rt) => rt._id);
+                    const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+                    const now = new Date();
+                    const [allOfficialRooms, allStayBookings, allDailyInventories, allDailyRates] = await Promise.all([
+                        // 1. All official active guest rooms sorted by floor, roomNumber
+                        Room_1.Room.find({
+                            isActive: true,
+                            isVenue: { $ne: true },
+                            roomNumber: { $in: officialRoomNumbers },
+                        })
+                            .sort({ floor: 1, roomNumber: 1 })
+                            .lean(),
+                        // 2. All potentially conflicting active bookings overlapping checkIn & checkOut
+                        Booking_1.Booking.find({
+                            checkIn: { $lt: checkOutDate },
+                            checkOut: { $gt: checkInDate },
+                            $or: [
+                                { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                                {
+                                    bookingStatus: 'PENDING',
+                                    expiresAt: { $gt: now },
+                                },
+                            ],
+                        })
+                            .select('checkIn checkOut bookingStatus assignedRoomId roomTypeId')
+                            .lean(),
+                        // 3. All DailyInventory records for active room types across stay dates
+                        DailyInventory_1.DailyInventory.find({
+                            roomTypeId: { $in: allRoomTypeIds },
+                            date: { $in: stayDates },
+                        })
+                            .select('roomTypeId date stopSell minStay blockedRooms inventoryOverride notes')
+                            .lean(),
+                        // 4. All DailyRate records for active room types and stay dates
+                        DailyRate_1.DailyRate.find({
+                            roomTypeId: { $in: allRoomTypeIds },
+                            ratePlanCode: { $in: ['ROOM_ONLY', 'BREAKFAST_INCLUDED'] },
+                            date: { $in: stayDates },
+                        }).lean(),
+                    ]);
+                    const availContext = {
+                        allRoomTypes: roomTypes,
+                        allOfficialRooms,
+                        allStayBookings,
+                        allDailyInventories,
+                    };
                     const enrichedRoomTypes = await Promise.all(roomTypes.map(async (rt) => {
                         const rtObj = rt.toObject ? rt.toObject() : { ...rt };
                         const applicableGuests = Math.min(queryGuests, rt.maxOccupancy || 1);
+                        const pricingContext = {
+                            roomType: rt,
+                            dailyRates: allDailyRates,
+                        };
                         try {
                             // Authoritative stay pricing using PricingEngine
-                            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, requestedPlan, false);
+                            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, requestedPlan, false, undefined, pricingContext);
                             // Authoritative stay pricing for EP (Room only)
-                            const epPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'NON_CP', false);
+                            const epPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'NON_CP', false, undefined, pricingContext);
                             // Authoritative stay pricing for CP (Breakfast included)
-                            const cpPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'CP', false);
+                            const cpPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'CP', false, undefined, pricingContext);
                             // Authoritative availability using AvailabilityEngine
-                            const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(rt._id.toString(), checkInDate, checkOutDate);
+                            const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(rt._id.toString(), checkInDate, checkOutDate, availContext);
                             const nightlyRates = pricing.nightlyRates || [];
                             const rates = nightlyRates.map((r) => r.rate);
                             const minRate = rates.length > 0 ? Math.min(...rates) : pricing.roomPricePerNight;
@@ -441,7 +496,7 @@ class PublicController {
     static async trackBooking(req, res) {
         try {
             const { token } = req.params;
-            const booking = await Booking_1.Booking.findOne({ trackingToken: token }).populate('roomTypeId assignedRoomId');
+            const booking = await Booking_1.Booking.findOne({ trackingToken: token }).populate('roomTypeId assignedRoomId').lean();
             if (!booking) {
                 return res.status(404).json({ success: false, message: 'Booking not found.' });
             }
@@ -488,12 +543,12 @@ class PublicController {
      */
     static async getMenu(req, res) {
         try {
-            let categories = await MenuCategory_1.MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
-            let items = await MenuItem_1.MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+            let categories = await MenuCategory_1.MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 }).lean();
+            let items = await MenuItem_1.MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 }).lean();
             if (items.length === 0) {
                 await (0, seedDatabase_1.ensureDatabaseSeeded)();
-                categories = await MenuCategory_1.MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
-                items = await MenuItem_1.MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+                categories = await MenuCategory_1.MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 }).lean();
+                items = await MenuItem_1.MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 }).lean();
             }
             return res.json({ success: true, data: { categories, items } });
         }
@@ -506,7 +561,7 @@ class PublicController {
      */
     static async getPartyPackages(req, res) {
         try {
-            const packages = await MenuItem_1.MenuItem.find({ section: 'SAMBHRAMA', isAvailable: true });
+            const packages = await MenuItem_1.MenuItem.find({ section: 'SAMBHRAMA', isAvailable: true }).lean();
             return res.json({ success: true, data: packages });
         }
         catch (error) {
@@ -518,7 +573,7 @@ class PublicController {
      */
     static async getAttractions(req, res) {
         try {
-            const attractions = await Attraction_1.Attraction.find({ isActive: true }).sort({ sortOrder: 1 });
+            const attractions = await Attraction_1.Attraction.find({ isActive: true }).sort({ sortOrder: 1 }).lean();
             return res.json({ success: true, data: attractions });
         }
         catch (error) {
@@ -530,7 +585,7 @@ class PublicController {
      */
     static async getHotelInfo(req, res) {
         try {
-            const info = await HotelSetting_1.HotelSetting.findOne() || {
+            const info = (await (0, HotelSettingService_1.getHotelSettings)()) || {
                 hotelName: 'Hotel Raama',
                 address: 'B.M. Road, Thanneeruhalla, Hassan',
                 phone: '+91 78995 11330',

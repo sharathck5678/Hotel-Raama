@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchMenuCatalog, createFoodOrder, verifyOrderPayment } from '../services/api';
+import { loadRazorpay } from '../utils/loadRazorpay';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 import { SEO } from '../components/SEO';
 
@@ -152,11 +153,6 @@ export const DiningPage: React.FC = () => {
         }
       })
       .finally(() => setLoading(false));
-
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
   }, [urlRoom, urlToken]);
 
   useEffect(() => {
@@ -415,16 +411,7 @@ export const DiningPage: React.FC = () => {
       };
 
       if (!window.Razorpay) {
-        await new Promise<void>((resolve) => {
-          let count = 0;
-          const interval = setInterval(() => {
-            count++;
-            if (window.Razorpay || count > 30) {
-              clearInterval(interval);
-              resolve();
-            }
-          }, 100);
-        });
+        await loadRazorpay();
       }
 
       if (window.Razorpay) {

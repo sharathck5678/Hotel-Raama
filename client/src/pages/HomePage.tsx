@@ -5,12 +5,15 @@ import { Calendar, Users, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { fetchRoomTypes, fetchAttractions } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 import { SEO } from '../components/SEO';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
+  const [loadingRooms, setLoadingRooms] = useState(true);
   const [attractions, setAttractions] = useState<any[]>([]);
+  const [loadingAttractions, setLoadingAttractions] = useState(true);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [numGuests, setNumGuests] = useState(2);
@@ -25,13 +28,19 @@ export const HomePage: React.FC = () => {
     setCheckIn(tomorrow.toISOString().split('T')[0]);
     setCheckOut(dayAfter.toISOString().split('T')[0]);
 
-    fetchRoomTypes().then(res => {
-      if (res.success) setRoomTypes(res.data);
-    }).catch(err => console.error(err));
+    fetchRoomTypes()
+      .then(res => {
+        if (res.success) setRoomTypes(res.data);
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoadingRooms(false));
 
-    fetchAttractions().then(res => {
-      if (res.success) setAttractions(res.data);
-    }).catch(err => console.error(err));
+    fetchAttractions()
+      .then(res => {
+        if (res.success) setAttractions(res.data);
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoadingAttractions(false));
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -59,7 +68,7 @@ export const HomePage: React.FC = () => {
               muted
               playsInline
               className="w-full h-full object-cover brightness-[1.0] contrast-[1.0]"
-              poster="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1920&q=80"
+              poster="/hero-poster.webp"
             >
               <source src="/hero-video.mp4" type="video/mp4" />
             </video>
@@ -169,50 +178,82 @@ export const HomePage: React.FC = () => {
             </div>
           </ScrollReveal>
 
-          <ScrollRevealGroup staggerDelay={0.15} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {roomTypes.slice(0, 3).map((room) => (
-              <ScrollRevealItem key={room._id}>
+          {loadingRooms ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {[1, 2, 3].map((i) => (
                 <div
-                  className="bg-[#F7F0DF] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm group hover:border-[#cbc0ad] transition-all duration-300 flex flex-col h-full"
+                  key={i}
+                  className="bg-[#F7F0DF] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm flex flex-col h-full animate-pulse"
                 >
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={room.images?.[0] || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'}
-                      alt={room.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute top-4 right-4 bg-[#D6B369] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#00174A]">
-                      {room.isAc ? 'A/C Executive' : 'Non-A/C Premium'}
-                    </div>
-                  </div>
-
+                  <div className="h-64 bg-[#e8deca]" />
                   <div className="p-7 flex-1 flex flex-col justify-between space-y-6">
-                    <div>
-                      <h3 className="text-2xl font-serif text-[#333333] group-hover:text-[#666666] transition-colors">
-                        {room.name}
-                      </h3>
-                      <p className="text-xs font-sans text-[#666666] mt-2 line-clamp-2 leading-relaxed">{room.description}</p>
+                    <div className="space-y-3">
+                      <div className="h-7 bg-[#e8deca] rounded w-3/4" />
+                      <div className="h-3.5 bg-[#e8deca] rounded w-full" />
+                      <div className="h-3.5 bg-[#e8deca] rounded w-4/5" />
                     </div>
-
                     <div className="pt-5 border-t border-[#cbc0ad] flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] font-sans text-[#666666] uppercase block tracking-wider">Starting Rate</span>
-                        <span className="text-2xl font-serif font-bold text-[#333333]">₹{room.basePrice}</span>
-                        <span className="text-[10px] font-sans text-[#666666]"> / night</span>
+                      <div className="space-y-1.5">
+                        <div className="h-3 bg-[#e8deca] rounded w-16" />
+                        <div className="h-6 bg-[#e8deca] rounded w-20" />
                       </div>
-
-                      <Link
-                        to={`/rooms?select=${room._id}`}
-                        className="px-4 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#E8C56A] transition-all"
-                      >
-                        Reserve Now
-                      </Link>
+                      <div className="h-9 bg-[#e8deca] rounded w-28" />
                     </div>
                   </div>
                 </div>
-              </ScrollRevealItem>
-            ))}
-          </ScrollRevealGroup>
+              ))}
+            </div>
+          ) : (
+            <ScrollRevealGroup staggerDelay={0.15} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {roomTypes.slice(0, 3).map((room) => (
+                <ScrollRevealItem key={room._id}>
+                  <div
+                    className="bg-[#F7F0DF] rounded-sm overflow-hidden border border-[#cbc0ad] shadow-sm group hover:border-[#cbc0ad] transition-all duration-300 flex flex-col h-full"
+                  >
+                    <div className="relative h-64 overflow-hidden">
+                      <picture className="w-full h-full block">
+                        <source srcSet={getOptimizedImageUrl(room.images?.[0])} type="image/webp" />
+                        <img
+                          src={room.images?.[0] || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'}
+                          alt={room.name}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        />
+                      </picture>
+                      <div className="absolute top-4 right-4 bg-[#D6B369] px-3 py-1 text-[10px] font-sans font-bold uppercase tracking-wider text-[#00174A]">
+                        {room.isAc ? 'A/C Executive' : 'Non-A/C Premium'}
+                      </div>
+                    </div>
+
+                    <div className="p-7 flex-1 flex flex-col justify-between space-y-6">
+                      <div>
+                        <h3 className="text-2xl font-serif text-[#333333] group-hover:text-[#666666] transition-colors">
+                          {room.name}
+                        </h3>
+                        <p className="text-xs font-sans text-[#666666] mt-2 line-clamp-2 leading-relaxed">{room.description}</p>
+                      </div>
+
+                      <div className="pt-5 border-t border-[#cbc0ad] flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-sans text-[#666666] uppercase block tracking-wider">Starting Rate</span>
+                          <span className="text-2xl font-serif font-bold text-[#333333]">₹{room.basePrice}</span>
+                          <span className="text-[10px] font-sans text-[#666666]"> / night</span>
+                        </div>
+
+                        <Link
+                          to={`/rooms?select=${room._id}`}
+                          className="px-4 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#E8C56A] transition-all"
+                        >
+                          Reserve Now
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollRevealItem>
+              ))}
+            </ScrollRevealGroup>
+          )}
         </section>
 
         {/* 3. DINING & LOUNGE SPOTLIGHT - Midnight Navy Dark Section */}
@@ -232,11 +273,16 @@ export const HomePage: React.FC = () => {
               {/* 1. Swaad Card */}
               <ScrollRevealItem>
                 <div className="relative rounded-sm overflow-hidden border border-white/15 group flex flex-col justify-end min-h-[380px] h-full">
-                  <img
-                    src="/swaad-restaurant.png"
-                    alt="Swaad Restaurant"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
+                  <picture className="absolute inset-0 w-full h-full">
+                    <source srcSet="/swaad-restaurant.webp" type="image/webp" />
+                    <img
+                      src="/swaad-restaurant.png"
+                      alt="Swaad Restaurant"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </picture>
                   <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
                     <h3 className="text-2xl font-serif text-white">Swaad Pure Veg</h3>
                     <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
@@ -254,11 +300,16 @@ export const HomePage: React.FC = () => {
               {/* 2. Hotel Raama Non-Veg Card */}
               <ScrollRevealItem>
                 <div className="relative rounded-sm overflow-hidden border border-white/15 group flex flex-col justify-end min-h-[380px] h-full">
-                  <img
-                    src="/hotel-raama-dining.jpg"
-                    alt="Hotel Raama Non-Veg Dining"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
+                  <picture className="absolute inset-0 w-full h-full">
+                    <source srcSet="/hotel-raama-dining.webp" type="image/webp" />
+                    <img
+                      src="/hotel-raama-dining.jpg"
+                      alt="Hotel Raama Non-Veg Dining"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </picture>
                   <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
                     <h3 className="text-2xl font-serif text-white">Hotel Raama</h3>
                     <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
@@ -276,11 +327,16 @@ export const HomePage: React.FC = () => {
               {/* 3. Liquid Lounge Card */}
               <ScrollRevealItem className="md:col-span-2 lg:col-span-1">
                 <div className="relative rounded-sm overflow-hidden border border-white/15 group flex flex-col justify-end min-h-[380px] h-full">
-                  <img
-                    src="/liquid-lounge-bar.png"
-                    alt="Liquid Lounge Bar"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
+                  <picture className="absolute inset-0 w-full h-full">
+                    <source srcSet="/liquid-lounge-bar.webp" type="image/webp" />
+                    <img
+                      src="/liquid-lounge-bar.png"
+                      alt="Liquid Lounge Bar"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </picture>
                   <div className="relative z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 sm:p-7 flex flex-col justify-end">
                     <h3 className="text-2xl font-serif text-white">Liquid Lounge Bar</h3>
                     <p className="text-xs font-sans text-white/80 mt-2 leading-relaxed">
@@ -364,11 +420,16 @@ export const HomePage: React.FC = () => {
             {/* Left Column: Sambhrama */}
             <ScrollReveal direction="left" duration={0.85} className="lg:col-span-1 h-full">
               <div className="relative rounded-sm overflow-hidden p-8 text-white space-y-6 border border-[#cbc0ad] shadow-md group h-full">
-                <img
-                  src="/sambhrama-party-hall.png"
-                  alt="Sambhrama Banquet Hall"
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
+                <picture className="absolute inset-0 w-full h-full">
+                  <source srcSet="/sambhrama-party-hall.webp" type="image/webp" />
+                  <img
+                    src="/sambhrama-party-hall.png"
+                    alt="Sambhrama Banquet Hall"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                </picture>
                 <div className="relative z-10 space-y-6">
                   <div>
                     <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Banquets & Events</span>
@@ -394,24 +455,47 @@ export const HomePage: React.FC = () => {
                 <h2 className="editorial-section-title text-[#333333]">Nearby Heritage Sightseeing</h2>
               </div>
 
-              <ScrollRevealGroup staggerDelay={0.12} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {attractions.slice(0, 4).map((attraction) => (
-                  <ScrollRevealItem key={attraction._id}>
-                    <div className="p-5 rounded-sm bg-[#F7F0DF] border border-[#cbc0ad] flex gap-4 items-center h-full">
-                      <img
-                        src={attraction.image}
-                        alt={attraction.name}
-                        className="w-20 h-20 rounded-sm object-cover shrink-0"
-                      />
-                      <div>
-                        <span className="text-[9px] font-sans text-[#666666] font-bold uppercase tracking-wider">{attraction.distance} away</span>
-                        <h4 className="text-sm font-serif font-bold text-[#333333] line-clamp-1">{attraction.name}</h4>
-                        <p className="text-xs font-sans text-[#666666] mt-1 line-clamp-2 leading-relaxed">{attraction.description}</p>
+              {loadingAttractions ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="p-5 rounded-sm bg-[#F7F0DF] border border-[#cbc0ad] flex gap-4 items-center h-full animate-pulse"
+                    >
+                      <div className="w-20 h-20 rounded-sm bg-[#e8deca] shrink-0" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-3 bg-[#e8deca] rounded w-16" />
+                        <div className="h-4 bg-[#e8deca] rounded w-36" />
+                        <div className="h-3 bg-[#e8deca] rounded w-48" />
                       </div>
                     </div>
-                  </ScrollRevealItem>
-                ))}
-              </ScrollRevealGroup>
+                  ))}
+                </div>
+              ) : (
+                <ScrollRevealGroup staggerDelay={0.12} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {attractions.slice(0, 4).map((attraction) => (
+                    <ScrollRevealItem key={attraction._id}>
+                      <div className="p-5 rounded-sm bg-[#F7F0DF] border border-[#cbc0ad] flex gap-4 items-center h-full">
+                        <picture className="w-20 h-20 rounded-sm shrink-0 overflow-hidden block">
+                          <source srcSet={getOptimizedImageUrl(attraction.image)} type="image/webp" />
+                          <img
+                            src={attraction.image}
+                            alt={attraction.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover shrink-0"
+                          />
+                        </picture>
+                        <div>
+                          <span className="text-[9px] font-sans text-[#666666] font-bold uppercase tracking-wider">{attraction.distance} away</span>
+                          <h4 className="text-sm font-serif font-bold text-[#333333] line-clamp-1">{attraction.name}</h4>
+                          <p className="text-xs font-sans text-[#666666] mt-1 line-clamp-2 leading-relaxed">{attraction.description}</p>
+                        </div>
+                      </div>
+                    </ScrollRevealItem>
+                  ))}
+                </ScrollRevealGroup>
+              )}
 
               <div className="text-right">
                 <Link to="/attractions" className="text-xs font-sans font-bold uppercase tracking-wider text-[#00174A] hover:text-[#667085] inline-flex items-center gap-1.5">

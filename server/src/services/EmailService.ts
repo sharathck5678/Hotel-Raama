@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
 import { IBooking, Booking } from '../models/Booking';
-import { HotelSetting } from '../models/HotelSetting';
+import { getHotelSettings } from './HotelSettingService';
 import { RoomType } from '../models/RoomType';
 import { InvoicePdfService } from './InvoicePdfService';
 import { IEmailProvider, ResendEmailProvider, NodemailerEmailProvider } from './email';
@@ -122,7 +122,7 @@ export class EmailService {
     }
 
     try {
-      const setting = await HotelSetting.findOne();
+      const setting = await getHotelSettings();
       if (setting?.notificationEmail) return setting.notificationEmail.trim();
       if (setting?.email) return setting.email.trim();
     } catch {

@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 import { RoomType } from '../models/RoomType';
 import { MealPlan } from '../models/MealPlan';
 import { Coupon } from '../models/Coupon';
-import { HotelSetting } from '../models/HotelSetting';
 import { DailyRate } from '../models/DailyRate';
+import { getHotelSettings } from './HotelSettingService';
 import { validateGSTIN, IGSTINValidationResult } from '../utils/gstinValidator';
 import { AvailabilityEngine } from './AvailabilityEngine';
 
@@ -57,44 +57,61 @@ export class PricingEngine {
     couponCode?: string,
     planType: 'NON_CP' | 'CP' = 'NON_CP',
     extraPerson: boolean = false,
-    gstin?: string
+    gstin?: string,
+    preloadedContext?: {
+      roomType?: any;
+      dailyRates?: any[];
+    }
   ): Promise<IPricingCalculationResult> {
     // 1. Calculate stay nights
     const stayDates = AvailabilityEngine.getStayDateStrings(checkIn, checkOut);
     const numNights = Math.max(1, stayDates.length);
 
     // 2. Fetch RoomType rate
-    let roomType = null;
-    if (roomTypeId instanceof Types.ObjectId) {
-      roomType = await RoomType.findById(roomTypeId);
-    } else if (typeof roomTypeId === 'string' && Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
-      roomType = await RoomType.findById(roomTypeId);
-    }
+    let roomType = preloadedContext?.roomType || null;
     if (!roomType) {
-      const MOCK_MAP: Record<string, string> = {
-        rt_1: 'PREM_SGL_NONAC',
-        rt_2: 'PREM_DBL_NONAC',
-        rt_3: 'EXEC_SGL_AC',
-        rt_4: 'EXEC_DBL_AC',
-        rt_5: 'TRIPLE_PREM',
-        rt_6: 'TRIPLE_EXEC',
-        rt_7: 'SUITE_ROOM',
-      };
-      const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
-      roomType = await RoomType.findOne({ code: searchCode });
-    }
-    if (!roomType) {
-      throw new Error('Invalid Room Type');
+      if (roomTypeId instanceof Types.ObjectId) {
+        roomType = await RoomType.findById(roomTypeId);
+      } else if (typeof roomTypeId === 'string' && Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+        roomType = await RoomType.findById(roomTypeId);
+      }
+      if (!roomType) {
+        const MOCK_MAP: Record<string, string> = {
+          rt_1: 'PREM_SGL_NONAC',
+          rt_2: 'PREM_DBL_NONAC',
+          rt_3: 'EXEC_SGL_AC',
+          rt_4: 'EXEC_DBL_AC',
+          rt_5: 'TRIPLE_PREM',
+          rt_6: 'TRIPLE_EXEC',
+          rt_7: 'SUITE_ROOM',
+        };
+        const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+        roomType = await RoomType.findOne({ code: searchCode });
+      }
+      if (!roomType) {
+        throw new Error('Invalid Room Type');
+      }
     }
 
     const ratePlanCode = planType === 'CP' ? 'BREAKFAST_INCLUDED' : 'ROOM_ONLY';
 
     // 3. Fetch any custom DailyRate records for this room type, rate plan, and stay dates
-    const customRates = await DailyRate.find({
-      roomTypeId: roomType._id,
-      ratePlanCode,
-      date: { $in: stayDates },
-    }).lean();
+    let customRates: any[];
+    if (preloadedContext?.dailyRates) {
+      const rtIdStr = roomType._id.toString();
+      customRates = preloadedContext.dailyRates.filter(
+        (cr: any) =>
+          cr.roomTypeId.toString() === rtIdStr &&
+          cr.ratePlanCode === ratePlanCode &&
+          stayDates.includes(cr.date)
+      );
+    } else {
+      customRates = await DailyRate.find({
+        roomTypeId: roomType._id,
+        ratePlanCode,
+        date: { $in: stayDates },
+      }).lean();
+    }
 
     const customRateMap = new Map<string, any>();
     for (const cr of customRates) {
@@ -236,7 +253,7 @@ export class PricingEngine {
 
     // 7. Calculate GST Tax
     // Precedence: Existing DB HotelSetting -> process.env.TAX_PERCENTAGE (if valid number) -> default 5%
-    const settings = await HotelSetting.findOne();
+    const settings = await getHotelSettings();
     let taxPercentage: number;
 
     if (settings && typeof settings.taxPercentage === 'number' && !isNaN(settings.taxPercentage) && settings.taxPercentage >= 0) {

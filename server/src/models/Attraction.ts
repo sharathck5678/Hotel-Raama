@@ -27,4 +27,6 @@ const AttractionSchema = new Schema<IAttraction>(
   { timestamps: true }
 );
 
+AttractionSchema.index({ isActive: 1, sortOrder: 1 });
+
 export const Attraction = model<IAttraction>('Attraction', AttractionSchema);

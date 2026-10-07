@@ -1,6 +1,3 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 
 export interface OrderItemPdf {
@@ -208,6 +205,13 @@ export const downloadOrderReceiptPdf = async (order: OrderPdfData) => {
       await document.fonts.ready;
     }
 
+    const [html2canvasModule, jsPdfModule] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf'),
+    ]);
+    const html2canvas = (html2canvasModule as any).default || html2canvasModule;
+    const jsPDF = (jsPdfModule as any).default || (jsPdfModule as any).jsPDF;
+
     const canvas = await html2canvas(container, {
       scale: 2, // 2x high-resolution rendering
       useCORS: true,
@@ -263,8 +267,16 @@ export const downloadOrderReceiptPdf = async (order: OrderPdfData) => {
  * Generate and trigger download of Booking Tax Invoice directly in the browser
  * with a pure white background, crisp typography, and printer-friendly layout
  */
-export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
+export const downloadBookingInvoicePdf = async (booking: BookingPdfData) => {
+  const toastId = toast.loading('Generating invoice...');
   try {
+    const [jsPdfModule, autoTableModule] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
+    const jsPDF = (jsPdfModule as any).default || (jsPdfModule as any).jsPDF;
+    const autoTable = (autoTableModule as any).default?.default || (autoTableModule as any).default || autoTableModule;
+
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -537,9 +549,9 @@ export const downloadBookingInvoicePdf = (booking: BookingPdfData) => {
 
     // Save PDF
     doc.save(`Invoice-${bookingId}.pdf`);
-    toast.success(`Tax Invoice for #${bookingId} downloaded successfully!`);
+    toast.success(`Tax Invoice for #${bookingId} downloaded successfully!`, { id: toastId });
   } catch (err) {
     console.error('Failed to generate booking PDF invoice:', err);
-    toast.error('Could not generate PDF invoice.');
+    toast.error('Could not generate PDF invoice.', { id: toastId });
   }
 };

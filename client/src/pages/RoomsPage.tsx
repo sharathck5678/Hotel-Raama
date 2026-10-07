@@ -8,12 +8,8 @@ import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components
 import { SEO } from '../components/SEO';
 import { formatAadharInput, validateAadhar } from '../utils/aadharValidator';
 import { validateGSTIN } from '../utils/gstinValidator';
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
+import { loadRazorpay } from '../utils/loadRazorpay';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 // Interactive Room Image Slideshow Component
 const RoomSlideshow: React.FC<{
@@ -92,8 +88,10 @@ const RoomSlideshow: React.FC<{
     <div className="relative h-64 overflow-hidden group rounded-t-sm bg-stone-900">
       <motion.img
         key={slideImages[currentIndex]}
-        src={slideImages[currentIndex]}
+        src={getOptimizedImageUrl(slideImages[currentIndex])}
         alt={`${roomName} - Photo ${currentIndex + 1}`}
+        loading="lazy"
+        decoding="async"
         className="w-full h-full object-cover select-none"
         initial={{ opacity: 0.8 }}
         animate={{ opacity: 1 }}
@@ -220,15 +218,12 @@ export const RoomsPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  // Ensure Razorpay Script is available
+  // Preload Razorpay on-demand when booking modal is opened
   useEffect(() => {
-    if (!window.Razorpay && !document.querySelector('script[src*="checkout.razorpay.com"]')) {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.body.appendChild(script);
+    if (selectedRoom) {
+      loadRazorpay();
     }
-  }, []);
+  }, [selectedRoom]);
 
   // Fetch Authoritative Date-Wise Room Types & Rates whenever dates, plan, or guests change
   useEffect(() => {
@@ -518,17 +513,7 @@ export const RoomsPage: React.FC = () => {
       };
 
       if (!window.Razorpay) {
-        // Wait briefly if script tag in HTML is still executing
-        await new Promise<void>((resolve) => {
-          let count = 0;
-          const interval = setInterval(() => {
-            count++;
-            if (window.Razorpay || count > 30) {
-              clearInterval(interval);
-              resolve();
-            }
-          }, 100);
-        });
+        await loadRazorpay();
       }
 
       if (window.Razorpay) {

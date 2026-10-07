@@ -12,4 +12,5 @@ const AttractionSchema = new mongoose_1.Schema({
     sortOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });
+AttractionSchema.index({ isActive: 1, sortOrder: 1 });
 exports.Attraction = (0, mongoose_1.model)('Attraction', AttractionSchema);

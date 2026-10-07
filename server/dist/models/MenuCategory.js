@@ -13,4 +13,5 @@ const MenuCategorySchema = new mongoose_1.Schema({
     sortOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });
+MenuCategorySchema.index({ isActive: 1, sortOrder: 1 });
 exports.MenuCategory = (0, mongoose_1.model)('MenuCategory', MenuCategorySchema);

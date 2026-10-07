@@ -60,7 +60,13 @@ app.use('/api/admin', adminRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date(), service: 'Hotel Raama Backend API' });
+  const isDbConnected = mongoose.connection.readyState === 1;
+  res.status(isDbConnected ? 200 : 503).json({
+    status: isDbConnected ? 'ok' : 'degraded',
+    timestamp: new Date(),
+    service: 'Hotel Raama Backend API',
+    database: isDbConnected ? 'connected' : 'disconnected',
+  });
 });
 
 // Global JSON Error Handler
@@ -131,6 +137,8 @@ const ensureCoupons = async () => {
   }
 };
 
+import { invalidateHotelSettingsCache } from './services/HotelSettingService';
+
 // Helper to ensure HotelSetting exists and preserves custom tax percentage
 export const ensureHotelSettings = async () => {
   try {
@@ -152,6 +160,7 @@ export const ensureHotelSettings = async () => {
     } else {
       console.log(`[Setup] Preserved existing HotelSetting tax rate at ${existing.taxPercentage}%.`);
     }
+    invalidateHotelSettingsCache();
   } catch (err) {
     console.warn('[Setup] HotelSetting sync warning:', err);
   }
@@ -239,22 +248,79 @@ const ensureRoomAmenities = async () => {
 
 import { ensureDatabaseSeeded } from './seed/seedDatabase';
 
+/**
+ * Asynchronously execute non-critical reference and seed synchronizations in the background.
+ * Preserves dependency order:
+ * 1. ensureDatabaseSeeded (catalog/menu/room data)
+ * 2. ensureRoomAmenities (updates room type amenities)
+ * 3. ensureSpecialVenues (depends on room types existing)
+ * 4. ensureHotelSettings (independent settings check)
+ * 5. ensureCoupons (independent promotional coupons check)
+ */
+async function runNonCriticalStartupTasks(): Promise<void> {
+  const syncStartTime = Date.now();
+  console.log('[Startup] Starting background database synchronization tasks...');
+
+  try {
+    await ensureDatabaseSeeded();
+    console.log('[Startup] ✓ ensureDatabaseSeeded completed.');
+  } catch (err: any) {
+    console.error('[Startup Error] ensureDatabaseSeeded failed:', err.message || err);
+  }
+
+  try {
+    await ensureRoomAmenities();
+    console.log('[Startup] ✓ ensureRoomAmenities completed.');
+  } catch (err: any) {
+    console.error('[Startup Error] ensureRoomAmenities failed:', err.message || err);
+  }
+
+  try {
+    await ensureSpecialVenues();
+    console.log('[Startup] ✓ ensureSpecialVenues completed.');
+  } catch (err: any) {
+    console.error('[Startup Error] ensureSpecialVenues failed:', err.message || err);
+  }
+
+  try {
+    await ensureHotelSettings();
+    console.log('[Startup] ✓ ensureHotelSettings completed.');
+  } catch (err: any) {
+    console.error('[Startup Error] ensureHotelSettings failed:', err.message || err);
+  }
+
+  try {
+    await ensureCoupons();
+    console.log('[Startup] ✓ ensureCoupons completed.');
+  } catch (err: any) {
+    console.error('[Startup Error] ensureCoupons failed:', err.message || err);
+  }
+
+  const syncDuration = Date.now() - syncStartTime;
+  console.log(`[Startup] Background synchronization completed in ${syncDuration}ms.`);
+}
+
 // 4. Connect MongoDB & Start HTTP Server
+const mongoStartTime = Date.now();
 mongoose
   .connect(MONGODB_URI)
-  .then(async () => {
-    console.log('[MongoDB] Connected successfully to hotel_raama database.');
-    await ensureDatabaseSeeded();
-    await ensureRoomAmenities();
-    await ensureSpecialVenues();
-    await ensureHotelSettings();
-    await ensureCoupons();
+  .then(() => {
+    const mongoDuration = Date.now() - mongoStartTime;
+    console.log(`[MongoDB] Connected successfully to database in ${mongoDuration}ms.`);
+
+    const listenStartTime = Date.now();
     httpServer.listen(PORT, () => {
-      console.log(`[Server] Hotel Raama Backend API running at http://localhost:${PORT}`);
+      const listenDuration = Date.now() - listenStartTime;
+      console.log(`[Server] Hotel Raama Backend API running at http://localhost:${PORT} (ready to serve in ${listenDuration}ms, total boot: ${Date.now() - mongoStartTime}ms)`);
+
+      // Run non-critical initializations asynchronously in background
+      void runNonCriticalStartupTasks().catch((err: any) => {
+        console.error('[Startup Error] Unhandled error during background initialization:', err.message || err);
+      });
     });
   })
   .catch((err) => {
-    console.error('[MongoDB Error] Connection failed:', err);
+    console.error('[MongoDB Error] Connection failed:', err.message || err);
     process.exit(1);
   });
 

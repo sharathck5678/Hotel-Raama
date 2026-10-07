@@ -14,6 +14,15 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_RAZORPAY_KEY_ID': JSON.stringify(rzpKeyId),
       ...(apiUrl ? { 'import.meta.env.VITE_API_BASE_URL': JSON.stringify(apiUrl) } : {}),
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          },
+        },
+      },
+    },
   };
 });
 

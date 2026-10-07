@@ -22,4 +22,6 @@ const MenuItemSchema = new mongoose_1.Schema({
 MenuItemSchema.index({ categoryId: 1 });
 MenuItemSchema.index({ section: 1 });
 MenuItemSchema.index({ isAvailable: 1 });
+MenuItemSchema.index({ isAvailable: 1, sortOrder: 1 });
+MenuItemSchema.index({ section: 1, isAvailable: 1 });
 exports.MenuItem = (0, mongoose_1.model)('MenuItem', MenuItemSchema);

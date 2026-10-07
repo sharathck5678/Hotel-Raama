@@ -5,8 +5,8 @@ const mongoose_1 = require("mongoose");
 const RoomType_1 = require("../models/RoomType");
 const MealPlan_1 = require("../models/MealPlan");
 const Coupon_1 = require("../models/Coupon");
-const HotelSetting_1 = require("../models/HotelSetting");
 const DailyRate_1 = require("../models/DailyRate");
+const HotelSettingService_1 = require("./HotelSettingService");
 const gstinValidator_1 = require("../utils/gstinValidator");
 const AvailabilityEngine_1 = require("./AvailabilityEngine");
 exports.OFFICIAL_COUPONS = {
@@ -14,41 +14,52 @@ exports.OFFICIAL_COUPONS = {
     WELCOME15: 15,
 };
 class PricingEngine {
-    static async calculateBookingPrice(roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType = 'NON_CP', extraPerson = false, gstin) {
+    static async calculateBookingPrice(roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType = 'NON_CP', extraPerson = false, gstin, preloadedContext) {
         // 1. Calculate stay nights
         const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(checkIn, checkOut);
         const numNights = Math.max(1, stayDates.length);
         // 2. Fetch RoomType rate
-        let roomType = null;
-        if (roomTypeId instanceof mongoose_1.Types.ObjectId) {
-            roomType = await RoomType_1.RoomType.findById(roomTypeId);
-        }
-        else if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
-            roomType = await RoomType_1.RoomType.findById(roomTypeId);
-        }
+        let roomType = preloadedContext?.roomType || null;
         if (!roomType) {
-            const MOCK_MAP = {
-                rt_1: 'PREM_SGL_NONAC',
-                rt_2: 'PREM_DBL_NONAC',
-                rt_3: 'EXEC_SGL_AC',
-                rt_4: 'EXEC_DBL_AC',
-                rt_5: 'TRIPLE_PREM',
-                rt_6: 'TRIPLE_EXEC',
-                rt_7: 'SUITE_ROOM',
-            };
-            const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
-            roomType = await RoomType_1.RoomType.findOne({ code: searchCode });
-        }
-        if (!roomType) {
-            throw new Error('Invalid Room Type');
+            if (roomTypeId instanceof mongoose_1.Types.ObjectId) {
+                roomType = await RoomType_1.RoomType.findById(roomTypeId);
+            }
+            else if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+                roomType = await RoomType_1.RoomType.findById(roomTypeId);
+            }
+            if (!roomType) {
+                const MOCK_MAP = {
+                    rt_1: 'PREM_SGL_NONAC',
+                    rt_2: 'PREM_DBL_NONAC',
+                    rt_3: 'EXEC_SGL_AC',
+                    rt_4: 'EXEC_DBL_AC',
+                    rt_5: 'TRIPLE_PREM',
+                    rt_6: 'TRIPLE_EXEC',
+                    rt_7: 'SUITE_ROOM',
+                };
+                const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+                roomType = await RoomType_1.RoomType.findOne({ code: searchCode });
+            }
+            if (!roomType) {
+                throw new Error('Invalid Room Type');
+            }
         }
         const ratePlanCode = planType === 'CP' ? 'BREAKFAST_INCLUDED' : 'ROOM_ONLY';
         // 3. Fetch any custom DailyRate records for this room type, rate plan, and stay dates
-        const customRates = await DailyRate_1.DailyRate.find({
-            roomTypeId: roomType._id,
-            ratePlanCode,
-            date: { $in: stayDates },
-        }).lean();
+        let customRates;
+        if (preloadedContext?.dailyRates) {
+            const rtIdStr = roomType._id.toString();
+            customRates = preloadedContext.dailyRates.filter((cr) => cr.roomTypeId.toString() === rtIdStr &&
+                cr.ratePlanCode === ratePlanCode &&
+                stayDates.includes(cr.date));
+        }
+        else {
+            customRates = await DailyRate_1.DailyRate.find({
+                roomTypeId: roomType._id,
+                ratePlanCode,
+                date: { $in: stayDates },
+            }).lean();
+        }
         const customRateMap = new Map();
         for (const cr of customRates) {
             customRateMap.set(cr.date, cr);
@@ -180,7 +191,7 @@ class PricingEngine {
         const netAmountBeforeTax = Math.max(0, subtotal - discountAmount);
         // 7. Calculate GST Tax
         // Precedence: Existing DB HotelSetting -> process.env.TAX_PERCENTAGE (if valid number) -> default 5%
-        const settings = await HotelSetting_1.HotelSetting.findOne();
+        const settings = await (0, HotelSettingService_1.getHotelSettings)();
         let taxPercentage;
         if (settings && typeof settings.taxPercentage === 'number' && !isNaN(settings.taxPercentage) && settings.taxPercentage >= 0) {
             taxPercentage = settings.taxPercentage;

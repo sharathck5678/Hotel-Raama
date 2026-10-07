@@ -7,36 +7,50 @@ import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
 import { SEO } from './components/SEO';
 
-// Guest Pages
+// Core Immediate Shell & Home Page (Required for initial customer experience)
 import { HomePage } from './pages/HomePage';
-import { RoomsPage } from './pages/RoomsPage';
-import { BookingConfirmationPage } from './pages/BookingConfirmationPage';
-import { DiningPage } from './pages/DiningPage';
-import { PartyHallPage } from './pages/PartyHallPage';
-import { AttractionsPage } from './pages/AttractionsPage';
-import { LocationPage } from './pages/LocationPage';
-import { MyBookingsOrdersPage } from './pages/MyBookingsOrdersPage';
-import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
-import { TermsOfBookingPage } from './pages/TermsOfBookingPage';
-import { CustomerFeedbackPage } from './pages/CustomerFeedbackPage';
 
-// QR Order Pages
-import { QrOrderingSectionPage } from './pages/QrOrderingSectionPage';
-import { QrOrderPage } from './pages/QrOrderPage';
-import { OrderTrackingPage } from './pages/OrderTrackingPage';
+// Lazy-loaded Guest Pages
+const RoomsPage = React.lazy(() => import('./pages/RoomsPage').then((m) => ({ default: m.RoomsPage })));
+const BookingConfirmationPage = React.lazy(() => import('./pages/BookingConfirmationPage').then((m) => ({ default: m.BookingConfirmationPage })));
+const DiningPage = React.lazy(() => import('./pages/DiningPage').then((m) => ({ default: m.DiningPage })));
+const PartyHallPage = React.lazy(() => import('./pages/PartyHallPage').then((m) => ({ default: m.PartyHallPage })));
+const AttractionsPage = React.lazy(() => import('./pages/AttractionsPage').then((m) => ({ default: m.AttractionsPage })));
+const LocationPage = React.lazy(() => import('./pages/LocationPage').then((m) => ({ default: m.LocationPage })));
+const MyBookingsOrdersPage = React.lazy(() => import('./pages/MyBookingsOrdersPage').then((m) => ({ default: m.MyBookingsOrdersPage })));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })));
+const TermsOfBookingPage = React.lazy(() => import('./pages/TermsOfBookingPage').then((m) => ({ default: m.TermsOfBookingPage })));
+const CustomerFeedbackPage = React.lazy(() => import('./pages/CustomerFeedbackPage').then((m) => ({ default: m.CustomerFeedbackPage })));
 
-// Admin Pages
-import { AdminLoginPage } from './pages/admin/AdminLoginPage';
-import { ProtectedAdminRoute } from './pages/admin/ProtectedAdminRoute';
-import { AdminLayout } from './pages/admin/AdminLayout';
-import { AdminDashboardView } from './pages/admin/AdminDashboardView';
-import { AdminOrdersView } from './pages/admin/AdminOrdersView';
-import { AdminMenuView } from './pages/admin/AdminMenuView';
-import { AdminBookingsView } from './pages/admin/AdminBookingsView';
-import { AdminInventoryView } from './pages/admin/AdminInventoryView';
-import { AdminRoomsView } from './pages/admin/AdminRoomsView';
-import { AdminCustomerHistoryView } from './pages/admin/AdminCustomerHistoryView';
-import { AdminFeedbackView } from './pages/admin/AdminFeedbackView';
+// Lazy-loaded QR Order Pages
+const QrOrderingSectionPage = React.lazy(() => import('./pages/QrOrderingSectionPage').then((m) => ({ default: m.QrOrderingSectionPage })));
+const QrOrderPage = React.lazy(() => import('./pages/QrOrderPage').then((m) => ({ default: m.QrOrderPage })));
+const OrderTrackingPage = React.lazy(() => import('./pages/OrderTrackingPage').then((m) => ({ default: m.OrderTrackingPage })));
+
+// Lazy-loaded Admin Pages
+const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage').then((m) => ({ default: m.AdminLoginPage })));
+const ProtectedAdminRoute = React.lazy(() => import('./pages/admin/ProtectedAdminRoute').then((m) => ({ default: m.ProtectedAdminRoute })));
+const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })));
+const AdminDashboardView = React.lazy(() => import('./pages/admin/AdminDashboardView').then((m) => ({ default: m.AdminDashboardView })));
+const AdminOrdersView = React.lazy(() => import('./pages/admin/AdminOrdersView').then((m) => ({ default: m.AdminOrdersView })));
+const AdminMenuView = React.lazy(() => import('./pages/admin/AdminMenuView').then((m) => ({ default: m.AdminMenuView })));
+const AdminBookingsView = React.lazy(() => import('./pages/admin/AdminBookingsView').then((m) => ({ default: m.AdminBookingsView })));
+const AdminInventoryView = React.lazy(() => import('./pages/admin/AdminInventoryView').then((m) => ({ default: m.AdminInventoryView })));
+const AdminRoomsView = React.lazy(() => import('./pages/admin/AdminRoomsView').then((m) => ({ default: m.AdminRoomsView })));
+const AdminCustomerHistoryView = React.lazy(() => import('./pages/admin/AdminCustomerHistoryView').then((m) => ({ default: m.AdminCustomerHistoryView })));
+const AdminFeedbackView = React.lazy(() => import('./pages/admin/AdminFeedbackView').then((m) => ({ default: m.AdminFeedbackView })));
+
+const PageSkeleton: React.FC = () => (
+  <div className="min-h-[70vh] max-w-6xl mx-auto px-6 py-12 space-y-8 animate-pulse">
+    <div className="h-8 bg-[#E5DBC7] rounded w-1/3 mb-4" />
+    <div className="h-4 bg-[#E5DBC7] rounded w-2/3 mb-8" />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="h-64 bg-[#E5DBC7] rounded-sm" />
+      <div className="h-64 bg-[#E5DBC7] rounded-sm" />
+      <div className="h-64 bg-[#E5DBC7] rounded-sm" />
+    </div>
+  </div>
+);
 
 const NoIndex: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>
@@ -58,9 +72,10 @@ export const App: React.FC = () => {
         <Navbar />
 
         <main className="flex-grow bg-[#F7F0DF]">
-          <Routes>
-            {/* Public Guest Routes */}
-            <Route path="/" element={<HomePage />} />
+          <React.Suspense fallback={<PageSkeleton />}>
+            <Routes>
+              {/* Public Guest Routes */}
+              <Route path="/" element={<HomePage />} />
             <Route path="/rooms" element={<RoomsPage />} />
             <Route
               path="/booking/confirmation/:token"
@@ -185,6 +200,7 @@ export const App: React.FC = () => {
               <Route path="customers" element={<AdminCustomerHistoryView />} />
             </Route>
           </Routes>
+          </React.Suspense>
         </main>
 
         <Footer />

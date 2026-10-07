@@ -124,9 +124,9 @@ class AdminController {
             const pendingOrdersCount = await Order_1.Order.countDocuments({ status: { $in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'] } });
             const totalConfirmedBookings = await Booking_1.Booking.countDocuments({ bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } });
             // Calculate Real Revenue from Database
-            const paidBookings = await Booking_1.Booking.find({ paymentStatus: 'PAID' });
+            const paidBookings = await Booking_1.Booking.find({ paymentStatus: 'PAID' }).select('totalAmount createdAt').lean();
             const totalBookingRevenue = paidBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-            const allOrders = await Order_1.Order.find();
+            const allOrders = await Order_1.Order.find().select('totalAmount createdAt items').lean();
             const totalOrderRevenue = allOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
             const totalCombinedRevenue = totalBookingRevenue + totalOrderRevenue;
             // Group Real Transactions by Month
@@ -223,7 +223,7 @@ class AdminController {
             if (bookingStatus && typeof bookingStatus === 'string') {
                 filter.bookingStatus = bookingStatus;
             }
-            const bookings = await Booking_1.Booking.find(filter).populate('roomTypeId assignedRoomId').sort({ createdAt: -1 });
+            const bookings = await Booking_1.Booking.find(filter).populate('roomTypeId assignedRoomId').sort({ createdAt: -1 }).lean();
             return res.json({ success: true, data: bookings });
         }
         catch (error) {
@@ -285,7 +285,7 @@ class AdminController {
      */
     static async getOrders(req, res) {
         try {
-            const orders = await Order_1.Order.find().sort({ createdAt: -1 });
+            const orders = await Order_1.Order.find().sort({ createdAt: -1 }).lean();
             return res.json({ success: true, data: orders });
         }
         catch (error) {
@@ -478,10 +478,10 @@ class AdminController {
      */
     static async getRoomTypes(req, res) {
         try {
-            let roomTypes = await RoomType_1.RoomType.find({ isActive: true }).sort({ basePrice: 1, name: 1 });
+            let roomTypes = await RoomType_1.RoomType.find({ isActive: true }).sort({ basePrice: 1, name: 1 }).lean();
             if (roomTypes.length === 0) {
                 await (0, seedDatabase_1.ensureDatabaseSeeded)();
-                roomTypes = await RoomType_1.RoomType.find({ isActive: true }).sort({ basePrice: 1, name: 1 });
+                roomTypes = await RoomType_1.RoomType.find({ isActive: true }).sort({ basePrice: 1, name: 1 }).lean();
             }
             return res.json({ success: true, data: roomTypes });
         }
@@ -618,7 +618,7 @@ class AdminController {
      */
     static async getAuditLogs(req, res) {
         try {
-            const logs = await AuditLog_1.AuditLog.find().sort({ createdAt: -1 }).limit(100);
+            const logs = await AuditLog_1.AuditLog.find().sort({ createdAt: -1 }).limit(100).lean();
             return res.json({ success: true, data: logs });
         }
         catch (error) {
@@ -630,12 +630,12 @@ class AdminController {
      */
     static async getMenuItems(req, res) {
         try {
-            let items = await MenuItem_1.MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
-            let categories = await MenuCategory_1.MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+            let items = await MenuItem_1.MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 }).lean();
+            let categories = await MenuCategory_1.MenuCategory.find().sort({ sortOrder: 1, name: 1 }).lean();
             if (items.length === 0) {
                 await (0, seedDatabase_1.ensureDatabaseSeeded)();
-                items = await MenuItem_1.MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 });
-                categories = await MenuCategory_1.MenuCategory.find().sort({ sortOrder: 1, name: 1 });
+                items = await MenuItem_1.MenuItem.find().sort({ section: 1, sortOrder: 1, name: 1 }).lean();
+                categories = await MenuCategory_1.MenuCategory.find().sort({ sortOrder: 1, name: 1 }).lean();
             }
             return res.json({ success: true, data: { items, categories } });
         }

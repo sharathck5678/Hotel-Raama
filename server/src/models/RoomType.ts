@@ -50,4 +50,6 @@ const RoomTypeSchema = new Schema<IRoomType>(
   { timestamps: true }
 );
 
+RoomTypeSchema.index({ isActive: 1 });
+
 export const RoomType = model<IRoomType>('RoomType', RoomTypeSchema);

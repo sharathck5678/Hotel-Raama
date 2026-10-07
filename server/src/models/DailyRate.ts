@@ -44,5 +44,7 @@ const DailyRateSchema = new Schema<IDailyRate>(
 DailyRateSchema.index({ roomTypeId: 1, ratePlanId: 1, date: 1 }, { unique: true });
 DailyRateSchema.index({ date: 1, roomTypeId: 1 });
 DailyRateSchema.index({ roomTypeId: 1, date: 1 });
+DailyRateSchema.index({ roomTypeId: 1, ratePlanCode: 1, date: 1 });
+DailyRateSchema.index({ ratePlanCode: 1, date: 1 });
 
 export const DailyRate = model<IDailyRate>('DailyRate', DailyRateSchema);

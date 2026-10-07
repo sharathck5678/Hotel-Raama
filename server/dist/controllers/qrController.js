@@ -116,7 +116,7 @@ class QrController {
                     ...(isBoardRoomToken ? [{ roomNumber: { $regex: /board/i } }] : []),
                 ],
                 isActive: true,
-            }).populate('roomTypeId');
+            }).select('_id roomNumber floor qrToken').lean();
             // Auto-fallback: If special venue was requested but not in DB, auto-create it
             if (!room && isPartyHallToken) {
                 const roomType = (await RoomType_1.RoomType.findOne({ code: 'SUITE_ROOM' })) || (await RoomType_1.RoomType.findOne());
@@ -197,7 +197,7 @@ class QrController {
                         { roomNumber: `Room ${parsedRoomNum}` },
                     ],
                     isActive: true,
-                });
+                }).select('_id roomNumber qrToken').lean();
                 if (room) {
                     finalRoomNumber = room.roomNumber.replace(/^(Room\s*#?|#)/i, '').trim();
                     roomId = room._id;
@@ -233,7 +233,7 @@ class QrController {
                 }
                 objectIdStrings.push(rawItemId);
             }
-            const menuItems = await MenuItem_1.MenuItem.find({ _id: { $in: objectIdStrings } });
+            const menuItems = await MenuItem_1.MenuItem.find({ _id: { $in: objectIdStrings } }).lean();
             const menuMap = new Map(menuItems.map((m) => [m._id.toString(), m]));
             let subtotal = 0;
             const orderItems = [];
@@ -395,7 +395,7 @@ class QrController {
     static async trackOrder(req, res) {
         try {
             const { token } = req.params;
-            const order = await Order_1.Order.findOne({ trackingToken: token });
+            const order = await Order_1.Order.findOne({ trackingToken: token }).lean();
             if (!order) {
                 return res.status(404).json({ success: false, message: 'Order not found.' });
             }

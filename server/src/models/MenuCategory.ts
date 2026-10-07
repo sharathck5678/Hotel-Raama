@@ -27,4 +27,6 @@ const MenuCategorySchema = new Schema<IMenuCategory>(
   { timestamps: true }
 );
 
+MenuCategorySchema.index({ isActive: 1, sortOrder: 1 });
+
 export const MenuCategory = model<IMenuCategory>('MenuCategory', MenuCategorySchema);

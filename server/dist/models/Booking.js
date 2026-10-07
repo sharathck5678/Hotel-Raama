@@ -85,6 +85,7 @@ const BookingSchema = new mongoose_1.Schema({
 }, { timestamps: true });
 BookingSchema.index({ checkIn: 1, checkOut: 1 });
 BookingSchema.index({ assignedRoomId: 1, checkIn: 1, checkOut: 1 });
+BookingSchema.index({ roomTypeId: 1, checkIn: 1, checkOut: 1 });
 BookingSchema.index({ source: 1, createdAt: -1 });
 BookingSchema.index({ guestPhone: 1 });
 BookingSchema.index({ guestEmail: 1 });

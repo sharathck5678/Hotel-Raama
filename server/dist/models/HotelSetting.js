@@ -21,4 +21,14 @@ const HotelSettingSchema = new mongoose_1.Schema({
     googleMapsLink: { type: String, default: 'https://maps.app.goo.gl/ytRudLDAau6mBPKH8' },
     googleMapsEmbedUrl: { type: String, default: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3886.99408665792!2d76.0826807!3d12.9950762!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba5485458021c3b%3A0x7d0259bdf1eef4f9!2sHotel%20Raama!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin' },
 }, { timestamps: true });
+// Invalidate in-memory cache whenever HotelSetting is modified or deleted
+const HotelSettingService_1 = require("../services/HotelSettingService");
+const onMutate = () => (0, HotelSettingService_1.invalidateHotelSettingsCache)();
+HotelSettingSchema.post('save', onMutate);
+HotelSettingSchema.post('updateOne', onMutate);
+HotelSettingSchema.post('updateMany', onMutate);
+HotelSettingSchema.post('findOneAndUpdate', onMutate);
+HotelSettingSchema.post('findOneAndDelete', onMutate);
+HotelSettingSchema.post('deleteOne', onMutate);
+HotelSettingSchema.post('deleteMany', onMutate);
 exports.HotelSetting = (0, mongoose_1.model)('HotelSetting', HotelSettingSchema);

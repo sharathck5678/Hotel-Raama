@@ -9,8 +9,9 @@ import { Order } from '../models/Order';
 import { MenuCategory } from '../models/MenuCategory';
 import { MenuItem } from '../models/MenuItem';
 import { Attraction } from '../models/Attraction';
-import { HotelSetting } from '../models/HotelSetting';
+import { getHotelSettings } from '../services/HotelSettingService';
 import { DailyInventory } from '../models/DailyInventory';
+import { DailyRate } from '../models/DailyRate';
 import { AvailabilityEngine } from '../services/AvailabilityEngine';
 import { PricingEngine, OFFICIAL_COUPONS } from '../services/PricingEngine';
 import { RazorpayService } from '../services/RazorpayService';
@@ -24,8 +25,8 @@ export class PublicController {
   private static async resolveRoomTypeId(roomTypeId: any): Promise<string | null> {
     if (!roomTypeId) return null;
     if (typeof roomTypeId === 'string' && mongoose.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
-      const foundById = await RoomType.findById(roomTypeId);
-      if (foundById) return foundById._id.toString();
+      const foundById = await RoomType.findById(roomTypeId).select('_id').lean();
+      if (foundById) return (foundById as any)._id.toString();
     }
     const MOCK_MAP: Record<string, string> = {
       rt_1: 'PREM_SGL_NONAC',
@@ -37,8 +38,8 @@ export class PublicController {
       rt_7: 'SUITE_ROOM',
     };
     const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
-    const found = await RoomType.findOne({ code: searchCode });
-    return found ? found._id.toString() : null;
+    const found = await RoomType.findOne({ code: searchCode }).select('_id').lean();
+    return found ? (found as any)._id.toString() : null;
   }
 
   /**
@@ -46,10 +47,10 @@ export class PublicController {
    */
   static async getRoomTypes(req: Request, res: Response) {
     try {
-      let roomTypes = await RoomType.find({ isActive: true });
+      let roomTypes = await RoomType.find({ isActive: true }).lean();
       if (roomTypes.length === 0) {
         await ensureDatabaseSeeded();
-        roomTypes = await RoomType.find({ isActive: true });
+        roomTypes = await RoomType.find({ isActive: true }).lean();
       }
 
       const { checkIn, checkOut, planType, guests } = req.query;
@@ -60,10 +61,71 @@ export class PublicController {
           const requestedPlan = (planType === 'CP' ? 'CP' : 'NON_CP') as 'NON_CP' | 'CP';
           const queryGuests = guests ? Math.max(1, parseInt(guests as string, 10) || 1) : 1;
 
+          // ==========================================
+          // PHASE 2B: BATCH DATA FETCHING
+          // ==========================================
+          const stayDates = AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
+          const allRoomTypeIds = roomTypes.map((rt: any) => rt._id);
+          const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+          const now = new Date();
+
+          const [allOfficialRooms, allStayBookings, allDailyInventories, allDailyRates] = await Promise.all([
+            // 1. All official active guest rooms sorted by floor, roomNumber
+            Room.find({
+              isActive: true,
+              isVenue: { $ne: true },
+              roomNumber: { $in: officialRoomNumbers },
+            })
+              .sort({ floor: 1, roomNumber: 1 })
+              .lean(),
+
+            // 2. All potentially conflicting active bookings overlapping checkIn & checkOut
+            Booking.find({
+              checkIn: { $lt: checkOutDate },
+              checkOut: { $gt: checkInDate },
+              $or: [
+                { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                {
+                  bookingStatus: 'PENDING',
+                  expiresAt: { $gt: now },
+                },
+              ],
+            })
+              .select('checkIn checkOut bookingStatus assignedRoomId roomTypeId')
+              .lean(),
+
+            // 3. All DailyInventory records for active room types across stay dates
+            DailyInventory.find({
+              roomTypeId: { $in: allRoomTypeIds },
+              date: { $in: stayDates },
+            })
+              .select('roomTypeId date stopSell minStay blockedRooms inventoryOverride notes')
+              .lean(),
+
+            // 4. All DailyRate records for active room types and stay dates
+            DailyRate.find({
+              roomTypeId: { $in: allRoomTypeIds },
+              ratePlanCode: { $in: ['ROOM_ONLY', 'BREAKFAST_INCLUDED'] },
+              date: { $in: stayDates },
+            }).lean(),
+          ]);
+
+          const availContext = {
+            allRoomTypes: roomTypes,
+            allOfficialRooms,
+            allStayBookings,
+            allDailyInventories,
+          };
+
           const enrichedRoomTypes = await Promise.all(
             roomTypes.map(async (rt) => {
               const rtObj = rt.toObject ? rt.toObject() : { ...rt };
               const applicableGuests = Math.min(queryGuests, rt.maxOccupancy || 1);
+
+              const pricingContext = {
+                roomType: rt,
+                dailyRates: allDailyRates,
+              };
 
               try {
                 // Authoritative stay pricing using PricingEngine
@@ -75,7 +137,9 @@ export class PublicController {
                   undefined,
                   undefined,
                   requestedPlan,
-                  false
+                  false,
+                  undefined,
+                  pricingContext
                 );
 
                 // Authoritative stay pricing for EP (Room only)
@@ -87,7 +151,9 @@ export class PublicController {
                   undefined,
                   undefined,
                   'NON_CP',
-                  false
+                  false,
+                  undefined,
+                  pricingContext
                 );
 
                 // Authoritative stay pricing for CP (Breakfast included)
@@ -99,14 +165,17 @@ export class PublicController {
                   undefined,
                   undefined,
                   'CP',
-                  false
+                  false,
+                  undefined,
+                  pricingContext
                 );
 
                 // Authoritative availability using AvailabilityEngine
                 const availability = await AvailabilityEngine.checkAvailability(
                   rt._id.toString(),
                   checkInDate,
-                  checkOutDate
+                  checkOutDate,
+                  availContext
                 );
 
                 const nightlyRates = pricing.nightlyRates || [];
@@ -570,7 +639,7 @@ export class PublicController {
   static async trackBooking(req: Request, res: Response) {
     try {
       const { token } = req.params;
-      const booking = await Booking.findOne({ trackingToken: token }).populate('roomTypeId assignedRoomId');
+      const booking = await Booking.findOne({ trackingToken: token }).populate('roomTypeId assignedRoomId').lean();
       if (!booking) {
         return res.status(404).json({ success: false, message: 'Booking not found.' });
       }
@@ -621,13 +690,13 @@ export class PublicController {
    */
   static async getMenu(req: Request, res: Response) {
     try {
-      let categories = await MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
-      let items = await MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+      let categories = await MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 }).lean();
+      let items = await MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 }).lean();
 
       if (items.length === 0) {
         await ensureDatabaseSeeded();
-        categories = await MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 });
-        items = await MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 });
+        categories = await MenuCategory.find({ isActive: true }).sort({ sortOrder: 1 }).lean();
+        items = await MenuItem.find({ isAvailable: true }).sort({ sortOrder: 1 }).lean();
       }
 
       return res.json({ success: true, data: { categories, items } });
@@ -641,7 +710,7 @@ export class PublicController {
    */
   static async getPartyPackages(req: Request, res: Response) {
     try {
-      const packages = await MenuItem.find({ section: 'SAMBHRAMA', isAvailable: true });
+      const packages = await MenuItem.find({ section: 'SAMBHRAMA', isAvailable: true }).lean();
       return res.json({ success: true, data: packages });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch party packages.' });
@@ -653,7 +722,7 @@ export class PublicController {
    */
   static async getAttractions(req: Request, res: Response) {
     try {
-      const attractions = await Attraction.find({ isActive: true }).sort({ sortOrder: 1 });
+      const attractions = await Attraction.find({ isActive: true }).sort({ sortOrder: 1 }).lean();
       return res.json({ success: true, data: attractions });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch attractions.' });
@@ -665,7 +734,7 @@ export class PublicController {
    */
   static async getHotelInfo(req: Request, res: Response) {
     try {
-      const info = await HotelSetting.findOne() || {
+      const info = (await getHotelSettings()) || {
         hotelName: 'Hotel Raama',
         address: 'B.M. Road, Thanneeruhalla, Hassan',
         phone: '+91 78995 11330',

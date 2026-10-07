@@ -44,4 +44,16 @@ const HotelSettingSchema = new Schema<IHotelSetting>(
   { timestamps: true }
 );
 
+// Invalidate in-memory cache whenever HotelSetting is modified or deleted
+import { invalidateHotelSettingsCache } from '../services/HotelSettingService';
+const onMutate = () => invalidateHotelSettingsCache();
+HotelSettingSchema.post('save', onMutate);
+HotelSettingSchema.post('updateOne', onMutate);
+HotelSettingSchema.post('updateMany', onMutate);
+HotelSettingSchema.post('findOneAndUpdate', onMutate);
+HotelSettingSchema.post('findOneAndDelete', onMutate);
+HotelSettingSchema.post('deleteOne', onMutate);
+HotelSettingSchema.post('deleteMany', onMutate);
+
 export const HotelSetting = model<IHotelSetting>('HotelSetting', HotelSettingSchema);
+

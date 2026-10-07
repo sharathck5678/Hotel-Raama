@@ -40,5 +40,7 @@ const MenuItemSchema = new Schema<IMenuItem>(
 MenuItemSchema.index({ categoryId: 1 });
 MenuItemSchema.index({ section: 1 });
 MenuItemSchema.index({ isAvailable: 1 });
+MenuItemSchema.index({ isAvailable: 1, sortOrder: 1 });
+MenuItemSchema.index({ section: 1, isAvailable: 1 });
 
 export const MenuItem = model<IMenuItem>('MenuItem', MenuItemSchema);

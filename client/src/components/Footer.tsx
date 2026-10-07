@@ -20,6 +20,8 @@ export const Footer: React.FC = () => {
             <img
               src="/hotel-raama-logo.png"
               alt="Hotel Raama"
+              loading="lazy"
+              decoding="async"
               className="h-12 w-auto object-contain rounded-lg bg-white p-1 shadow-xs border border-[#00174A]/10"
             />
           </div>

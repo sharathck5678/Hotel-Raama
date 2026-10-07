@@ -57,34 +57,61 @@ class AvailabilityEngine {
     /**
      * Resolves target RoomType ObjectId, its shared inventoryGroup, all pooled room types, and physical rooms in this pool.
      */
-    static async resolvePooledRoomTypes(roomTypeId) {
-        let rTypeId;
-        if (roomTypeId instanceof mongoose_1.Types.ObjectId) {
-            rTypeId = roomTypeId;
-        }
-        else if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
-            rTypeId = new mongoose_1.Types.ObjectId(roomTypeId);
-        }
-        else {
-            const MOCK_MAP = {
-                rt_1: 'PREM_SGL_NONAC',
-                rt_2: 'PREM_DBL_NONAC',
-                rt_3: 'EXEC_SGL_AC',
-                rt_4: 'EXEC_DBL_AC',
-                rt_5: 'TRIPLE_PREM',
-                rt_6: 'TRIPLE_EXEC',
-                rt_7: 'SUITE_ROOM',
-            };
-            const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
-            const foundType = await RoomType_1.RoomType.findOne({ code: searchCode });
-            if (!foundType) {
-                throw new Error(`Room type '${roomTypeId}' not found`);
+    static async resolvePooledRoomTypes(roomTypeId, preloadedContext) {
+        let rTypeId = null;
+        let primaryType = null;
+        if (preloadedContext?.allRoomTypes && preloadedContext.allRoomTypes.length > 0) {
+            if (roomTypeId instanceof mongoose_1.Types.ObjectId) {
+                primaryType = preloadedContext.allRoomTypes.find((t) => t._id.toString() === roomTypeId.toString());
             }
-            rTypeId = foundType._id;
+            else if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+                primaryType = preloadedContext.allRoomTypes.find((t) => t._id.toString() === roomTypeId);
+            }
+            else {
+                const MOCK_MAP = {
+                    rt_1: 'PREM_SGL_NONAC',
+                    rt_2: 'PREM_DBL_NONAC',
+                    rt_3: 'EXEC_SGL_AC',
+                    rt_4: 'EXEC_DBL_AC',
+                    rt_5: 'TRIPLE_PREM',
+                    rt_6: 'TRIPLE_EXEC',
+                    rt_7: 'SUITE_ROOM',
+                };
+                const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+                primaryType = preloadedContext.allRoomTypes.find((t) => t.code === searchCode);
+            }
+            if (primaryType) {
+                rTypeId = primaryType._id;
+            }
         }
-        const primaryType = await RoomType_1.RoomType.findById(rTypeId);
         if (!primaryType) {
-            throw new Error(`Room type with id '${rTypeId}' not found`);
+            if (roomTypeId instanceof mongoose_1.Types.ObjectId) {
+                rTypeId = roomTypeId;
+            }
+            else if (typeof roomTypeId === 'string' && mongoose_1.Types.ObjectId.isValid(roomTypeId) && roomTypeId.length === 24) {
+                rTypeId = new mongoose_1.Types.ObjectId(roomTypeId);
+            }
+            else {
+                const MOCK_MAP = {
+                    rt_1: 'PREM_SGL_NONAC',
+                    rt_2: 'PREM_DBL_NONAC',
+                    rt_3: 'EXEC_SGL_AC',
+                    rt_4: 'EXEC_DBL_AC',
+                    rt_5: 'TRIPLE_PREM',
+                    rt_6: 'TRIPLE_EXEC',
+                    rt_7: 'SUITE_ROOM',
+                };
+                const searchCode = typeof roomTypeId === 'string' ? (MOCK_MAP[roomTypeId] || roomTypeId) : '';
+                const foundType = await RoomType_1.RoomType.findOne({ code: searchCode });
+                if (!foundType) {
+                    throw new Error(`Room type '${roomTypeId}' not found`);
+                }
+                rTypeId = foundType._id;
+            }
+            primaryType = await RoomType_1.RoomType.findById(rTypeId);
+            if (!primaryType) {
+                throw new Error(`Room type with id '${rTypeId}' not found`);
+            }
         }
         const targetCode = primaryType.code;
         let inventoryGroup = primaryType.inventoryGroup?.trim().toUpperCase();
@@ -99,29 +126,52 @@ class AvailabilityEngine {
                 inventoryGroup = targetCode;
             }
         }
-        let pooledTypes = await RoomType_1.RoomType.find({
-            inventoryGroup,
-            isActive: true,
-        });
-        if (!pooledTypes || pooledTypes.length === 0) {
-            let pooledCodes = [targetCode];
-            if (targetCode === 'EXEC_SGL_AC' || targetCode === 'EXEC_DBL_AC') {
-                pooledCodes = ['EXEC_DBL_AC', 'EXEC_SGL_AC'];
+        let pooledTypes;
+        if (preloadedContext?.allRoomTypes && preloadedContext.allRoomTypes.length > 0) {
+            pooledTypes = preloadedContext.allRoomTypes.filter((t) => t.isActive && t.inventoryGroup?.trim().toUpperCase() === inventoryGroup);
+            if (!pooledTypes || pooledTypes.length === 0) {
+                let pooledCodes = [targetCode];
+                if (targetCode === 'EXEC_SGL_AC' || targetCode === 'EXEC_DBL_AC') {
+                    pooledCodes = ['EXEC_DBL_AC', 'EXEC_SGL_AC'];
+                }
+                else if (targetCode === 'PREM_SGL_NONAC' || targetCode === 'PREM_DBL_NONAC') {
+                    pooledCodes = ['PREM_DBL_NONAC', 'PREM_SGL_NONAC'];
+                }
+                pooledTypes = preloadedContext.allRoomTypes.filter((t) => t.isActive && pooledCodes.includes(t.code));
             }
-            else if (targetCode === 'PREM_SGL_NONAC' || targetCode === 'PREM_DBL_NONAC') {
-                pooledCodes = ['PREM_DBL_NONAC', 'PREM_SGL_NONAC'];
+        }
+        else {
+            pooledTypes = await RoomType_1.RoomType.find({
+                inventoryGroup,
+                isActive: true,
+            });
+            if (!pooledTypes || pooledTypes.length === 0) {
+                let pooledCodes = [targetCode];
+                if (targetCode === 'EXEC_SGL_AC' || targetCode === 'EXEC_DBL_AC') {
+                    pooledCodes = ['EXEC_DBL_AC', 'EXEC_SGL_AC'];
+                }
+                else if (targetCode === 'PREM_SGL_NONAC' || targetCode === 'PREM_DBL_NONAC') {
+                    pooledCodes = ['PREM_DBL_NONAC', 'PREM_SGL_NONAC'];
+                }
+                pooledTypes = await RoomType_1.RoomType.find({ code: { $in: pooledCodes }, isActive: true });
             }
-            pooledTypes = await RoomType_1.RoomType.find({ code: { $in: pooledCodes }, isActive: true });
         }
         const pooledTypeIds = pooledTypes.map((t) => t._id);
+        const pooledTypeIdStrs = new Set(pooledTypeIds.map((id) => id.toString()));
         // Official active guest rooms for this pool
+        let poolRooms;
         const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
-        const poolRooms = await Room_1.Room.find({
-            roomTypeId: { $in: pooledTypeIds },
-            isActive: true,
-            isVenue: { $ne: true },
-            roomNumber: { $in: officialRoomNumbers },
-        }).sort({ floor: 1, roomNumber: 1 });
+        if (preloadedContext?.allOfficialRooms) {
+            poolRooms = preloadedContext.allOfficialRooms.filter((r) => pooledTypeIdStrs.has(r.roomTypeId.toString()));
+        }
+        else {
+            poolRooms = await Room_1.Room.find({
+                roomTypeId: { $in: pooledTypeIds },
+                isActive: true,
+                isVenue: { $ne: true },
+                roomNumber: { $in: officialRoomNumbers },
+            }).sort({ floor: 1, roomNumber: 1 });
+        }
         const poolRoomIds = poolRooms.map((r) => r._id);
         const totalPhysical = poolRooms.length;
         return {
@@ -139,7 +189,7 @@ class AvailabilityEngine {
      * Authoritative multi-night calculation: checks each stay night, applies Stop Sell & Minimum Stay,
      * excludes maintenance rooms, checks sellable overrides, and finds an available physical room.
      */
-    static async checkAvailability(roomTypeId, checkIn, checkOut) {
+    static async checkAvailability(roomTypeId, checkIn, checkOut, preloadedContext) {
         const now = new Date();
         const stayDates = this.getStayDateStrings(checkIn, checkOut);
         const numNights = stayDates.length;
@@ -150,7 +200,7 @@ class AvailabilityEngine {
         let poolRoomIds;
         let totalRooms;
         try {
-            const resolved = await this.resolvePooledRoomTypes(roomTypeId);
+            const resolved = await this.resolvePooledRoomTypes(roomTypeId, preloadedContext);
             primaryType = resolved.primaryType;
             pooledTypes = resolved.pooledTypes;
             pooledTypeIds = resolved.pooledTypeIds;
@@ -185,32 +235,64 @@ class AvailabilityEngine {
         const maintenanceCount = maintenanceRoomIds.size;
         const todayStr = this.formatDateStr(now);
         // 2. Fetch all conflicting bookings for this shared pool across the stay window
-        const conflictingBookings = await Booking_1.Booking.find({
-            $and: [
-                {
-                    $or: [
-                        { assignedRoomId: { $in: poolRoomIds } },
-                        { roomTypeId: { $in: pooledTypeIds } },
-                    ],
-                },
-                {
-                    $or: [
-                        { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
-                        {
-                            bookingStatus: 'PENDING',
-                            expiresAt: { $gt: now },
-                        },
-                    ],
-                },
-            ],
-            checkIn: { $lt: checkOut },
-            checkOut: { $gt: checkIn },
-        });
+        let conflictingBookings;
+        if (preloadedContext?.allStayBookings) {
+            const poolRoomIdStrs = new Set(poolRoomIds.map((id) => id.toString()));
+            const pooledTypeIdStrs = new Set(pooledTypeIds.map((id) => id.toString()));
+            conflictingBookings = preloadedContext.allStayBookings.filter((b) => {
+                const matchesRoomOrType = (b.assignedRoomId && poolRoomIdStrs.has(b.assignedRoomId.toString())) ||
+                    (b.roomTypeId && pooledTypeIdStrs.has(b.roomTypeId.toString()));
+                if (!matchesRoomOrType)
+                    return false;
+                const isStatusValid = b.bookingStatus === 'CONFIRMED' ||
+                    b.bookingStatus === 'CHECKED_IN' ||
+                    (b.bookingStatus === 'PENDING' && b.expiresAt && new Date(b.expiresAt) > now);
+                if (!isStatusValid)
+                    return false;
+                const bIn = new Date(b.checkIn);
+                const bOut = new Date(b.checkOut);
+                return bIn < checkOut && bOut > checkIn;
+            });
+        }
+        else {
+            conflictingBookings = await Booking_1.Booking.find({
+                $and: [
+                    {
+                        $or: [
+                            { assignedRoomId: { $in: poolRoomIds } },
+                            { roomTypeId: { $in: pooledTypeIds } },
+                        ],
+                    },
+                    {
+                        $or: [
+                            { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                            {
+                                bookingStatus: 'PENDING',
+                                expiresAt: { $gt: now },
+                            },
+                        ],
+                    },
+                ],
+                checkIn: { $lt: checkOut },
+                checkOut: { $gt: checkIn },
+            })
+                .select('checkIn checkOut bookingStatus assignedRoomId')
+                .lean();
+        }
         // 3. Fetch DailyInventory records for these stay dates across all pooled room types
-        const dailyInventories = await DailyInventory_1.DailyInventory.find({
-            roomTypeId: { $in: pooledTypeIds },
-            date: { $in: stayDates },
-        });
+        let dailyInventories;
+        if (preloadedContext?.allDailyInventories) {
+            const pooledTypeIdStrs = new Set(pooledTypeIds.map((id) => id.toString()));
+            dailyInventories = preloadedContext.allDailyInventories.filter((inv) => pooledTypeIdStrs.has(inv.roomTypeId.toString()) && stayDates.includes(inv.date));
+        }
+        else {
+            dailyInventories = await DailyInventory_1.DailyInventory.find({
+                roomTypeId: { $in: pooledTypeIds },
+                date: { $in: stayDates },
+            })
+                .select('roomTypeId date stopSell minStay blockedRooms inventoryOverride notes')
+                .lean();
+        }
         // Aggregate DailyInventory records per stay date across all pooled room types
         const invMap = new Map();
         for (const nightStr of stayDates) {
@@ -515,7 +597,9 @@ class AvailabilityEngine {
             isActive: true,
             isVenue: { $ne: true },
             roomNumber: { $in: officialRoomNumbers },
-        });
+        })
+            .select('_id roomNumber floor status roomTypeId')
+            .lean();
         const now = new Date();
         const conflictingBookings = await Booking_1.Booking.find({
             checkIn: { $lt: checkOut },
@@ -524,8 +608,12 @@ class AvailabilityEngine {
                 { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
                 { bookingStatus: 'PENDING', expiresAt: { $gt: now } },
             ],
-        });
-        const roomTypes = await RoomType_1.RoomType.find({ isActive: true });
+        })
+            .select('checkIn checkOut bookingStatus assignedRoomId')
+            .lean();
+        const roomTypes = await RoomType_1.RoomType.find({ isActive: true })
+            .select('_id code inventoryGroup')
+            .lean();
         const typeById = new Map(roomTypes.map((rt) => [rt._id.toString(), rt]));
         const groupOf = (rt) => {
             const grp = rt?.inventoryGroup?.trim().toUpperCase();

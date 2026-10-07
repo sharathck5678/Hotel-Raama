@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Plus, Minus, Utensils, GlassWater, Send, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateQrToken, fetchMenuCatalog, createFoodOrder, verifyOrderPayment } from '../services/api';
+import { loadRazorpay } from '../utils/loadRazorpay';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 
 export const QrOrderPage: React.FC = () => {
@@ -67,11 +68,6 @@ export const QrOrderPage: React.FC = () => {
         toast.error('Failed to initialize QR ordering.');
       })
       .finally(() => setLoading(false));
-
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
   }, [token]);
 
   const addToCart = (item: any, potionSize: string = 'Standard') => {
@@ -231,16 +227,7 @@ export const QrOrderPage: React.FC = () => {
       };
 
       if (!window.Razorpay) {
-        await new Promise<void>((resolve) => {
-          let count = 0;
-          const interval = setInterval(() => {
-            count++;
-            if (window.Razorpay || count > 30) {
-              clearInterval(interval);
-              resolve();
-            }
-          }, 100);
-        });
+        await loadRazorpay();
       }
 
       if (window.Razorpay) {
