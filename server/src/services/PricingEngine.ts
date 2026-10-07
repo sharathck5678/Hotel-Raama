@@ -110,41 +110,43 @@ export class PricingEngine {
     const isSingleCategory = roomType.code.includes('SGL');
     const defaultSingle = isSingleCategory ? defaultBase : Math.max(0, defaultBase - 200);
     const defaultDouble = defaultBase;
-    const defaultTriple = roomType.maxOccupancy >= 3 ? defaultBase : defaultBase + 600;
+
+    // Room max occupancy determines the threshold beyond which extra person charges apply
+    const maxOcc = roomType.maxOccupancy || 2;
+    const requestedExtra = extraPerson ? 1 : 0;
+    const totalGuests = Math.max(numGuests, 1) + requestedExtra;
+    const extraCount = (totalGuests > maxOcc && (extraPerson || numGuests > maxOcc))
+      ? Math.max(1, totalGuests - maxOcc)
+      : 0;
+    const hasExtraPerson = extraCount > 0;
 
     for (const nightStr of stayDates) {
       const cr = customRateMap.get(nightStr);
       let nightPrice = defaultDouble;
-      let extraCharge = extraPerson ? 600 : 0;
+      let extraCharge = 0;
       let isCustom = false;
 
       if (cr) {
         isCustom = true;
         if (numGuests === 1) {
           nightPrice = cr.singleAdult ?? defaultSingle;
-        } else if (numGuests === 2) {
-          nightPrice = cr.doubleAdult ?? defaultDouble;
         } else {
-          // 3 or more guests
-          if (roomType.maxOccupancy >= 3) {
-            nightPrice = cr.tripleAdult ?? defaultTriple;
-          } else {
-            nightPrice = (cr.doubleAdult ?? defaultDouble) + (cr.extraAdultRate ?? 600);
-          }
+          // 2 or more guests: 2-adult rate is the base room price.
+          // 3 adults and 4 adults use the SAME 2-adult/base rate within room capacity.
+          nightPrice = cr.doubleAdult ?? defaultDouble;
         }
-        if (extraPerson) {
-          extraCharge = cr.extraAdultRate ?? 600;
+        if (hasExtraPerson) {
+          extraCharge = extraCount * (cr.extraAdultRate ?? 600);
         }
       } else {
         if (numGuests === 1) {
           nightPrice = defaultSingle;
-        } else if (numGuests === 2) {
-          nightPrice = defaultDouble;
         } else {
-          nightPrice = defaultTriple;
+          // 2 or more guests: 2-adult rate is the base room price.
+          nightPrice = defaultDouble;
         }
-        if (extraPerson) {
-          extraCharge = 600;
+        if (hasExtraPerson) {
+          extraCharge = extraCount * 600;
         }
       }
 
@@ -162,7 +164,7 @@ export class PricingEngine {
 
     // 5. Fetch Meal Plans and calculate total
     let mealPlanPricePerNight = 0;
-    const totalDiningGuests = numGuests + (extraPerson ? 1 : 0);
+    const totalDiningGuests = Math.max(numGuests, 1) + (hasExtraPerson ? extraCount : 0);
     if (mealSelection) {
       const mealPlans = await MealPlan.find({ isActive: true });
       const mealMap = new Map(mealPlans.map((m) => [m.type, m.pricePerPersonPerNight]));
@@ -254,7 +256,7 @@ export class PricingEngine {
       numNights,
       roomPricePerNight,
       roomTotal,
-      extraPerson: !!extraPerson,
+      extraPerson: hasExtraPerson,
       extraPersonChargePerNight,
       extraPersonTotal,
       mealPlanPricePerNight,

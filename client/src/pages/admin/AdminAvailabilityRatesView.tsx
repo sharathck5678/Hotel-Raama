@@ -130,7 +130,6 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
     endDate: '',
     singleAdult: '' as string | number,
     doubleAdult: '' as string | number,
-    tripleAdult: '' as string | number,
     childRate: 0 as string | number,
     extraAdultRate: 600 as string | number,
     inventoryOverride: '' as string | number,
@@ -404,10 +403,7 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
         rates: {
           singleAdult: Number(cellEditForm.singleAdult),
           doubleAdult: Number(cellEditForm.doubleAdult),
-          tripleAdult:
-            selectedCell.row.roomType.maxOccupancy >= 3
-              ? Number(cellEditForm.doubleAdult)
-              : Number(cellEditForm.doubleAdult) + Number(cellEditForm.extraAdultRate || 600),
+          tripleAdult: Number(cellEditForm.doubleAdult),
           childRate: Number(cellEditForm.childRate),
           extraAdultRate: Number(cellEditForm.extraAdultRate),
         },
@@ -445,7 +441,6 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
       endDate: endStr,
       singleAdult: '',
       doubleAdult: '',
-      tripleAdult: '',
       childRate: 0,
       extraAdultRate: 600,
       inventoryOverride: '',
@@ -484,7 +479,7 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
           endDate: bulkForm.endDate,
           singleAdult: Number(bulkForm.singleAdult || bulkForm.doubleAdult),
           doubleAdult: Number(bulkForm.doubleAdult),
-          tripleAdult: Number(bulkForm.tripleAdult || (Number(bulkForm.doubleAdult) + 600)),
+          tripleAdult: Number(bulkForm.doubleAdult),
           childRate: Number(bulkForm.childRate || 0),
           extraAdultRate: Number(bulkForm.extraAdultRate || 600),
         });
@@ -1235,10 +1230,7 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
                             setCellEditForm({
                               ...cellEditForm,
                               doubleAdult: val,
-                              tripleAdult:
-                                selectedCell?.row.roomType.maxOccupancy >= 3
-                                  ? val
-                                  : val + Number(cellEditForm.extraAdultRate || 600),
+                              tripleAdult: val,
                             });
                           }}
                           className="w-full bg-[#F7F0DF] border border-[#10184A]/25 rounded-xs px-2.5 py-1.5 font-bold text-[#00174A] mt-1"
@@ -1261,7 +1253,7 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
                       </div>
 
                       <div>
-                        <label className="text-[11px] font-semibold text-[#667085]">Extra Adult (₹)</label>
+                        <label className="text-[11px] font-semibold text-[#667085]">Extra Person (₹)</label>
                         <input
                           type="number"
                           min="0"
@@ -1496,7 +1488,7 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
                     Rates Configuration
                   </h4>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[11px] font-semibold text-[#667085]">For 1 Adult (₹)</label>
                       <input
@@ -1521,18 +1513,6 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
                         className="w-full bg-[#F7F0DF] border border-[#10184A]/25 rounded-xs px-2.5 py-1.5 font-bold text-[#00174A] mt-1"
                       />
                     </div>
-
-                    <div>
-                      <label className="text-[11px] font-semibold text-[#667085]">For 3 Adults (₹)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="e.g. 2800"
-                        value={bulkForm.tripleAdult}
-                        onChange={(e) => setBulkForm({ ...bulkForm, tripleAdult: e.target.value })}
-                        className="w-full bg-[#F7F0DF] border border-[#10184A]/25 rounded-xs px-2.5 py-1.5 font-bold text-[#00174A] mt-1"
-                      />
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 pt-1">
@@ -1548,7 +1528,7 @@ export const AdminAvailabilityRatesView: React.FC<AdminAvailabilityRatesViewProp
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-semibold text-[#667085]">Extra Adult (₹)</label>
+                      <label className="text-[11px] font-semibold text-[#667085]">Extra Person (₹)</label>
                       <input
                         type="number"
                         min="0"

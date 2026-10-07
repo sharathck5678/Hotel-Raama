@@ -569,7 +569,7 @@ export const bulkUpdateRates = (payload: {
   endDate: string;
   singleAdult: number;
   doubleAdult: number;
-  tripleAdult: number;
+  tripleAdult?: number;
   childRate?: number;
   extraAdultRate?: number;
 }) =>

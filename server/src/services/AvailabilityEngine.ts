@@ -314,14 +314,16 @@ export class AvailabilityEngine {
 
     for (const nightStr of stayDates) {
       const invsForDate = dailyInventories.filter((inv) => inv.date === nightStr);
-      const isStopSell = invsForDate.some((inv) => !!inv.stopSell);
-      const minStay = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.minStay || 1)) : 1;
+      // Stop Sell is strictly specific to the requested room category (primaryType)
+      const thisTypeInv = invsForDate.find((inv) => inv.roomTypeId.toString() === primaryType._id.toString());
+      const isStopSell = !!thisTypeInv?.stopSell;
+      const minStay = thisTypeInv?.minStay || (invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.minStay || 1)) : 1);
       const blockedRooms = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.blockedRooms || 0)) : 0;
       const overrides = invsForDate
         .map((inv) => inv.inventoryOverride)
         .filter((o) => o !== undefined && o !== null) as number[];
       const inventoryOverride = overrides.length > 0 ? Math.min(...overrides) : null;
-      const notes = invsForDate.find((inv) => inv.notes)?.notes;
+      const notes = thisTypeInv?.notes || invsForDate.find((inv) => inv.notes)?.notes;
 
       invMap.set(nightStr, {
         stopSell: isStopSell,
@@ -555,19 +557,25 @@ export class AvailabilityEngine {
         const dayOfWeek = dayNames[cellDate.getUTCDay()];
         const dayOfMonth = d;
 
-        // DailyInventory records aggregated across all pooled types for this date
+        // DailyInventory records across pooled types for this date (for shared physical inventory)
         const pooledInvs = dailyInventories.filter(
           (inv) => inv.date === dateStr && pooledTypeIdStrs.has(inv.roomTypeId.toString())
         );
 
-        const stopSell = pooledInvs.some((inv) => !!inv.stopSell);
-        const minStay = pooledInvs.length > 0 ? Math.max(...pooledInvs.map((inv) => inv.minStay || 1)) : 1;
+        // Room-type-specific DailyInventory for THIS row's room type (rt)
+        const thisTypeInv = dailyInventories.find(
+          (inv) => inv.date === dateStr && inv.roomTypeId.toString() === rtIdStr
+        );
+
+        // Stop Sell is strictly room-type-specific:
+        const stopSell = !!thisTypeInv?.stopSell;
+        const minStay = thisTypeInv?.minStay || (pooledInvs.length > 0 ? Math.max(...pooledInvs.map((inv) => inv.minStay || 1)) : 1);
         const rawBlocked = pooledInvs.length > 0 ? Math.max(...pooledInvs.map((inv) => inv.blockedRooms || 0)) : 0;
         const overrides = pooledInvs
           .map((inv) => inv.inventoryOverride)
           .filter((o) => o !== undefined && o !== null) as number[];
         const overrideVal = overrides.length > 0 ? Math.min(...overrides) : null;
-        const notes = pooledInvs.find((inv) => inv.notes)?.notes || undefined;
+        const notes = thisTypeInv?.notes || pooledInvs.find((inv) => inv.notes)?.notes || undefined;
 
         // Date-aware maintenance & blocking
         const todayStr = AvailabilityEngine.formatDateStr(now);
@@ -614,12 +622,12 @@ export class AvailabilityEngine {
         const isCP = ratePlanCode === 'BREAKFAST_INCLUDED';
         const defaultDouble = isCP ? rt.cpPrice : rt.basePrice;
         const defaultSingle = rt.code.includes('SGL') ? defaultDouble : Math.max(0, defaultDouble - 200);
-        const defaultTriple = rt.maxOccupancy >= 3 ? defaultDouble : defaultDouble + 600;
+        const defaultTriple = defaultDouble;
 
         const rateObj = {
           singleAdult: customRate ? customRate.singleAdult : defaultSingle,
           doubleAdult: customRate ? customRate.doubleAdult : defaultDouble,
-          tripleAdult: customRate ? customRate.tripleAdult : defaultTriple,
+          tripleAdult: customRate?.tripleAdult ?? (customRate ? customRate.doubleAdult : defaultDouble),
           childRate: customRate ? customRate.childRate : 0,
           extraAdultRate: customRate ? customRate.extraAdultRate : 600,
           isCustomRate: !!customRate,

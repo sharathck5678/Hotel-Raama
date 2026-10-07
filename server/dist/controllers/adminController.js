@@ -1334,7 +1334,7 @@ class AdminController {
             const plan = activePlans.find((p) => p.code === planCode) || activePlans[0];
             const sAdult = Number(singleAdult ?? (doubleAdult !== undefined ? doubleAdult : roomType.basePrice));
             const dAdult = Number(doubleAdult ?? roomType.basePrice);
-            const tAdult = Number(tripleAdult ?? (dAdult + 600));
+            const tAdult = Number(tripleAdult ?? dAdult);
             const cRate = Number(childRate ?? 0);
             const eaRate = Number(extraAdultRate ?? 600);
             if (isNaN(sAdult) || isNaN(dAdult) || isNaN(tAdult) || sAdult < 0 || dAdult < 0 || tAdult < 0) {
@@ -1549,34 +1549,31 @@ class AdminController {
             }
             if (notes !== undefined)
                 updateFields.notes = String(notes).trim();
-            const { pooledTypeIds } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(roomTypeId);
-            const bulkOps = [];
-            for (const pTypeId of pooledTypeIds) {
-                for (const dateStr of stayDates) {
-                    const [y, m, d] = dateStr.split('-').map(Number);
-                    const dateVal = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
-                    bulkOps.push({
-                        updateOne: {
-                            filter: {
-                                roomTypeId: pTypeId,
-                                date: dateStr,
-                            },
-                            update: {
-                                $set: {
-                                    ...updateFields,
-                                    dateValue: dateVal,
-                                },
-                                $setOnInsert: {
-                                    inventoryOverride: null,
-                                    blockedRooms: 0,
-                                    createdBy: req.admin?.email || 'admin',
-                                },
-                            },
-                            upsert: true,
+            // Restrictions (including Stop Sell) are strictly specific to the selected room category (roomType._id)
+            const bulkOps = stayDates.map((dateStr) => {
+                const [y, m, d] = dateStr.split('-').map(Number);
+                const dateVal = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+                return {
+                    updateOne: {
+                        filter: {
+                            roomTypeId: roomType._id,
+                            date: dateStr,
                         },
-                    });
-                }
-            }
+                        update: {
+                            $set: {
+                                ...updateFields,
+                                dateValue: dateVal,
+                            },
+                            $setOnInsert: {
+                                inventoryOverride: null,
+                                blockedRooms: 0,
+                                createdBy: req.admin?.email || 'admin',
+                            },
+                        },
+                        upsert: true,
+                    },
+                };
+            });
             if (bulkOps.length > 0) {
                 await DailyInventory_1.DailyInventory.bulkWrite(bulkOps);
             }
@@ -1628,7 +1625,7 @@ class AdminController {
                 const plan = activePlans.find((p) => p.code === planCode) || activePlans[0];
                 const sAdult = Number(rates.singleAdult ?? roomType.basePrice);
                 const dAdult = Number(rates.doubleAdult ?? roomType.basePrice);
-                const tAdult = Number(rates.tripleAdult ?? (dAdult + 600));
+                const tAdult = Number(rates.tripleAdult ?? dAdult);
                 const cRate = Number(rates.childRate ?? 0);
                 const eaRate = Number(rates.extraAdultRate ?? 600);
                 await DailyRate_1.DailyRate.findOneAndUpdate({
@@ -1749,24 +1746,68 @@ class AdminController {
                 invFields.notes = String(notes).trim();
             }
             if (hasInvChange) {
-                const { pooledTypeIds } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(roomTypeId);
-                const invOps = pooledTypeIds.map((pId) => ({
-                    updateOne: {
-                        filter: {
-                            roomTypeId: pId,
-                            date,
-                        },
-                        update: {
-                            $set: invFields,
-                            $setOnInsert: {
-                                createdBy: req.admin?.email || 'admin',
-                                blockedRooms: 0,
+                // Physical inventory override cap is shared across all pooled room types
+                if (invFields.inventoryOverride !== undefined) {
+                    const { pooledTypeIds } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(roomTypeId);
+                    const overrideOps = pooledTypeIds.map((pId) => ({
+                        updateOne: {
+                            filter: {
+                                roomTypeId: pId,
+                                date,
                             },
+                            update: {
+                                $set: {
+                                    dateValue: dateVal,
+                                    inventoryOverride: invFields.inventoryOverride,
+                                    updatedBy: req.admin?.email || 'admin',
+                                },
+                                $setOnInsert: {
+                                    stopSell: false,
+                                    minStay: 1,
+                                    blockedRooms: 0,
+                                    createdBy: req.admin?.email || 'admin',
+                                },
+                            },
+                            upsert: true,
                         },
-                        upsert: true,
-                    },
-                }));
-                await DailyInventory_1.DailyInventory.bulkWrite(invOps);
+                    }));
+                    await DailyInventory_1.DailyInventory.bulkWrite(overrideOps);
+                }
+                // Room-category-specific fields (stopSell, minStay, blockedRooms, notes)
+                // are updated ONLY for the exact requested room category (roomType._id)
+                const specificFields = {
+                    dateValue: dateVal,
+                    updatedBy: req.admin?.email || 'admin',
+                };
+                let hasSpecificFields = false;
+                if (stopSell !== undefined) {
+                    hasSpecificFields = true;
+                    specificFields.stopSell = Boolean(stopSell);
+                }
+                if (minStay !== undefined) {
+                    hasSpecificFields = true;
+                    specificFields.minStay = Number(minStay);
+                }
+                if (blockedRooms !== undefined) {
+                    hasSpecificFields = true;
+                    specificFields.blockedRooms = Math.max(0, Number(blockedRooms));
+                }
+                if (notes !== undefined) {
+                    hasSpecificFields = true;
+                    specificFields.notes = String(notes).trim();
+                }
+                if (hasSpecificFields) {
+                    await DailyInventory_1.DailyInventory.findOneAndUpdate({
+                        roomTypeId: roomType._id,
+                        date,
+                    }, {
+                        $set: specificFields,
+                        $setOnInsert: {
+                            inventoryOverride: null,
+                            createdBy: req.admin?.email || 'admin',
+                        },
+                    }, { upsert: true, new: true });
+                }
                 await AuditLog_1.AuditLog.create({
                     adminId: req.admin.id,
                     adminEmail: req.admin.email,

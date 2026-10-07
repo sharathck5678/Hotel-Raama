@@ -5598,16 +5598,28 @@ export const mockCalculateAvailability = (payload: any) => {
     if (diff > 0) numNights = diff;
   }
 
-  const baseRate = payload.planType === 'CP' ? (room.cpPrice || room.basePrice + 150) : room.basePrice;
+  const numGuests = payload.numGuests || 1;
+  const isSingle = numGuests === 1;
+  const isSingleCategory = room.code?.includes('SGL');
+  const defaultBase = payload.planType === 'CP' ? (room.cpPrice || room.basePrice + 150) : room.basePrice;
+  const baseRate = isSingle ? (isSingleCategory ? defaultBase : Math.max(0, defaultBase - 200)) : defaultBase;
   const roomTotal = baseRate * numNights;
-  const extraPersonChargePerNight = payload.extraPerson ? 600 : 0;
+
+  const maxOcc = room.maxOccupancy || 2;
+  const requestedExtra = payload.extraPerson ? 1 : 0;
+  const totalGuests = Math.max(numGuests, 1) + requestedExtra;
+  const extraCount = (totalGuests > maxOcc && (payload.extraPerson || numGuests > maxOcc))
+    ? Math.max(1, totalGuests - maxOcc)
+    : 0;
+  const hasExtraPerson = extraCount > 0;
+  const extraPersonChargePerNight = hasExtraPerson ? (extraCount * 600) : 0;
   const extraPersonTotal = extraPersonChargePerNight * numNights;
   
   let mealPlanTotal = 0;
-  const totalGuests = (payload.numGuests || 1) + (payload.extraPerson ? 1 : 0);
-  if (payload.mealSelection?.breakfast) mealPlanTotal += 150 * totalGuests * numNights;
-  if (payload.mealSelection?.lunch) mealPlanTotal += 250 * totalGuests * numNights;
-  if (payload.mealSelection?.dinner) mealPlanTotal += 300 * totalGuests * numNights;
+  const totalDiningGuests = Math.max(numGuests, 1) + (hasExtraPerson ? extraCount : 0);
+  if (payload.mealSelection?.breakfast) mealPlanTotal += 150 * totalDiningGuests * numNights;
+  if (payload.mealSelection?.lunch) mealPlanTotal += 250 * totalDiningGuests * numNights;
+  if (payload.mealSelection?.dinner) mealPlanTotal += 300 * totalDiningGuests * numNights;
 
   const subtotal = roomTotal + extraPersonTotal + mealPlanTotal;
   let discountAmount = 0;
@@ -5636,7 +5648,7 @@ export const mockCalculateAvailability = (payload: any) => {
       numNights,
       roomPricePerNight: baseRate,
       roomTotal,
-      extraPerson: !!payload.extraPerson,
+      extraPerson: hasExtraPerson,
       extraPersonChargePerNight,
       extraPersonTotal,
       mealPlanTotal,

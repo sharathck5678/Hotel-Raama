@@ -9,7 +9,7 @@ export interface IDailyRate extends Document {
 
   singleAdult: number;
   doubleAdult: number;
-  tripleAdult: number;
+  tripleAdult?: number;
 
   childRate: number;
   extraAdultRate: number;
@@ -30,7 +30,7 @@ const DailyRateSchema = new Schema<IDailyRate>(
 
     singleAdult: { type: Number, required: true, min: 0 },
     doubleAdult: { type: Number, required: true, min: 0 },
-    tripleAdult: { type: Number, required: true, min: 0 },
+    tripleAdult: { type: Number, required: false, min: 0 },
 
     childRate: { type: Number, default: 0, min: 0 },
     extraAdultRate: { type: Number, default: 600, min: 0 },

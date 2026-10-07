@@ -88,10 +88,14 @@ async function runSharedInventoryTests() {
 
     // Helper cleanup for test dates
     const cleanup = async () => {
-      if (createdBookingIds.length > 0) {
-        await Booking.deleteMany({ _id: { $in: createdBookingIds } });
-        createdBookingIds.length = 0;
-      }
+      await Booking.deleteMany({
+        $or: [
+          { _id: { $in: createdBookingIds } },
+          { guestEmail: { $regex: /@example\.com$/i } },
+          { checkIn: { $in: [d1In, d2In, dMultiIn] } },
+        ],
+      });
+      createdBookingIds.length = 0;
       await DailyInventory.deleteMany({
         date: { $in: testDates },
       });
@@ -441,28 +445,297 @@ async function runSharedInventoryTests() {
     await cleanup();
 
     // ------------------------------------------------------------------------
-    // TEST 11: Stop Sell enabled.
-    // Expected: both Single and Double are unavailable for that shared inventory.
+    // TEST 11.1 (USER SCENARIO 1):
+    // Premium Single Non-A/C: Stop Sell = TRUE
+    // Premium Double Non-A/C: Stop Sell = FALSE
+    // Expected: Single -> unavailable, Double -> available
+    // Also tests PublicController booking rejection vs acceptance.
     // ------------------------------------------------------------------------
-    console.log('--- TEST 11: Stop Sell enabled -> Both Single and Double unavailable ---');
-    // Enable Stop Sell via quickUpdateCell on Double
-    const { req: r11, res: s11 } = mockReqRes({}, {
+    console.log('--- TEST 11.1 (SCENARIO 1): Premium Single Stop Sell = TRUE, Double = FALSE ---');
+    // Enable Stop Sell on Premium Single via quickUpdateCell
+    const { req: r11_1, res: s11_1 } = mockReqRes({}, {
+      roomTypeId: premSgl._id.toString(),
+      date: testDate1,
+      stopSell: true,
+    });
+    await AdminController.quickUpdateCell(r11_1, s11_1);
+
+    const avail11_1Sgl = await AvailabilityEngine.checkAvailability(premSgl._id, d1In, d1Out);
+    const avail11_1Dbl = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
+
+    console.log(`[TEST 11.1] Single stopSell: ${avail11_1Sgl.stopSell} (isAvailable: ${avail11_1Sgl.isAvailable})`);
+    console.log(`[TEST 11.1] Double stopSell: ${avail11_1Dbl.stopSell} (isAvailable: ${avail11_1Dbl.isAvailable})`);
+    if (!avail11_1Sgl.stopSell || avail11_1Sgl.isAvailable) {
+      throw new Error('TEST 11.1 FAILED: Single should be stopped and unavailable');
+    }
+    if (avail11_1Dbl.stopSell || !avail11_1Dbl.isAvailable) {
+      throw new Error('TEST 11.1 FAILED: Double should remain available and NOT stopped');
+    }
+
+    // Public booking attempt on Single must be rejected
+    const { req: bReq11_1Sgl, res: bRes11_1Sgl } = mockReqRes({}, {
+      guestName: 'Guest Single Stop',
+      guestEmail: 'singlestop@example.com',
+      guestPhone: '9876543210',
+      roomTypeId: premSgl._id.toString(),
+      checkIn: testDate1,
+      checkOut: testDate2,
+      numGuests: 1,
+    });
+    await PublicController.createBooking(bReq11_1Sgl, bRes11_1Sgl);
+    if (bRes11_1Sgl.getStatusCode() !== 400) {
+      throw new Error(`TEST 11.1 FAILED: Public booking for stopped Single should return 400, got ${bRes11_1Sgl.getStatusCode()}`);
+    }
+
+    // Public booking attempt on Double must succeed
+    const { req: bReq11_1Dbl, res: bRes11_1Dbl } = mockReqRes({}, {
+      guestName: 'Guest Double Book',
+      guestEmail: 'doublebook@example.com',
+      guestPhone: '9876543210',
+      roomTypeId: premDbl._id.toString(),
+      checkIn: testDate1,
+      checkOut: testDate2,
+      numGuests: 2,
+    });
+    await PublicController.createBooking(bReq11_1Dbl, bRes11_1Dbl);
+    if (bRes11_1Dbl.getStatusCode() !== 201) {
+      throw new Error(`TEST 11.1 FAILED: Public booking for unstopped Double should return 201, got ${bRes11_1Dbl.getStatusCode()}`);
+    }
+    const bookedDblId = bRes11_1Dbl.getData()?.data?.booking?._id;
+    if (bookedDblId) createdBookingIds.push(new Types.ObjectId(bookedDblId));
+    console.log('✓ TEST 11.1 PASSED: Premium Single unavailable & rejected; Premium Double available & booked successfully!\n');
+    await cleanup();
+
+    // ------------------------------------------------------------------------
+    // TEST 11.2 (USER SCENARIO 2):
+    // Executive Single A/C: Stop Sell = TRUE
+    // Executive Double A/C: Stop Sell = FALSE
+    // Expected: Single -> unavailable, Double -> available
+    // ------------------------------------------------------------------------
+    console.log('--- TEST 11.2 (SCENARIO 2): Executive Single Stop Sell = TRUE, Double = FALSE ---');
+    const { req: r11_2, res: s11_2 } = mockReqRes({}, {
+      roomTypeId: execSgl._id.toString(),
+      date: testDate1,
+      stopSell: true,
+    });
+    await AdminController.quickUpdateCell(r11_2, s11_2);
+
+    const avail11_2Sgl = await AvailabilityEngine.checkAvailability(execSgl._id, d1In, d1Out);
+    const avail11_2Dbl = await AvailabilityEngine.checkAvailability(execDbl._id, d1In, d1Out);
+
+    console.log(`[TEST 11.2] Single stopSell: ${avail11_2Sgl.stopSell} (isAvailable: ${avail11_2Sgl.isAvailable})`);
+    console.log(`[TEST 11.2] Double stopSell: ${avail11_2Dbl.stopSell} (isAvailable: ${avail11_2Dbl.isAvailable})`);
+    if (!avail11_2Sgl.stopSell || avail11_2Sgl.isAvailable) {
+      throw new Error('TEST 11.2 FAILED: Executive Single should be stopped and unavailable');
+    }
+    if (avail11_2Dbl.stopSell || !avail11_2Dbl.isAvailable) {
+      throw new Error('TEST 11.2 FAILED: Executive Double should remain available and NOT stopped');
+    }
+
+    // Public booking attempt on Executive Single must be rejected
+    const { req: bReq11_2Sgl, res: bRes11_2Sgl } = mockReqRes({}, {
+      guestName: 'Guest Exec Single',
+      guestEmail: 'execsingle@example.com',
+      guestPhone: '9876543210',
+      roomTypeId: execSgl._id.toString(),
+      checkIn: testDate1,
+      checkOut: testDate2,
+      numGuests: 1,
+    });
+    await PublicController.createBooking(bReq11_2Sgl, bRes11_2Sgl);
+    if (bRes11_2Sgl.getStatusCode() !== 400) {
+      throw new Error(`TEST 11.2 FAILED: Public booking for stopped Exec Single should return 400, got ${bRes11_2Sgl.getStatusCode()}`);
+    }
+
+    // Public booking attempt on Executive Double must succeed
+    const { req: bReq11_2Dbl, res: bRes11_2Dbl } = mockReqRes({}, {
+      guestName: 'Guest Exec Double',
+      guestEmail: 'execdouble@example.com',
+      guestPhone: '9876543210',
+      roomTypeId: execDbl._id.toString(),
+      checkIn: testDate1,
+      checkOut: testDate2,
+      numGuests: 2,
+    });
+    await PublicController.createBooking(bReq11_2Dbl, bRes11_2Dbl);
+    if (bRes11_2Dbl.getStatusCode() !== 201) {
+      throw new Error(`TEST 11.2 FAILED: Public booking for unstopped Exec Double should return 201, got ${bRes11_2Dbl.getStatusCode()}`);
+    }
+    const bookedExecDblId = bRes11_2Dbl.getData()?.data?.booking?._id;
+    if (bookedExecDblId) createdBookingIds.push(new Types.ObjectId(bookedExecDblId));
+    console.log('✓ TEST 11.2 PASSED: Executive Single unavailable & rejected; Executive Double available & booked successfully!\n');
+    await cleanup();
+
+    // ------------------------------------------------------------------------
+    // TEST 11.3 (USER SCENARIO 3):
+    // Both room types stopped:
+    // Premium Single Non-A/C: Stop Sell = TRUE
+    // Premium Double Non-A/C: Stop Sell = TRUE
+    // Expected: Both unavailable.
+    // ------------------------------------------------------------------------
+    console.log('--- TEST 11.3 (SCENARIO 3): Both Single and Double Stop Sell = TRUE ---');
+    const { req: r11_3a, res: s11_3a } = mockReqRes({}, {
+      roomTypeId: premSgl._id.toString(),
+      date: testDate1,
+      stopSell: true,
+    });
+    await AdminController.quickUpdateCell(r11_3a, s11_3a);
+
+    const { req: r11_3b, res: s11_3b } = mockReqRes({}, {
       roomTypeId: premDbl._id.toString(),
       date: testDate1,
       stopSell: true,
     });
-    await AdminController.quickUpdateCell(r11, s11);
+    await AdminController.quickUpdateCell(r11_3b, s11_3b);
 
-    const avail11Sgl = await AvailabilityEngine.checkAvailability(premSgl._id, d1In, d1Out);
-    const avail11Dbl = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
+    const avail11_3Sgl = await AvailabilityEngine.checkAvailability(premSgl._id, d1In, d1Out);
+    const avail11_3Dbl = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
 
-    console.log(`[TEST 11] Single stopSell: ${avail11Sgl.stopSell} (isAvailable: ${avail11Sgl.isAvailable})`);
-    console.log(`[TEST 11] Double stopSell: ${avail11Dbl.stopSell} (isAvailable: ${avail11Dbl.isAvailable})`);
-    if (avail11Sgl.isAvailable || avail11Dbl.isAvailable || !avail11Sgl.stopSell || !avail11Dbl.stopSell) {
-      throw new Error('TEST 11 FAILED: Expected both Single and Double to enforce Stop Sell');
+    console.log(`[TEST 11.3] Single isAvailable: ${avail11_3Sgl.isAvailable}, Double isAvailable: ${avail11_3Dbl.isAvailable}`);
+    if (avail11_3Sgl.isAvailable || avail11_3Dbl.isAvailable) {
+      throw new Error('TEST 11.3 FAILED: Both room types must be unavailable when both stopped');
     }
-    console.log('✓ TEST 11 PASSED: Stop Sell cannot be bypassed through the other occupancy representation.\n');
+    console.log('✓ TEST 11.3 PASSED: Both room types are unavailable when both stopped!\n');
+    await cleanup();
 
+    // ------------------------------------------------------------------------
+    // TEST 11.4 (USER SCENARIO 4):
+    // Neither room type stopped:
+    // Premium Single Non-A/C: Stop Sell = FALSE
+    // Premium Double Non-A/C: Stop Sell = FALSE
+    // Expected: Both follow normal physical inventory availability.
+    // ------------------------------------------------------------------------
+    console.log('--- TEST 11.4 (SCENARIO 4): Neither room type stopped ---');
+    const avail11_4Sgl = await AvailabilityEngine.checkAvailability(premSgl._id, d1In, d1Out);
+    const avail11_4Dbl = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
+
+    console.log(`[TEST 11.4] Single available: ${avail11_4Sgl.availableRooms}, Double available: ${avail11_4Dbl.availableRooms}`);
+    if (!avail11_4Sgl.isAvailable || !avail11_4Dbl.isAvailable || avail11_4Sgl.availableRooms !== 7 || avail11_4Dbl.availableRooms !== 7) {
+      throw new Error('TEST 11.4 FAILED: Both should have full 7 physical rooms available');
+    }
+    console.log('✓ TEST 11.4 PASSED: Both room types follow normal physical inventory availability!\n');
+
+    // ------------------------------------------------------------------------
+    // TEST 11.5 (USER SCENARIO 5):
+    // Shared inventory is low:
+    // Total physical = 7. Book 6 rooms -> exactly 1 shared physical room remains.
+    // Premium Single Non-A/C: Stop Sell = TRUE
+    // Expected: Single = NOT BOOKABLE (Stop Sell). Double = BOOKABLE with exactly 1 room.
+    // ------------------------------------------------------------------------
+    console.log('--- TEST 11.5 (SCENARIO 5): Shared inventory is low (1 room remaining) + Single Stop Sell ---');
+    // Create 6 bookings in the Premium Non-AC pool
+    for (let i = 0; i < 6; i++) {
+      await createBooking(premDbl._id, d1In, d1Out, 'CONFIRMED');
+    }
+    // Set Stop Sell on Single only
+    const { req: r11_5, res: s11_5 } = mockReqRes({}, {
+      roomTypeId: premSgl._id.toString(),
+      date: testDate1,
+      stopSell: true,
+    });
+    await AdminController.quickUpdateCell(r11_5, s11_5);
+
+    const avail11_5Sgl = await AvailabilityEngine.checkAvailability(premSgl._id, d1In, d1Out);
+    const avail11_5Dbl = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
+
+    console.log(`[TEST 11.5] Single isAvailable: ${avail11_5Sgl.isAvailable} (stopSell: ${avail11_5Sgl.stopSell})`);
+    console.log(`[TEST 11.5] Double isAvailable: ${avail11_5Dbl.isAvailable} (availableRooms: ${avail11_5Dbl.availableRooms})`);
+
+    if (avail11_5Sgl.isAvailable || !avail11_5Sgl.stopSell) {
+      throw new Error('TEST 11.5 FAILED: Single should be unavailable due to Stop Sell');
+    }
+    if (!avail11_5Dbl.isAvailable || avail11_5Dbl.availableRooms !== 1) {
+      throw new Error(`TEST 11.5 FAILED: Double should have exactly 1 room available, got ${avail11_5Dbl.availableRooms}`);
+    }
+
+    // Successfully book the 7th room under Double
+    const { req: bReq11_5Dbl, res: bRes11_5Dbl } = mockReqRes({}, {
+      guestName: 'Guest Last Room',
+      guestEmail: 'lastroom@example.com',
+      guestPhone: '9876543210',
+      roomTypeId: premDbl._id.toString(),
+      checkIn: testDate1,
+      checkOut: testDate2,
+      numGuests: 2,
+    });
+    await PublicController.createBooking(bReq11_5Dbl, bRes11_5Dbl);
+    if (bRes11_5Dbl.getStatusCode() !== 201) {
+      throw new Error(`TEST 11.5 FAILED: Double should book the last remaining room, got status ${bRes11_5Dbl.getStatusCode()}`);
+    }
+    const bookedLastId = bRes11_5Dbl.getData()?.data?.booking?._id;
+    if (bookedLastId) createdBookingIds.push(new Types.ObjectId(bookedLastId));
+
+    // Now shared inventory is 0 -> Double is now sold out as well
+    const avail11_5DblAfter = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
+    if (avail11_5DblAfter.isAvailable || avail11_5DblAfter.availableRooms !== 0) {
+      throw new Error('TEST 11.5 FAILED: Double should now be sold out after booking 7th room');
+    }
+    console.log('✓ TEST 11.5 PASSED: Double correctly utilized the remaining physical inventory while Single was stopped!\n');
+    await cleanup();
+
+    // ------------------------------------------------------------------------
+    // TEST 11.6 (USER SCENARIO 6):
+    // Date-specific Stop Sell:
+    // Stop Premium Single Non-A/C only on testDate1 (Nov 20).
+    // Expected:
+    // testDate1: Single unavailable, Double available
+    // testDate2: Single follows normal availability, Double follows normal availability
+    // Also tests Bulk Update Manager on date ranges.
+    // ------------------------------------------------------------------------
+    console.log('--- TEST 11.6 (SCENARIO 6): Date-specific Stop Sell & Bulk Update isolation ---');
+    // Quick update: stop Single ONLY on testDate1
+    const { req: r11_6, res: s11_6 } = mockReqRes({}, {
+      roomTypeId: premSgl._id.toString(),
+      date: testDate1,
+      stopSell: true,
+    });
+    await AdminController.quickUpdateCell(r11_6, s11_6);
+
+    const avail11_6SglD1 = await AvailabilityEngine.checkAvailability(premSgl._id, d1In, d1Out);
+    const avail11_6DblD1 = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
+    const avail11_6SglD2 = await AvailabilityEngine.checkAvailability(premSgl._id, d2In, d2Out);
+    const avail11_6DblD2 = await AvailabilityEngine.checkAvailability(premDbl._id, d2In, d2Out);
+
+    console.log(`[TEST 11.6 Date 1] Single isAvail: ${avail11_6SglD1.isAvailable}, Double isAvail: ${avail11_6DblD1.isAvailable}`);
+    console.log(`[TEST 11.6 Date 2] Single isAvail: ${avail11_6SglD2.isAvailable}, Double isAvail: ${avail11_6DblD2.isAvailable}`);
+
+    if (avail11_6SglD1.isAvailable || !avail11_6SglD1.stopSell) {
+      throw new Error('TEST 11.6 FAILED: Single should be stopped on Date 1');
+    }
+    if (!avail11_6DblD1.isAvailable || avail11_6DblD1.stopSell) {
+      throw new Error('TEST 11.6 FAILED: Double should be available on Date 1');
+    }
+    if (!avail11_6SglD2.isAvailable || avail11_6SglD2.stopSell) {
+      throw new Error('TEST 11.6 FAILED: Single should follow normal availability on Date 2');
+    }
+    if (!avail11_6DblD2.isAvailable || avail11_6DblD2.stopSell) {
+      throw new Error('TEST 11.6 FAILED: Double should follow normal availability on Date 2');
+    }
+
+    // Now test Bulk Update Manager: bulk stop Single across [testDate1, testDate2]
+    const { req: r11_6bulk, res: s11_6bulk } = mockReqRes({}, {
+      roomTypeId: premSgl._id.toString(),
+      startDate: testDate1,
+      endDate: testDate2,
+      stopSell: true,
+    });
+    await AdminController.bulkUpdateRestrictions(r11_6bulk, s11_6bulk);
+
+    const bulkSglD1 = await AvailabilityEngine.checkAvailability(premSgl._id, d1In, d1Out);
+    const bulkSglD2 = await AvailabilityEngine.checkAvailability(premSgl._id, d2In, d2Out);
+    const bulkDblD1 = await AvailabilityEngine.checkAvailability(premDbl._id, d1In, d1Out);
+    const bulkDblD2 = await AvailabilityEngine.checkAvailability(premDbl._id, d2In, d2Out);
+
+    console.log(`[TEST 11.6 Bulk Single] Date 1 isAvail: ${bulkSglD1.isAvailable}, Date 2 isAvail: ${bulkSglD2.isAvailable}`);
+    console.log(`[TEST 11.6 Bulk Double] Date 1 isAvail: ${bulkDblD1.isAvailable}, Date 2 isAvail: ${bulkDblD2.isAvailable}`);
+
+    if (bulkSglD1.isAvailable || bulkSglD2.isAvailable) {
+      throw new Error('TEST 11.6 FAILED: Single should be stopped on both dates after bulk update');
+    }
+    if (!bulkDblD1.isAvailable || !bulkDblD2.isAvailable) {
+      throw new Error('TEST 11.6 FAILED: Double must remain 100% available across both dates after Single bulk update');
+    }
+    console.log('✓ TEST 11.6 PASSED: Date-specific Stop Sell and Bulk Update Manager work independently per category!\n');
     await cleanup();
 
     // ------------------------------------------------------------------------

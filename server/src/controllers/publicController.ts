@@ -343,8 +343,12 @@ export class PublicController {
 
       for (const nightStr of stayDates) {
         const invsForDate = dailyInvs.filter((inv) => inv.date === nightStr);
-        const isStopSell = invsForDate.some((inv) => !!inv.stopSell);
-        const minStay = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.minStay || 1)) : 1;
+        // Stop Sell check is strictly specific to the requested room category (resolvedRoomTypeId)
+        const targetTypeInv = invsForDate.find(
+          (inv) => inv.roomTypeId.toString() === resolvedRoomTypeId.toString()
+        );
+        const isStopSell = !!targetTypeInv?.stopSell;
+        const minStay = targetTypeInv?.minStay || (invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.minStay || 1)) : 1);
         const blockedRooms = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.blockedRooms || 0)) : 0;
         const overrides = invsForDate
           .map((inv) => inv.inventoryOverride)
