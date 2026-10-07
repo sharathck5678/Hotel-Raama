@@ -165,6 +165,7 @@ export const RoomsPage: React.FC = () => {
   const [checkIn, setCheckIn] = useState<string>(searchParams.get('checkIn') || '');
   const [checkOut, setCheckOut] = useState<string>(searchParams.get('checkOut') || '');
   const [numGuests, setNumGuests] = useState<number>(parseInt(searchParams.get('guests') || '2', 10));
+  const [guestCountManuallyChanged, setGuestCountManuallyChanged] = useState<boolean>(false);
   const [extraPerson, setExtraPerson] = useState(false);
   const [breakfast, setBreakfast] = useState(false);
   const [lunch, setLunch] = useState(false);
@@ -248,7 +249,11 @@ export const RoomsPage: React.FC = () => {
           const preselectId = searchParams.get('select');
           if (preselectId && !selectedRoom) {
             const found = res.data.find((r: any) => r._id === preselectId);
-            if (found) setSelectedRoom(found);
+            if (found) {
+              setSelectedRoom(found);
+              setGuestCountManuallyChanged(false);
+              setNumGuests(Math.max(1, found.maxOccupancy || 1));
+            }
           } else if (selectedRoom) {
             const found = res.data.find((r: any) => r._id === selectedRoom._id);
             if (found) setSelectedRoom(found);
@@ -267,13 +272,20 @@ export const RoomsPage: React.FC = () => {
     };
   }, [checkIn, checkOut, planType, numGuests]);
 
-  // Ensure numGuests stays within maxOccupancy of the selected room & reset terms agreement on room select
+  // Set default adult count to room's configured maximum adult capacity (or preserve manual selection if valid)
   useEffect(() => {
     if (selectedRoom) {
-      const maxAllowed = selectedRoom.maxOccupancy || 2;
-      setNumGuests((prev) => (prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev));
+      const maxAllowed = Math.max(1, selectedRoom.maxOccupancy || 1);
+      setNumGuests((prev) => {
+        if (guestCountManuallyChanged) {
+          return prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev;
+        }
+        return maxAllowed;
+      });
       setShowTerms(false);
       setTermsAccepted(false);
+    } else {
+      setGuestCountManuallyChanged(false);
     }
   }, [selectedRoom]);
 
@@ -748,8 +760,9 @@ export const RoomsPage: React.FC = () => {
                       onClick={() => {
                         setSelectedRoom(room);
                         setExtraPerson(false);
-                        const maxAllowed = room.maxOccupancy || 2;
-                        setNumGuests((prev) => (prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev));
+                        setGuestCountManuallyChanged(false);
+                        const defaultAdults = Math.max(1, room.maxOccupancy || 1);
+                        setNumGuests(defaultAdults);
                       }}
                       className="px-5 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -772,7 +785,10 @@ export const RoomsPage: React.FC = () => {
             className="bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl"
           >
             <button
-              onClick={() => setSelectedRoom(null)}
+              onClick={() => {
+                setSelectedRoom(null);
+                setGuestCountManuallyChanged(false);
+              }}
               className="absolute top-6 right-6 p-2 rounded-full bg-[#333333]/10 text-[#333333]/70 hover:text-[#333333] hover:bg-[#333333]/20 transition-colors"
             >
               <X size={20} />
@@ -833,14 +849,17 @@ export const RoomsPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[10px] font-sans uppercase tracking-wider text-[#666666] mb-1.5 font-semibold">
-                    Guests (Max {selectedRoom.maxOccupancy || 2})
+                    Guests (Max {selectedRoom.maxOccupancy || 1})
                   </label>
                   <select
-                    value={Math.min(numGuests, selectedRoom.maxOccupancy || 2)}
-                    onChange={(e) => setNumGuests(parseInt(e.target.value, 10))}
+                    value={Math.min(numGuests, selectedRoom.maxOccupancy || 1)}
+                    onChange={(e) => {
+                      setNumGuests(parseInt(e.target.value, 10));
+                      setGuestCountManuallyChanged(true);
+                    }}
                     className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] focus:border-[#00174A] focus:outline-none cursor-pointer"
                   >
-                    {Array.from({ length: selectedRoom.maxOccupancy || 2 }, (_, i) => i + 1).map((n) => (
+                    {Array.from({ length: Math.max(1, selectedRoom.maxOccupancy || 1) }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n} className="bg-white text-[#333333]">
                         {n} {n === 1 ? 'Guest' : 'Guests'}
                       </option>
