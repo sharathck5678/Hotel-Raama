@@ -51,13 +51,19 @@ app.use(express_1.default.json({
 }));
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, morgan_1.default)('dev'));
+// Lightweight Keep-Alive Ping for External Uptime Monitoring (Zero DB Queries)
+app.get('/api/health/ping', (_req, res) => {
+    res.status(200).json({
+        status: 'ok',
+    });
+});
 app.use('/api', rateLimiter_1.apiLimiter);
 // 2. Register Routes
 app.use('/api', publicRoutes_1.default);
 app.use('/api', qrRoutes_1.default);
 app.use('/api/admin', adminRoutes_1.default);
-// Health Check
-app.get('/health', (req, res) => {
+// Health Check (Full Backend & Database Status Check)
+const handleFullHealthCheck = (_req, res) => {
     const isDbConnected = mongoose_1.default.connection.readyState === 1;
     res.status(isDbConnected ? 200 : 503).json({
         status: isDbConnected ? 'ok' : 'degraded',
@@ -65,7 +71,9 @@ app.get('/health', (req, res) => {
         service: 'Hotel Raama Backend API',
         database: isDbConnected ? 'connected' : 'disconnected',
     });
-});
+};
+app.get('/health', handleFullHealthCheck);
+app.get('/api/health', handleFullHealthCheck);
 // Global JSON Error Handler
 app.use((err, req, res, _next) => {
     console.error(`[Unhandled Error] ${req.method} ${req.originalUrl}:`, err.message || err);

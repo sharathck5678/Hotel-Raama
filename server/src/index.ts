@@ -51,6 +51,14 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Lightweight Keep-Alive Ping for External Uptime Monitoring (Zero DB Queries)
+app.get('/api/health/ping', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+  });
+});
+
 app.use('/api', apiLimiter);
 
 // 2. Register Routes
@@ -58,8 +66,8 @@ app.use('/api', publicRoutes);
 app.use('/api', qrRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health Check
-app.get('/health', (req, res) => {
+// Health Check (Full Backend & Database Status Check)
+const handleFullHealthCheck = (_req: express.Request, res: express.Response) => {
   const isDbConnected = mongoose.connection.readyState === 1;
   res.status(isDbConnected ? 200 : 503).json({
     status: isDbConnected ? 'ok' : 'degraded',
@@ -67,7 +75,10 @@ app.get('/health', (req, res) => {
     service: 'Hotel Raama Backend API',
     database: isDbConnected ? 'connected' : 'disconnected',
   });
-});
+};
+
+app.get('/health', handleFullHealthCheck);
+app.get('/api/health', handleFullHealthCheck);
 
 // Global JSON Error Handler
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
