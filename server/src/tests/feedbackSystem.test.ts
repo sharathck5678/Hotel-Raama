@@ -351,4 +351,66 @@ describe('Hotel Raama Private Feedback & Email Automation System Tests', () => {
     assert.equal(validateRating('5'), false, 'String rating is rejected');
     assert.equal(validateRating(null), false, 'Null rating is rejected');
   });
+
+  // -------------------------------------------------------------
+  // Test 11: Production Feedback URL Resolution (hotelraama.com enforcement)
+  // -------------------------------------------------------------
+  it('11. Production feedback URL strictly resolves to https://hotelraama.com and rejects workers.dev', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalClientUrl = process.env.CLIENT_URL;
+    const originalFrontendUrl = process.env.FRONTEND_URL;
+
+    try {
+      process.env.NODE_ENV = 'production';
+
+      // Case 1: CLIENT_URL set to workers.dev on Render -> must sanitize to hotelraama.com
+      process.env.CLIENT_URL = 'https://hotel-raama.hotelraama5.workers.dev';
+      delete process.env.FRONTEND_URL;
+      const url1 = EmailService.getFeedbackUrl('token_abc_123');
+      assert.equal(url1, 'https://hotelraama.com/feedback/token_abc_123');
+
+      // Case 2: FRONTEND_URL set to production domain
+      process.env.FRONTEND_URL = 'https://hotelraama.com';
+      const url2 = EmailService.getFeedbackUrl('token_abc_123');
+      assert.equal(url2, 'https://hotelraama.com/feedback/token_abc_123');
+
+      // Case 3: No env var in production -> defaults to https://hotelraama.com
+      delete process.env.CLIENT_URL;
+      delete process.env.FRONTEND_URL;
+      const url3 = EmailService.getFeedbackUrl('token_abc_123');
+      assert.equal(url3, 'https://hotelraama.com/feedback/token_abc_123');
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+      process.env.CLIENT_URL = originalClientUrl;
+      process.env.FRONTEND_URL = originalFrontendUrl;
+    }
+  });
+
+  // -------------------------------------------------------------
+  // Test 12: Development Feedback URL Resolution
+  // -------------------------------------------------------------
+  it('12. Development feedback URL supports local development URL without hardcoding', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalClientUrl = process.env.CLIENT_URL;
+    const originalFrontendUrl = process.env.FRONTEND_URL;
+
+    try {
+      process.env.NODE_ENV = 'development';
+
+      // Custom dev URL
+      process.env.CLIENT_URL = 'http://localhost:5173';
+      const devUrl = EmailService.getFeedbackUrl('dev_token_456');
+      assert.equal(devUrl, 'http://localhost:5173/feedback/dev_token_456');
+
+      // Default dev fallback if no env var
+      delete process.env.CLIENT_URL;
+      delete process.env.FRONTEND_URL;
+      const defaultDevUrl = EmailService.getFeedbackUrl('dev_token_456');
+      assert.equal(defaultDevUrl, 'http://localhost:5173/feedback/dev_token_456');
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+      process.env.CLIENT_URL = originalClientUrl;
+      process.env.FRONTEND_URL = originalFrontendUrl;
+    }
+  });
 });

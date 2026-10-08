@@ -143,10 +143,37 @@ export class EmailService {
   }
 
   /**
-   * Resolve customer booking tracking URL based on CLIENT_URL environment variable
+   * Resolve customer-facing frontend / public URL base.
+   * Priority: FRONTEND_URL -> CLIENT_URL.
+   * Production strictly resolves to 'https://hotelraama.com'.
+   * Prevents internal hosting hostnames (workers.dev) or development URLs from leaking into production emails.
+   */
+  public static resolveFrontendUrl(): string {
+    const isProd = (process.env.NODE_ENV || '').toLowerCase() === 'production';
+    const rawUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL;
+
+    if (rawUrl && rawUrl !== 'undefined' && rawUrl.trim()) {
+      const clean = rawUrl.trim().replace(/\/+$/, '');
+      if (isProd) {
+        // In production, customer-facing emails must never use workers.dev or localhost
+        if (clean.includes('workers.dev') || clean.includes('localhost') || clean.includes('127.0.0.1')) {
+          return 'https://hotelraama.com';
+        }
+      }
+      return clean;
+    }
+
+    return isProd ? 'https://hotelraama.com' : 'http://localhost:5173';
+  }
+
+  /**
+   * Resolve customer booking tracking URL based on FRONTEND_URL / CLIENT_URL environment variables
    */
   public static getTrackingUrl(trackingToken: string): string {
-    const clientBase = (process.env.CLIENT_URL || 'https://hotel-raama.hotelraama5.workers.dev').replace(/\/+$/, '');
+    const rawUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL;
+    const clientBase = (rawUrl && rawUrl !== 'undefined' && rawUrl.trim())
+      ? rawUrl.trim().replace(/\/+$/, '')
+      : ((process.env.NODE_ENV || '').toLowerCase() === 'production' ? 'https://hotelraama.com' : 'http://localhost:5173');
     return `${clientBase}/booking/confirmation/${trackingToken}`;
   }
 
@@ -722,10 +749,10 @@ Email: hotelraama.hsn@gmail.com
   }
 
   /**
-   * Resolve customer feedback URL based on CLIENT_URL environment variable
+   * Resolve customer feedback URL based on FRONTEND_URL / CLIENT_URL environment variables
    */
   public static getFeedbackUrl(token: string): string {
-    const clientBase = (process.env.CLIENT_URL || 'https://hotelraama.com').replace(/\/+$/, '');
+    const clientBase = this.resolveFrontendUrl();
     return `${clientBase}/feedback/${token}`;
   }
 
@@ -872,7 +899,7 @@ Hassan, Karnataka
     const recipient = process.env.ADMIN_EMAIL?.trim() || await this.resolveHotelNotificationEmail();
     const sender = this.resolveSenderEmail();
 
-    const clientBase = (process.env.CLIENT_URL || 'https://hotelraama.com').replace(/\/+$/, '');
+    const clientBase = this.resolveFrontendUrl();
     const adminFeedbackUrl = `${clientBase}/admin/feedback`;
 
     const subject = 'New Customer Feedback - Hotel Raama';

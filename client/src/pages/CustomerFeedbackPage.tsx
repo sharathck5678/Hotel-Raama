@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Star,
@@ -109,7 +109,9 @@ const StarRatingInput: React.FC<StarRatingInputProps> = ({
 };
 
 export const CustomerFeedbackPage: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
+  const { token: pathToken } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const token = (pathToken || searchParams.get('token') || searchParams.get('feedbackToken') || '').trim();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -276,6 +278,10 @@ export const CustomerFeedbackPage: React.FC = () => {
       title = 'Link Expired';
       icon = Clock;
       iconBg = 'bg-red-50 text-red-600';
+    } else if (errorCode === 'NETWORK_ERROR') {
+      title = 'Connection Notice';
+      icon = AlertCircle;
+      iconBg = 'bg-amber-50 text-amber-600';
     } else if (errorCode === 'INVALID_TOKEN') {
       title = 'Invalid Feedback Link';
       icon = AlertCircle;
@@ -302,9 +308,19 @@ export const CustomerFeedbackPage: React.FC = () => {
             {errorMessage || 'This feedback link is not valid or has already been used.'}
           </p>
 
+          {errorCode === 'NETWORK_ERROR' && (
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 mb-3 rounded-full bg-[#00174A] text-white hover:bg-[#071A3D] font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+            >
+              Retry Connection
+            </button>
+          )}
+
           <Link
             to="/"
-            className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 rounded-full bg-[#00174A] text-white hover:bg-[#071A3D] font-bold text-xs uppercase tracking-wider transition-all"
+            className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 rounded-full bg-slate-100 text-[#00174A] hover:bg-slate-200 font-bold text-xs uppercase tracking-wider transition-all"
           >
             Visit Hotel Raama Home
           </Link>

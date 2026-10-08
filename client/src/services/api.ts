@@ -748,10 +748,11 @@ export const validateFeedbackToken = (token: string) =>
     .get(`/feedback/${token}`)
     .then((res) => res.data)
     .catch((err) => {
+      const isNetworkOrTimeout = !err.response || err.code === 'ECONNABORTED' || (err.response && err.response.status >= 500);
       return {
         success: false,
-        code: err.response?.data?.code || 'INVALID_TOKEN',
-        message: err.response?.data?.message || 'This feedback link is invalid or has expired.',
+        code: isNetworkOrTimeout ? 'NETWORK_ERROR' : (err.response?.data?.code || 'INVALID_TOKEN'),
+        message: err.response?.data?.message || (isNetworkOrTimeout ? 'Unable to reach the server. Please check your internet connection and try again.' : 'This feedback link is invalid or has expired.'),
       };
     });
 

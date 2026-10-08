@@ -107,6 +107,14 @@ export const App: React.FC = () => {
                 </NoIndex>
               }
             />
+            <Route
+              path="/feedback"
+              element={
+                <NoIndex>
+                  <CustomerFeedbackPage />
+                </NoIndex>
+              }
+            />
 
             {/* Room QR Scan & Tracking Routes for Guests */}
             <Route
