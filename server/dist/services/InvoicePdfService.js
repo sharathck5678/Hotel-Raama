@@ -29,13 +29,15 @@ class InvoicePdfService {
                 // Booking info grid
                 const startY = doc.y;
                 doc.fillColor('#333333').fontSize(10).font('Helvetica-Bold').text(`Invoice No: INV-${booking.bookingId}`, 40, startY);
-                doc.font('Helvetica').text(`Date: ${new Date(booking.createdAt).toLocaleDateString()}`);
+                doc.font('Helvetica').text(`Date: ${new Date(booking.createdAt || Date.now()).toLocaleDateString()}`);
                 doc.text(`Booking Reference: ${booking.bookingId}`);
-                doc.text(`Payment Status: ${booking.paymentStatus.toUpperCase()}`);
+                doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`);
                 doc.font('Helvetica-Bold').text(`Guest Details:`, 320, startY);
-                doc.font('Helvetica').text(`Name: ${booking.guestName}`, 320);
-                doc.text(`Email: ${booking.guestEmail}`);
-                doc.text(`Phone: ${booking.guestPhone}`);
+                doc.font('Helvetica').text(`Name: ${booking.guestName || 'Valued Guest'}`, 320);
+                if (booking.guestEmail)
+                    doc.text(`Email: ${booking.guestEmail}`);
+                if (booking.guestPhone)
+                    doc.text(`Phone: ${booking.guestPhone}`);
                 if (booking.guestAadhar) {
                     doc.text(`Aadhaar: ${booking.guestAadhar}`);
                 }
@@ -54,7 +56,7 @@ class InvoicePdfService {
                 // Table Row
                 let rowTop = tableTop + 30;
                 doc.fillColor('#333333').font('Helvetica');
-                doc.text(roomTypeName, 50, rowTop);
+                doc.text(roomTypeName || booking.roomTypeId?.name || 'Room Accommodation', 50, rowTop);
                 doc.text(`${new Date(booking.checkIn).toLocaleDateString()} - ${new Date(booking.checkOut).toLocaleDateString()}`, 250, rowTop);
                 doc.text(`${booking.numNights}`, 430, rowTop);
                 const roomSubtotal = ((booking.roomPricePerNightSnapshot || 0) * (booking.numNights || 1)).toFixed(2);
@@ -66,13 +68,17 @@ class InvoicePdfService {
                     doc.text(`${booking.numNights || 1}`, 430, rowTop);
                     doc.text(`Rs. ${(booking.extraPersonChargeSnapshot || 0).toFixed(2)}`, 480, rowTop);
                 }
-                if (booking.mealPlanSelection && (booking.mealPlanSelection.pricePerNight || 0) > 0) {
+                const mealTotal = booking.mealPlanSelection
+                    ? (booking.mealPlanSelection.totalPrice !== undefined
+                        ? booking.mealPlanSelection.totalPrice
+                        : (booking.mealPlanSelection.pricePerNight || 0) * (booking.numNights || 1))
+                    : 0;
+                if (mealTotal > 0) {
                     rowTop += 20;
                     doc.text(`Meal Plan Additions`, 50, rowTop);
                     doc.text(`Pax: ${booking.numGuests || 1}`, 250, rowTop);
                     doc.text(`${booking.numNights || 1}`, 430, rowTop);
-                    const mealPlanSubtotal = ((booking.mealPlanSelection.pricePerNight || 0) * (booking.numNights || 1)).toFixed(2);
-                    doc.text(`Rs. ${mealPlanSubtotal}`, 480, rowTop);
+                    doc.text(`Rs. ${mealTotal.toFixed(2)}`, 480, rowTop);
                 }
                 rowTop += 30;
                 doc.strokeColor('#DDDDDD').lineWidth(0.5).moveTo(40, rowTop).lineTo(570, rowTop).stroke();
@@ -80,7 +86,7 @@ class InvoicePdfService {
                 // Totals summary
                 const subtotal = (booking.roomPricePerNightSnapshot || 0) * (booking.numNights || 1) +
                     (booking.extraPersonChargeSnapshot || 0) +
-                    (booking.mealPlanSelection?.pricePerNight || 0) * (booking.numNights || 1);
+                    mealTotal;
                 doc.font('Helvetica').text(`Subtotal:`, 350, rowTop);
                 doc.text(`Rs. ${subtotal.toFixed(2)}`, 480, rowTop);
                 rowTop += 15;

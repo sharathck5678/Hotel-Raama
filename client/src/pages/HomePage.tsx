@@ -14,34 +14,101 @@ export const HomePage: React.FC = () => {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [attractions, setAttractions] = useState<any[]>([]);
   const [loadingAttractions, setLoadingAttractions] = useState(true);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+
+  // Helper to format default dates in Asia/Kolkata timezone
+  const getDefaultDates = () => {
+    try {
+      const now = new Date();
+      const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now);
+      const [y, m, d] = todayStr.split('-').map(Number);
+      const tomorrow = new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0, 0));
+      const dayAfter = new Date(Date.UTC(y, m - 1, d + 2, 12, 0, 0, 0));
+      const fmt = (dt: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(dt);
+      return {
+        checkIn: fmt(tomorrow),
+        checkOut: fmt(dayAfter),
+        today: todayStr,
+      };
+    } catch {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfter = new Date();
+      dayAfter.setDate(dayAfter.getDate() + 2);
+      return {
+        checkIn: tomorrow.toISOString().split('T')[0],
+        checkOut: dayAfter.toISOString().split('T')[0],
+        today: new Date().toISOString().split('T')[0],
+      };
+    }
+  };
+
+  const [dateDefaults] = useState(getDefaultDates);
+  const [checkIn, setCheckIn] = useState(dateDefaults.checkIn);
+  const [checkOut, setCheckOut] = useState(dateDefaults.checkOut);
   const [numGuests, setNumGuests] = useState(2);
 
+  // Fetch Attractions on mount
   useEffect(() => {
-    // Default checkIn tomorrow, checkOut day after
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date();
-    dayAfter.setDate(dayAfter.getDate() + 2);
-
-    setCheckIn(tomorrow.toISOString().split('T')[0]);
-    setCheckOut(dayAfter.toISOString().split('T')[0]);
-
-    fetchRoomTypes()
-      .then(res => {
-        if (res.success) setRoomTypes(res.data);
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoadingRooms(false));
-
     fetchAttractions()
-      .then(res => {
+      .then((res) => {
         if (res.success) setAttractions(res.data);
       })
-      .catch(err => console.error(err))
+      .catch((err) => console.error(err))
       .finally(() => setLoadingAttractions(false));
   }, []);
+
+  // Fetch Authoritative Effective Room Rates whenever dates or guests change
+  useEffect(() => {
+    if (!checkIn || !checkOut) return;
+    const inD = new Date(checkIn);
+    const outD = new Date(checkOut);
+    if (isNaN(inD.getTime()) || isNaN(outD.getTime()) || outD <= inD) return;
+
+    let isMounted = true;
+    setLoadingRooms(true);
+
+    fetchRoomTypes({
+      checkIn,
+      checkOut,
+      planType: 'NON_CP',
+      guests: numGuests,
+    })
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.success && Array.isArray(res.data)) {
+          setRoomTypes(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load room rates:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingRooms(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [checkIn, checkOut, numGuests]);
+
+  const handleCheckInChange = (newCheckIn: string) => {
+    setCheckIn(newCheckIn);
+    if (checkOut && newCheckIn >= checkOut) {
+      try {
+        const [y, m, d] = newCheckIn.split('-').map(Number);
+        const nextDay = new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0, 0));
+        setCheckOut(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(nextDay));
+      } catch {
+        const inD = new Date(newCheckIn);
+        const nextDay = new Date(inD.getTime() + 24 * 60 * 60 * 1000);
+        setCheckOut(nextDay.toISOString().split('T')[0]);
+      }
+    }
+  };
+
+  const handleCheckOutChange = (newCheckOut: string) => {
+    setCheckOut(newCheckOut);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,8 +178,9 @@ export const HomePage: React.FC = () => {
                   </label>
                   <input
                     type="date"
+                    min={dateDefaults.today}
                     value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
+                    onChange={(e) => handleCheckInChange(e.target.value)}
                     className="w-full bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#D6B369] focus:outline-none shadow-xs"
                     required
                   />
@@ -124,8 +192,9 @@ export const HomePage: React.FC = () => {
                   </label>
                   <input
                     type="date"
+                    min={checkIn || dateDefaults.today}
                     value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
+                    onChange={(e) => handleCheckOutChange(e.target.value)}
                     className="w-full bg-[#F7F0DF] text-[#00174A] border border-[#cbc0ad] rounded-lg px-3.5 py-2.5 text-xs font-sans font-semibold focus:ring-2 focus:ring-[#D6B369] focus:outline-none shadow-xs"
                     required
                   />
@@ -170,7 +239,7 @@ export const HomePage: React.FC = () => {
                 <h2 className="editorial-section-title text-[#333333]">Rooms & Executive Suites</h2>
               </div>
               <Link
-                to="/rooms"
+                to={`/rooms?checkIn=${checkIn}&checkOut=${checkOut}&guests=${numGuests}`}
                 className="mt-4 md:mt-0 text-xs font-sans font-bold uppercase tracking-wider text-[#333333] hover:text-[#666666] flex items-center gap-1.5 transition-colors"
               >
                 View All Rates <ArrowRight size={15} />
@@ -236,17 +305,36 @@ export const HomePage: React.FC = () => {
 
                       <div className="pt-5 border-t border-[#cbc0ad] flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] font-sans text-[#666666] uppercase block tracking-wider">Starting Rate</span>
-                          <span className="text-2xl font-serif font-bold text-[#333333]">₹{room.basePrice}</span>
-                          <span className="text-[10px] font-sans text-[#666666]"> / night</span>
+                          <span className="text-[10px] font-sans text-[#666666] uppercase block tracking-wider font-medium">
+                            {room.hasVaryingRates ? 'Nightly Rates' : 'Effective Rate'}
+                          </span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-serif font-bold text-[#333333]">
+                              {room.hasVaryingRates
+                                ? `₹${room.minRate}–₹${room.maxRate}`
+                                : `₹${room.dateWiseRate ?? room.epRate ?? room.basePrice}`}
+                            </span>
+                            <span className="text-[10px] font-sans text-[#666666]"> / night</span>
+                          </div>
+                          {room.numNights && room.numNights > 1 && (
+                            <span className="text-[10px] font-sans text-[#666666] block">
+                              {room.numNights} nights · ₹{room.roomTotal} total
+                            </span>
+                          )}
                         </div>
 
-                        <Link
-                          to={`/rooms?select=${room._id}`}
-                          className="px-4 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#E8C56A] transition-all"
-                        >
-                          Reserve Now
-                        </Link>
+                        {room.isAvailable === false ? (
+                          <span className="px-4 py-2.5 rounded-sm bg-stone-200 text-stone-500 text-xs font-sans font-semibold uppercase tracking-wider cursor-not-allowed">
+                            Sold Out
+                          </span>
+                        ) : (
+                          <Link
+                            to={`/rooms?select=${room._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${numGuests}`}
+                            className="px-4 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] text-xs font-sans font-semibold uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer shadow-xs"
+                          >
+                            Reserve Now
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>

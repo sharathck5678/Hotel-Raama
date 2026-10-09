@@ -13,6 +13,7 @@ import {
   Edit2,
   Trash2,
   Tag,
+  Utensils,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -25,6 +26,7 @@ import {
 import { ScrollReveal } from '../../components/ScrollReveal';
 import { AdminAvailabilityRatesView } from './AdminAvailabilityRatesView';
 import { AdminBaseRatesView } from './AdminBaseRatesView';
+import { AdminMealAddonsView } from './AdminMealAddonsView';
 
 export interface IInventoryRoom {
   _id: string;
@@ -80,13 +82,14 @@ export interface IOfflineBookingRecord {
 }
 
 export interface AdminInventoryViewProps {
-  initialTab?: 'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES';
+  initialTab?: 'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES' | 'MEAL_ADDONS';
 }
 
 export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialTab }) => {
   const location = useLocation();
-  const [mainTab, setMainTab] = useState<'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES'>(() => {
+  const [mainTab, setMainTab] = useState<'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES' | 'MEAL_ADDONS'>(() => {
     if (initialTab) return initialTab;
+    if (location.pathname.includes('meal-addon') || location.pathname.includes('meals')) return 'MEAL_ADDONS';
     if (location.pathname.includes('base-rates')) return 'BASE_RATES';
     if (location.pathname.includes('availability')) return 'AVAILABILITY';
     return 'PHYSICAL';
@@ -416,6 +419,17 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
             <Tag size={15} className={mainTab === 'BASE_RATES' ? 'text-[#D6B369]' : 'text-[#667085]'} />
             Base Rates
           </button>
+          <button
+            onClick={() => setMainTab('MEAL_ADDONS')}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-t-sm transition-all cursor-pointer border-b-2 ${
+              mainTab === 'MEAL_ADDONS'
+                ? 'border-[#D6B369] bg-[#00174A] text-[#FAF9F6] shadow-sm'
+                : 'border-transparent bg-white/70 hover:bg-white text-[#00174A]/80 hover:text-[#00174A]'
+            }`}
+          >
+            <Utensils size={15} className={mainTab === 'MEAL_ADDONS' ? 'text-[#D6B369]' : 'text-[#667085]'} />
+            Edit Meal Addon
+          </button>
         </div>
       </ScrollReveal>
 
@@ -423,6 +437,8 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
         <AdminAvailabilityRatesView initialStartDate={new Date(checkIn)} />
       ) : mainTab === 'BASE_RATES' ? (
         <AdminBaseRatesView />
+      ) : mainTab === 'MEAL_ADDONS' ? (
+        <AdminMealAddonsView />
       ) : (
         <>
           {/* Metrics Bar */}

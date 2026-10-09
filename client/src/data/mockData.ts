@@ -5628,11 +5628,17 @@ export const mockCalculateAvailability = (payload: any) => {
 
   if (payload.couponCode && typeof payload.couponCode === 'string' && payload.couponCode.trim().length > 0) {
     const cleanCode = payload.couponCode.trim().toUpperCase();
-    if (cleanCode === 'WELCOME10' || cleanCode === 'WELCOME15') {
+    const mockCoupons: Record<string, number> = {
+      WELCOME10: 10,
+      PREMIUM15: 15,
+      MEGA25: 25,
+      PLATINUM30: 30,
+    };
+    if (cleanCode in mockCoupons) {
       const gstinCheck = validateGSTIN(payload.gstin);
       if (gstinCheck.isValid) {
         validCouponCode = cleanCode;
-        discountPercentage = cleanCode === 'WELCOME15' ? 15 : 10;
+        discountPercentage = mockCoupons[cleanCode];
         discountAmount = Math.round((subtotal * discountPercentage) / 100);
       }
     }

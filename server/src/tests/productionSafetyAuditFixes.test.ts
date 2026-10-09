@@ -297,20 +297,20 @@ async function runProductionSafetyTests() {
     console.log(`[TEST G.4] WELCOME10 coupon gives 10% discount (₹${priceW10.discountAmount}): ${w10Correct}`);
     if (!w10Correct) throw new Error('TEST G.4 Failed: WELCOME10 discount calculation incorrect.');
 
-    const priceW15 = await PricingEngine.calculateBookingPrice(
+    const priceP15 = await PricingEngine.calculateBookingPrice(
       execType._id.toString(),
       testGIn,
       testGOut,
       2,
       undefined,
-      'WELCOME15',
+      'PREMIUM15',
       'NON_CP',
       false,
       '22AAAAA0000A1Z5'
     );
-    const w15Correct = priceW15.discountPercentage === 15 && priceW15.discountAmount === 660;
-    console.log(`[TEST G.4] WELCOME15 coupon gives 15% discount (₹${priceW15.discountAmount}): ${w15Correct}`);
-    if (!w15Correct) throw new Error('TEST G.4 Failed: WELCOME15 discount calculation incorrect.');
+    const p15Correct = priceP15.discountPercentage === 15 && priceP15.discountAmount === 660 && priceP15.couponCode === 'PREMIUM15';
+    console.log(`[TEST G.4] PREMIUM15 coupon gives 15% discount (₹${priceP15.discountAmount}): ${p15Correct}`);
+    if (!p15Correct) throw new Error('TEST G.4 Failed: PREMIUM15 discount calculation incorrect.');
 
     // 5. Booking Cancellation restores availability
     holdBk.bookingStatus = 'CANCELLED';

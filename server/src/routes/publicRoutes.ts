@@ -23,6 +23,10 @@ router.get('/billing/invoice/booking/:idOrToken', PublicController.downloadBooki
 router.get('/billing/invoice/order/:idOrToken', PublicController.downloadOrderInvoicePdf);
 router.post('/webhooks/razorpay', PublicController.handleRazorpayWebhook);
 
+// Meal Addon Pricing (Read-only)
+router.get('/meals/effective-rates', PublicController.getEffectiveMealRates);
+router.get('/meals/base-rates', PublicController.getBaseMealRates);
+
 // Customer Private Feedback (No Login Required)
 router.get('/feedback/:token', feedbackLimiter, PublicController.validateFeedbackToken);
 router.post('/feedback/:token', feedbackLimiter, PublicController.submitFeedback);

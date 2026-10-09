@@ -6,6 +6,7 @@ import { DailyRate } from '../models/DailyRate';
 import { getHotelSettings } from './HotelSettingService';
 import { validateGSTIN, IGSTINValidationResult } from '../utils/gstinValidator';
 import { AvailabilityEngine } from './AvailabilityEngine';
+import { MealPricingService, IEffectiveMealPricesResult } from './MealPricingService';
 
 export interface IMealSelectionInput {
   breakfast?: boolean;
@@ -40,11 +41,14 @@ export interface IPricingCalculationResult {
   couponError?: string;
   couponMessage?: string;
   nightlyRates?: INightlyRateBreakdown[];
+  effectiveMealRates?: IEffectiveMealPricesResult;
 }
 
 export const OFFICIAL_COUPONS: Record<string, number> = {
   WELCOME10: 10,
-  WELCOME15: 15,
+  PREMIUM15: 15,
+  MEGA25: 25,
+  PLATINUM30: 30,
 };
 
 export class PricingEngine {
@@ -179,24 +183,29 @@ export class PricingEngine {
     const roomPricePerNight = Math.round(roomTotal / numNights);
     const extraPersonChargePerNight = Math.round(extraPersonTotal / numNights);
 
-    // 5. Fetch Meal Plans and calculate total
-    let mealPlanPricePerNight = 0;
+    // 5. Fetch Meal Plans and calculate total with date-wise overrides
+    let mealPlanTotal = 0;
     const totalDiningGuests = Math.max(numGuests, 1) + (hasExtraPerson ? extraCount : 0);
-    if (mealSelection) {
-      const mealPlans = await MealPlan.find({ isActive: true });
-      const mealMap = new Map(mealPlans.map((m) => [m.type, m.pricePerPersonPerNight]));
+    const hasAnyMealSelected = !!(mealSelection && (mealSelection.breakfast || mealSelection.lunch || mealSelection.dinner));
 
-      if (mealSelection.breakfast && mealMap.has('BREAKFAST')) {
-        mealPlanPricePerNight += mealMap.get('BREAKFAST')! * totalDiningGuests;
-      }
-      if (mealSelection.lunch && mealMap.has('LUNCH')) {
-        mealPlanPricePerNight += mealMap.get('LUNCH')! * totalDiningGuests;
-      }
-      if (mealSelection.dinner && mealMap.has('DINNER')) {
-        mealPlanPricePerNight += mealMap.get('DINNER')! * totalDiningGuests;
+    let effectiveMealRates: IEffectiveMealPricesResult | undefined = undefined;
+    if (hasAnyMealSelected) {
+      effectiveMealRates = await MealPricingService.getEffectiveMealPrices(checkIn, checkOut);
+
+      for (const night of effectiveMealRates.nightlyBreakdown) {
+        if (mealSelection?.breakfast) {
+          mealPlanTotal += night.breakfast * totalDiningGuests;
+        }
+        if (mealSelection?.lunch) {
+          mealPlanTotal += night.lunch * totalDiningGuests;
+        }
+        if (mealSelection?.dinner) {
+          mealPlanTotal += night.dinner * totalDiningGuests;
+        }
       }
     }
-    const mealPlanTotal = mealPlanPricePerNight * numNights;
+
+    const mealPlanPricePerNight = numNights > 0 ? Math.round(mealPlanTotal / numNights) : 0;
 
     const subtotal = roomTotal + extraPersonTotal + mealPlanTotal;
 
@@ -217,7 +226,7 @@ export class PricingEngine {
       } else {
         const cleanCode = rawCode.toUpperCase();
 
-        // The ONLY permitted active coupons are WELCOME10 and WELCOME15
+        // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
         if (!(cleanCode in OFFICIAL_COUPONS)) {
           couponError = 'Invalid coupon code.';
         } else {
@@ -290,6 +299,7 @@ export class PricingEngine {
       couponError,
       couponMessage,
       nightlyRates,
+      effectiveMealRates,
     };
   }
 }

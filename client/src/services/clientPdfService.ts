@@ -45,6 +45,7 @@ export interface BookingPdfData {
   mealPlanSelection?: {
     planName?: string;
     pricePerNight?: number;
+    totalPrice?: number;
   };
   taxAmountSnapshot?: number;
   discountAmountSnapshot?: number;
@@ -292,10 +293,13 @@ export const downloadBookingInvoicePdf = async (booking: BookingPdfData) => {
     const guests = Number(booking.numGuests || 1);
     const roomRate = Number(booking.roomPricePerNightSnapshot || booking.roomTypeId?.basePrice || 2500);
     const mealPrice = Number(booking.mealPlanSelection?.pricePerNight || 0);
+    const mealTotal = booking.mealPlanSelection?.totalPrice !== undefined
+      ? Number(booking.mealPlanSelection.totalPrice)
+      : mealPrice * nights;
     const extraPersonCharge = Number(booking.extraPersonChargeSnapshot || 0);
     const discount = Number(booking.discountAmountSnapshot || 0);
     const tax = Number(booking.taxAmountSnapshot || 0);
-    const totalAmount = Number(booking.totalAmount || (roomRate * nights + mealPrice * nights + extraPersonCharge - discount + tax));
+    const totalAmount = Number(booking.totalAmount || (roomRate * nights + mealTotal + extraPersonCharge - discount + tax));
 
     // ==========================================
     // 1. HEADER (Pure White Background, No Fill)
@@ -435,13 +439,13 @@ export const downloadBookingInvoicePdf = async (booking: BookingPdfData) => {
       ]);
     }
 
-    if (mealPrice > 0) {
+    if (mealTotal > 0) {
       tableBody.push([
         (tableBody.length + 1).toString(),
         `Meal Plan Addition (${booking.mealPlanSelection?.planName || 'Selected Plan'})`,
         `${nights} Night(s)`,
-        `Rs. ${mealPrice.toFixed(2)}`,
-        `Rs. ${(mealPrice * nights).toFixed(2)}`,
+        `Rs. ${(mealTotal / nights).toFixed(2)}`,
+        `Rs. ${mealTotal.toFixed(2)}`,
       ]);
     }
 

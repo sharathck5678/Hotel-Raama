@@ -3,15 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PricingEngine = exports.OFFICIAL_COUPONS = void 0;
 const mongoose_1 = require("mongoose");
 const RoomType_1 = require("../models/RoomType");
-const MealPlan_1 = require("../models/MealPlan");
 const Coupon_1 = require("../models/Coupon");
 const DailyRate_1 = require("../models/DailyRate");
 const HotelSettingService_1 = require("./HotelSettingService");
 const gstinValidator_1 = require("../utils/gstinValidator");
 const AvailabilityEngine_1 = require("./AvailabilityEngine");
+const MealPricingService_1 = require("./MealPricingService");
 exports.OFFICIAL_COUPONS = {
     WELCOME10: 10,
-    WELCOME15: 15,
+    PREMIUM15: 15,
+    MEGA25: 25,
+    PLATINUM30: 30,
 };
 class PricingEngine {
     static async calculateBookingPrice(roomTypeId, checkIn, checkOut, numGuests, mealSelection, couponCode, planType = 'NON_CP', extraPerson = false, gstin, preloadedContext) {
@@ -121,23 +123,26 @@ class PricingEngine {
         }
         const roomPricePerNight = Math.round(roomTotal / numNights);
         const extraPersonChargePerNight = Math.round(extraPersonTotal / numNights);
-        // 5. Fetch Meal Plans and calculate total
-        let mealPlanPricePerNight = 0;
+        // 5. Fetch Meal Plans and calculate total with date-wise overrides
+        let mealPlanTotal = 0;
         const totalDiningGuests = Math.max(numGuests, 1) + (hasExtraPerson ? extraCount : 0);
-        if (mealSelection) {
-            const mealPlans = await MealPlan_1.MealPlan.find({ isActive: true });
-            const mealMap = new Map(mealPlans.map((m) => [m.type, m.pricePerPersonPerNight]));
-            if (mealSelection.breakfast && mealMap.has('BREAKFAST')) {
-                mealPlanPricePerNight += mealMap.get('BREAKFAST') * totalDiningGuests;
-            }
-            if (mealSelection.lunch && mealMap.has('LUNCH')) {
-                mealPlanPricePerNight += mealMap.get('LUNCH') * totalDiningGuests;
-            }
-            if (mealSelection.dinner && mealMap.has('DINNER')) {
-                mealPlanPricePerNight += mealMap.get('DINNER') * totalDiningGuests;
+        const hasAnyMealSelected = !!(mealSelection && (mealSelection.breakfast || mealSelection.lunch || mealSelection.dinner));
+        let effectiveMealRates = undefined;
+        if (hasAnyMealSelected) {
+            effectiveMealRates = await MealPricingService_1.MealPricingService.getEffectiveMealPrices(checkIn, checkOut);
+            for (const night of effectiveMealRates.nightlyBreakdown) {
+                if (mealSelection?.breakfast) {
+                    mealPlanTotal += night.breakfast * totalDiningGuests;
+                }
+                if (mealSelection?.lunch) {
+                    mealPlanTotal += night.lunch * totalDiningGuests;
+                }
+                if (mealSelection?.dinner) {
+                    mealPlanTotal += night.dinner * totalDiningGuests;
+                }
             }
         }
-        const mealPlanTotal = mealPlanPricePerNight * numNights;
+        const mealPlanPricePerNight = numNights > 0 ? Math.round(mealPlanTotal / numNights) : 0;
         const subtotal = roomTotal + extraPersonTotal + mealPlanTotal;
         // 6. Authoritative Server-Side Coupon & GSTIN Validation
         let discountAmount = 0;
@@ -154,7 +159,7 @@ class PricingEngine {
             }
             else {
                 const cleanCode = rawCode.toUpperCase();
-                // The ONLY permitted active coupons are WELCOME10 and WELCOME15
+                // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
                 if (!(cleanCode in exports.OFFICIAL_COUPONS)) {
                     couponError = 'Invalid coupon code.';
                 }
@@ -226,6 +231,7 @@ class PricingEngine {
             couponError,
             couponMessage,
             nightlyRates,
+            effectiveMealRates,
         };
     }
 }

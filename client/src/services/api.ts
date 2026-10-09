@@ -815,3 +815,80 @@ export const sendBookingFeedbackRequest = (bookingId: string) =>
       success: false,
       message: err.response?.data?.message || 'Failed to dispatch feedback request email.',
     }));
+
+// ==========================================
+// MEAL ADDON PRICING MANAGEMENT (ADMIN & PUBLIC)
+// ==========================================
+
+export const fetchAdminBaseMealPrices = () =>
+  api
+    .get('/admin/meals/base-rates')
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch base meal prices.',
+    }));
+
+export const updateAdminBaseMealPrices = (payload: {
+  breakfast?: number;
+  lunch?: number;
+  dinner?: number;
+}) =>
+  api
+    .put('/admin/meals/base-rates', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to update base meal prices.',
+    }));
+
+export const fetchAdminDateWiseMealPrices = (startDate?: string, endDate?: string) => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  return api
+    .get(`/admin/meals/date-wise?${params.toString()}`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch date-wise meal prices.',
+    }));
+};
+
+export const bulkUpdateMealPrices = (payload: {
+  startDate: string;
+  endDate: string;
+  breakfastPrice?: number;
+  lunchPrice?: number;
+  dinnerPrice?: number;
+}) =>
+  api
+    .post('/admin/meals/bulk-update', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to bulk update meal prices.',
+    }));
+
+export const deleteAdminDateWiseMealPrice = (date: string) =>
+  api
+    .delete(`/admin/meals/date-wise/${date}`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to delete date-wise meal override.',
+    }));
+
+export const fetchEffectiveMealRates = (checkIn?: string, checkOut?: string) => {
+  const params = new URLSearchParams();
+  if (checkIn) params.append('checkIn', checkIn);
+  if (checkOut) params.append('checkOut', checkOut);
+  return api
+    .get(`/meals/effective-rates?${params.toString()}`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch effective meal prices.',
+    }));
+};
+

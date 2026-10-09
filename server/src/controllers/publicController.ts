@@ -20,6 +20,7 @@ import { EmailService } from '../services/EmailService';
 import { ensureDatabaseSeeded, OFFICIAL_ROOMS_SPEC } from '../seed/seedDatabase';
 import { validateAadhar } from '../utils/aadharValidator';
 import { validateGSTIN } from '../utils/gstinValidator';
+import { MealPricingService } from '../services/MealPricingService';
 
 export class PublicController {
   private static async resolveRoomTypeId(roomTypeId: any): Promise<string | null> {
@@ -47,6 +48,12 @@ export class PublicController {
    */
   static async getRoomTypes(req: Request, res: Response) {
     try {
+      if (typeof res.setHeader === 'function') {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+
       let roomTypes = await RoomType.find({ isActive: true }).lean();
       if (roomTypes.length === 0) {
         await ensureDatabaseSeeded();
@@ -54,20 +61,40 @@ export class PublicController {
       }
 
       const { checkIn, checkOut, planType, guests } = req.query;
-      if (checkIn && checkOut && typeof checkIn === 'string' && typeof checkOut === 'string') {
-        const checkInDate = new Date(checkIn);
-        const checkOutDate = new Date(checkOut);
-        if (!isNaN(checkInDate.getTime()) && !isNaN(checkOutDate.getTime()) && checkOutDate > checkInDate) {
-          const requestedPlan = (planType === 'CP' ? 'CP' : 'NON_CP') as 'NON_CP' | 'CP';
-          const queryGuests = guests ? Math.max(1, parseInt(guests as string, 10) || 1) : 1;
+      let checkInDate: Date | null = null;
+      let checkOutDate: Date | null = null;
 
-          // ==========================================
-          // PHASE 2B: BATCH DATA FETCHING
-          // ==========================================
-          const stayDates = AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
-          const allRoomTypeIds = roomTypes.map((rt: any) => rt._id);
-          const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
-          const now = new Date();
+      if (checkIn && checkOut && typeof checkIn === 'string' && typeof checkOut === 'string') {
+        const inD = new Date(checkIn);
+        const outD = new Date(checkOut);
+        if (!isNaN(inD.getTime()) && !isNaN(outD.getTime()) && outD > inD) {
+          checkInDate = inD;
+          checkOutDate = outD;
+        }
+      }
+
+      // Default stay window if checkIn or checkOut is omitted or invalid:
+      // (Tomorrow to day-after-tomorrow in Asia/Kolkata timezone)
+      if (!checkInDate || !checkOutDate) {
+        const now = new Date();
+        const todayStr = AvailabilityEngine.formatDateStr(now);
+        const [y, m, d] = todayStr.split('-').map(Number);
+        const tomorrow = new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0, 0));
+        const dayAfter = new Date(Date.UTC(y, m - 1, d + 2, 12, 0, 0, 0));
+        checkInDate = new Date(AvailabilityEngine.formatDateStr(tomorrow));
+        checkOutDate = new Date(AvailabilityEngine.formatDateStr(dayAfter));
+      }
+
+      const requestedPlan = (planType === 'CP' ? 'CP' : 'NON_CP') as 'NON_CP' | 'CP';
+      const queryGuests = guests ? Math.max(1, parseInt(guests as string, 10) || 1) : 1;
+
+      // ==========================================
+      // PHASE 2B: BATCH DATA FETCHING
+      // ==========================================
+      const stayDates = AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
+      const allRoomTypeIds = roomTypes.map((rt: any) => rt._id);
+      const officialRoomNumbers = OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+      const now = new Date();
 
           const [allOfficialRooms, allStayBookings, allDailyInventories, allDailyRates] = await Promise.all([
             // 1. All official active guest rooms sorted by floor, roomNumber
@@ -218,10 +245,6 @@ export class PublicController {
           );
 
           return res.json({ success: true, data: enrichedRoomTypes });
-        }
-      }
-
-      return res.json({ success: true, data: roomTypes });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch rooms.' });
     }
@@ -270,11 +293,14 @@ export class PublicController {
         gstin
       );
 
+      const effectiveMealRates = pricing.effectiveMealRates || (await MealPricingService.getEffectiveMealPrices(checkInDate, checkOutDate));
+
       return res.json({
         success: true,
         data: {
           availability,
           pricing,
+          effectiveMealRates,
         },
       });
     } catch (error: any) {
@@ -373,6 +399,7 @@ export class PublicController {
           lunch: !!mealSelection?.lunch,
           dinner: !!mealSelection?.dinner,
           pricePerNight: pricing.mealPlanPricePerNight,
+          totalPrice: pricing.mealPlanTotal,
         },
         extraPerson: !!extraPerson,
         extraPersonChargeSnapshot: pricing.extraPersonTotal,
@@ -1245,7 +1272,7 @@ export class PublicController {
 
       const cleanCode = rawCode.toUpperCase();
 
-      // The ONLY permitted active coupons are WELCOME10 and WELCOME15
+      // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
       if (!(cleanCode in OFFICIAL_COUPONS)) {
         return res.status(400).json({
           success: false,
@@ -1315,6 +1342,73 @@ export class PublicController {
         success: false,
         message: 'Unable to apply coupon. Please try again.',
       });
+    }
+  }
+
+  /**
+   * GET /api/meals/effective-rates?checkIn=...&checkOut=...
+   */
+  static async getEffectiveMealRates(req: Request, res: Response) {
+    try {
+      const { checkIn, checkOut } = req.query;
+      if (checkIn && typeof checkIn === 'string') {
+        const rates = await MealPricingService.getEffectiveMealPrices(
+          checkIn,
+          typeof checkOut === 'string' ? checkOut : undefined
+        );
+        return res.json({ success: true, data: rates });
+      }
+      const base = await MealPricingService.getBasePrices();
+      return res.json({
+        success: true,
+        data: {
+          stayDates: [],
+          numNights: 1,
+          basePrices: base,
+          breakfast: {
+            minPrice: base.breakfast,
+            maxPrice: base.breakfast,
+            avgPrice: base.breakfast,
+            totalPerGuest: base.breakfast,
+            effectivePrice: base.breakfast,
+            isVariable: false,
+            hasOverride: false,
+          },
+          lunch: {
+            minPrice: base.lunch,
+            maxPrice: base.lunch,
+            avgPrice: base.lunch,
+            totalPerGuest: base.lunch,
+            effectivePrice: base.lunch,
+            isVariable: false,
+            hasOverride: false,
+          },
+          dinner: {
+            minPrice: base.dinner,
+            maxPrice: base.dinner,
+            avgPrice: base.dinner,
+            totalPerGuest: base.dinner,
+            effectivePrice: base.dinner,
+            isVariable: false,
+            hasOverride: false,
+          },
+          nightlyBreakdown: [],
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message || 'Failed to fetch meal rates.' });
+    }
+  }
+
+  /**
+   * GET /api/meals/base-rates
+   */
+  static async getBaseMealRates(req: Request, res: Response) {
+    try {
+      const base = await MealPricingService.getBasePrices();
+      return res.json({ success: true, data: base });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: 'Failed to fetch base meal prices.' });
     }
   }
 }

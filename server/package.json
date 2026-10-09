@@ -11,7 +11,8 @@
     "test": "tsx --test src/tests/bookingEmailVerification.test.ts src/tests/feedbackSystem.test.ts src/tests/resendEmailIntegration.test.ts src/tests/healthPing.test.ts",
     "test:health": "tsx --test src/tests/healthPing.test.ts",
     "test:resend": "tsx --test src/tests/resendEmailIntegration.test.ts",
-    "test:feedback": "tsx --test src/tests/feedbackSystem.test.ts"
+    "test:feedback": "tsx --test src/tests/feedbackSystem.test.ts",
+    "test:meals": "tsx src/tests/mealAddonPricingManagement.test.ts"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

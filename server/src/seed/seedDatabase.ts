@@ -164,20 +164,26 @@ export const runSeedLogic = async (clearExisting = false) => {
     console.log('✓ Meal plans created/updated');
 
     // 5. Official Promotional Coupons (Idempotent upsert by code)
-    await Coupon.deleteMany({ code: { $nin: ['WELCOME10', 'WELCOME15'] } });
+    await Coupon.updateMany(
+      { code: { $nin: ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'] } },
+      { $set: { isActive: false } }
+    );
     const now = new Date(2020, 0, 1);
     const futureDate = new Date(new Date().getFullYear() + 5, 11, 31);
-    await Coupon.findOneAndUpdate(
-      { code: 'WELCOME10' },
-      { code: 'WELCOME10', discountType: 'PERCENTAGE', discountValue: 10, minBookingAmount: 0, startDate: now, endDate: futureDate, maxUsage: 100000, isActive: true },
-      { upsert: true, new: true }
-    );
-    await Coupon.findOneAndUpdate(
-      { code: 'WELCOME15' },
-      { code: 'WELCOME15', discountType: 'PERCENTAGE', discountValue: 15, minBookingAmount: 0, startDate: now, endDate: futureDate, maxUsage: 100000, isActive: true },
-      { upsert: true, new: true }
-    );
-    console.log('✓ Official coupons created/updated: WELCOME10 (10%) and WELCOME15 (15%)');
+    const activeCoupons = [
+      { code: 'WELCOME10', discountValue: 10 },
+      { code: 'PREMIUM15', discountValue: 15 },
+      { code: 'MEGA25', discountValue: 25 },
+      { code: 'PLATINUM30', discountValue: 30 },
+    ];
+    for (const cp of activeCoupons) {
+      await Coupon.findOneAndUpdate(
+        { code: cp.code },
+        { code: cp.code, discountType: 'PERCENTAGE', discountValue: cp.discountValue, minBookingAmount: 0, startDate: now, endDate: futureDate, maxUsage: 100000, isActive: true },
+        { upsert: true, new: true }
+      );
+    }
+    console.log('✓ Official coupons created/updated: WELCOME10 (10%), PREMIUM15 (15%), MEGA25 (25%), PLATINUM30 (30%)');
 
     // 6. Attractions (Idempotent upsert by name)
     const attractionsData = [

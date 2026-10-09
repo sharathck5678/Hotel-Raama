@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, CreditCard, ChevronLeft, ChevronRight, ChevronDown, FileText, Calendar, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchRoomTypes, checkAvailability, validateCoupon, createBookingHold, verifyBookingPayment, cancelBookingHold } from '../services/api';
+import { fetchRoomTypes, checkAvailability, validateCoupon, createBookingHold, verifyBookingPayment, cancelBookingHold, fetchEffectiveMealRates } from '../services/api';
 import { ScrollReveal, ScrollRevealGroup, ScrollRevealItem } from '../components/ScrollReveal';
 import { SEO } from '../components/SEO';
 import { formatAadharInput, validateAadhar } from '../utils/aadharValidator';
@@ -170,6 +170,24 @@ export const RoomsPage: React.FC = () => {
   const [breakfast, setBreakfast] = useState(false);
   const [lunch, setLunch] = useState(false);
   const [dinner, setDinner] = useState(false);
+  const [mealPricing, setMealPricing] = useState<{
+    breakfast: number;
+    lunch: number;
+    dinner: number;
+    isBreakfastVariable?: boolean;
+    isLunchVariable?: boolean;
+    isDinnerVariable?: boolean;
+    minBreakfast?: number;
+    maxBreakfast?: number;
+    minLunch?: number;
+    maxLunch?: number;
+    minDinner?: number;
+    maxDinner?: number;
+  }>({
+    breakfast: 150,
+    lunch: 250,
+    dinner: 300,
+  });
   const [couponCode, setCouponCode] = useState('');
   const [gstin, setGstin] = useState('');
   const [gstinError, setGstinError] = useState('');
@@ -198,17 +216,31 @@ export const RoomsPage: React.FC = () => {
     if (qCheckIn) {
       setCheckIn(qCheckIn);
     } else if (!checkIn) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      setCheckIn(tomorrow.toISOString().split('T')[0]);
+      try {
+        const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+        const [y, m, d] = todayStr.split('-').map(Number);
+        const tomorrow = new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0, 0));
+        setCheckIn(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(tomorrow));
+      } catch {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        setCheckIn(tomorrow.toISOString().split('T')[0]);
+      }
     }
 
     if (qCheckOut) {
       setCheckOut(qCheckOut);
     } else if (!checkOut) {
-      const dayAfter = new Date();
-      dayAfter.setDate(dayAfter.getDate() + 2);
-      setCheckOut(dayAfter.toISOString().split('T')[0]);
+      try {
+        const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+        const [y, m, d] = todayStr.split('-').map(Number);
+        const dayAfter = new Date(Date.UTC(y, m - 1, d + 2, 12, 0, 0, 0));
+        setCheckOut(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(dayAfter));
+      } catch {
+        const dayAfter = new Date();
+        dayAfter.setDate(dayAfter.getDate() + 2);
+        setCheckOut(dayAfter.toISOString().split('T')[0]);
+      }
     }
 
     if (qGuests) {
@@ -289,6 +321,41 @@ export const RoomsPage: React.FC = () => {
     }
   }, [selectedRoom]);
 
+  // Fetch Authoritative Effective Meal Addon Prices whenever stay dates change
+  useEffect(() => {
+    let isMounted = true;
+    fetchEffectiveMealRates(checkIn || undefined, checkOut || undefined)
+      .then((res) => {
+        if (!isMounted) return;
+        if (res?.success && res.data) {
+          const b = res.data.breakfast;
+          const l = res.data.lunch;
+          const d = res.data.dinner;
+          setMealPricing({
+            breakfast: b?.effectivePrice ?? res.data.basePrices?.breakfast ?? 150,
+            lunch: l?.effectivePrice ?? res.data.basePrices?.lunch ?? 250,
+            dinner: d?.effectivePrice ?? res.data.basePrices?.dinner ?? 300,
+            isBreakfastVariable: b?.isVariable,
+            isLunchVariable: l?.isVariable,
+            isDinnerVariable: d?.isVariable,
+            minBreakfast: b?.minPrice,
+            maxBreakfast: b?.maxPrice,
+            minLunch: l?.minPrice,
+            maxLunch: l?.maxPrice,
+            minDinner: d?.minPrice,
+            maxDinner: d?.maxPrice,
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load effective meal prices:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [checkIn, checkOut]);
+
   // Recalculate price whenever booking parameters change
 
   useEffect(() => {
@@ -308,6 +375,23 @@ export const RoomsPage: React.FC = () => {
       .then((res) => {
         if (res.success) {
           setCalcResult(res.data);
+          if (res.data?.effectiveMealRates) {
+            const emr = res.data.effectiveMealRates;
+            setMealPricing({
+              breakfast: emr.breakfast?.effectivePrice ?? 150,
+              lunch: emr.lunch?.effectivePrice ?? 250,
+              dinner: emr.dinner?.effectivePrice ?? 300,
+              isBreakfastVariable: emr.breakfast?.isVariable,
+              isLunchVariable: emr.lunch?.isVariable,
+              isDinnerVariable: emr.dinner?.isVariable,
+              minBreakfast: emr.breakfast?.minPrice,
+              maxBreakfast: emr.breakfast?.maxPrice,
+              minLunch: emr.lunch?.minPrice,
+              maxLunch: emr.lunch?.maxPrice,
+              minDinner: emr.dinner?.minPrice,
+              maxDinner: emr.dinner?.maxPrice,
+            });
+          }
         }
       })
       .catch((err) => {
@@ -344,7 +428,8 @@ export const RoomsPage: React.FC = () => {
     }
 
     const cleanCode = rawCode.toUpperCase();
-    if (cleanCode !== 'WELCOME10' && cleanCode !== 'WELCOME15') {
+    const ACTIVE_COUPONS = ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'];
+    if (!ACTIVE_COUPONS.includes(cleanCode)) {
       toast.error('Invalid coupon code.');
       setCouponStatus({ valid: false, message: 'Invalid coupon code.' });
       return;
@@ -924,7 +1009,10 @@ export const RoomsPage: React.FC = () => {
                       onChange={(e) => setBreakfast(e.target.checked)}
                       className="rounded accent-[#00174A]"
                     />
-                    <span>Breakfast (+₹150)</span>
+                    <span>
+                      Breakfast (+₹{mealPricing.breakfast}
+                      {mealPricing.isBreakfastVariable ? ' avg' : ''})
+                    </span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -933,7 +1021,10 @@ export const RoomsPage: React.FC = () => {
                       onChange={(e) => setLunch(e.target.checked)}
                       className="rounded accent-[#00174A]"
                     />
-                    <span>Lunch (+₹250)</span>
+                    <span>
+                      Lunch (+₹{mealPricing.lunch}
+                      {mealPricing.isLunchVariable ? ' avg' : ''})
+                    </span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -942,7 +1033,10 @@ export const RoomsPage: React.FC = () => {
                       onChange={(e) => setDinner(e.target.checked)}
                       className="rounded accent-[#00174A]"
                     />
-                    <span>Dinner (+₹300)</span>
+                    <span>
+                      Dinner (+₹{mealPricing.dinner}
+                      {mealPricing.isDinnerVariable ? ' avg' : ''})
+                    </span>
                   </label>
                 </div>
               </div>

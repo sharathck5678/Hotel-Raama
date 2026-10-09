@@ -56,8 +56,56 @@ async function runCouponGstTestSuite() {
     assert.strictEqual(p1.discountPercentage, 10, 'TEST 1 Failed: WELCOME10 discount % must be 10');
     console.log('✓ TEST 1: WELCOME10 is accepted.');
 
-    // TEST 2: WELCOME15 is accepted
+    // TEST 2: PREMIUM15 is accepted
     const p2 = await PricingEngine.calculateBookingPrice(
+      testRoomType._id.toString(),
+      checkIn,
+      checkOut,
+      2,
+      undefined,
+      'PREMIUM15',
+      'NON_CP',
+      false,
+      validGstin
+    );
+    assert.strictEqual(p2.couponCode, 'PREMIUM15', 'TEST 2 Failed: PREMIUM15 not accepted');
+    assert.strictEqual(p2.discountPercentage, 15, 'TEST 2 Failed: PREMIUM15 discount % must be 15');
+    console.log('✓ TEST 2: PREMIUM15 is accepted.');
+
+    // TEST 2B: MEGA25 is accepted
+    const p2b = await PricingEngine.calculateBookingPrice(
+      testRoomType._id.toString(),
+      checkIn,
+      checkOut,
+      2,
+      undefined,
+      'MEGA25',
+      'NON_CP',
+      false,
+      validGstin
+    );
+    assert.strictEqual(p2b.couponCode, 'MEGA25', 'TEST 2B Failed: MEGA25 not accepted');
+    assert.strictEqual(p2b.discountPercentage, 25, 'TEST 2B Failed: MEGA25 discount % must be 25');
+    console.log('✓ TEST 2B: MEGA25 is accepted.');
+
+    // TEST 2C: PLATINUM30 is accepted
+    const p2c = await PricingEngine.calculateBookingPrice(
+      testRoomType._id.toString(),
+      checkIn,
+      checkOut,
+      2,
+      undefined,
+      'PLATINUM30',
+      'NON_CP',
+      false,
+      validGstin
+    );
+    assert.strictEqual(p2c.couponCode, 'PLATINUM30', 'TEST 2C Failed: PLATINUM30 not accepted');
+    assert.strictEqual(p2c.discountPercentage, 30, 'TEST 2C Failed: PLATINUM30 discount % must be 30');
+    console.log('✓ TEST 2C: PLATINUM30 is accepted.');
+
+    // TEST 2D: Obsolete WELCOME15 is rejected as invalid/inactive
+    const p2d = await PricingEngine.calculateBookingPrice(
       testRoomType._id.toString(),
       checkIn,
       checkOut,
@@ -68,9 +116,10 @@ async function runCouponGstTestSuite() {
       false,
       validGstin
     );
-    assert.strictEqual(p2.couponCode, 'WELCOME15', 'TEST 2 Failed: WELCOME15 not accepted');
-    assert.strictEqual(p2.discountPercentage, 15, 'TEST 2 Failed: WELCOME15 discount % must be 15');
-    console.log('✓ TEST 2: WELCOME15 is accepted.');
+    assert.strictEqual(p2d.couponCode, undefined, 'TEST 2D Failed: WELCOME15 must be rejected');
+    assert.strictEqual(p2d.discountAmount, 0, 'TEST 2D Failed: WELCOME15 discount must be 0');
+    assert.strictEqual(p2d.couponError, 'Invalid coupon code.', 'TEST 2D Failed: Expected Invalid coupon code error');
+    console.log('✓ TEST 2D: WELCOME15 is rejected as invalid/inactive.');
 
     // TEST 3: RAAMA5 is rejected
     const p3 = await PricingEngine.calculateBookingPrice(
@@ -137,21 +186,53 @@ async function runCouponGstTestSuite() {
     assert.strictEqual(p6.discountPercentage, 10, 'TEST 6 Failed: discount % must be 10');
     console.log('✓ TEST 6: welcome10 is normalized and accepted.');
 
-    // TEST 7: welcome15 is normalized and accepted
+    // TEST 7: premium15 is normalized and accepted
     const p7 = await PricingEngine.calculateBookingPrice(
       testRoomType._id.toString(),
       checkIn,
       checkOut,
       2,
       undefined,
-      '  Welcome15  ',
+      '  Premium15  ',
       'NON_CP',
       false,
       validGstin
     );
-    assert.strictEqual(p7.couponCode, 'WELCOME15', 'TEST 7 Failed: mixed-case Welcome15 not normalized');
+    assert.strictEqual(p7.couponCode, 'PREMIUM15', 'TEST 7 Failed: mixed-case Premium15 not normalized');
     assert.strictEqual(p7.discountPercentage, 15, 'TEST 7 Failed: discount % must be 15');
-    console.log('✓ TEST 7: welcome15 is normalized and accepted.');
+    console.log('✓ TEST 7: premium15 is normalized and accepted.');
+
+    // TEST 7B: mega25 is normalized and accepted
+    const p7b = await PricingEngine.calculateBookingPrice(
+      testRoomType._id.toString(),
+      checkIn,
+      checkOut,
+      2,
+      undefined,
+      '  mega25  ',
+      'NON_CP',
+      false,
+      validGstin
+    );
+    assert.strictEqual(p7b.couponCode, 'MEGA25', 'TEST 7B Failed: mega25 not normalized');
+    assert.strictEqual(p7b.discountPercentage, 25, 'TEST 7B Failed: discount % must be 25');
+    console.log('✓ TEST 7B: mega25 is normalized and accepted.');
+
+    // TEST 7C: platinum30 is normalized and accepted
+    const p7c = await PricingEngine.calculateBookingPrice(
+      testRoomType._id.toString(),
+      checkIn,
+      checkOut,
+      2,
+      undefined,
+      '  Platinum30  ',
+      'NON_CP',
+      false,
+      validGstin
+    );
+    assert.strictEqual(p7c.couponCode, 'PLATINUM30', 'TEST 7C Failed: platinum30 not normalized');
+    assert.strictEqual(p7c.discountPercentage, 30, 'TEST 7C Failed: discount % must be 30');
+    console.log('✓ TEST 7C: platinum30 is normalized and accepted.');
 
     // TEST 8: WELCOME10 gives exactly 10% discount
     const subtotal8 = p1.subtotal;
@@ -159,11 +240,23 @@ async function runCouponGstTestSuite() {
     assert.strictEqual(p1.discountAmount, expectedDiscount8, 'TEST 8 Failed: Expected 10% discount');
     console.log(`✓ TEST 8: WELCOME10 gives exactly 10% discount (Subtotal ₹${subtotal8} -> Discount ₹${p1.discountAmount}).`);
 
-    // TEST 9: WELCOME15 gives exactly 15% discount
+    // TEST 9: PREMIUM15 gives exactly 15% discount
     const subtotal9 = p2.subtotal;
     const expectedDiscount9 = Math.round((subtotal9 * 15) / 100);
     assert.strictEqual(p2.discountAmount, expectedDiscount9, 'TEST 9 Failed: Expected 15% discount');
-    console.log(`✓ TEST 9: WELCOME15 gives exactly 15% discount (Subtotal ₹${subtotal9} -> Discount ₹${p2.discountAmount}).`);
+    console.log(`✓ TEST 9: PREMIUM15 gives exactly 15% discount (Subtotal ₹${subtotal9} -> Discount ₹${p2.discountAmount}).`);
+
+    // TEST 9B: MEGA25 gives exactly 25% discount
+    const subtotal9b = p2b.subtotal;
+    const expectedDiscount9b = Math.round((subtotal9b * 25) / 100);
+    assert.strictEqual(p2b.discountAmount, expectedDiscount9b, 'TEST 9B Failed: Expected 25% discount');
+    console.log(`✓ TEST 9B: MEGA25 gives exactly 25% discount (Subtotal ₹${subtotal9b} -> Discount ₹${p2b.discountAmount}).`);
+
+    // TEST 9C: PLATINUM30 gives exactly 30% discount
+    const subtotal9c = p2c.subtotal;
+    const expectedDiscount9c = Math.round((subtotal9c * 30) / 100);
+    assert.strictEqual(p2c.discountAmount, expectedDiscount9c, 'TEST 9C Failed: Expected 30% discount');
+    console.log(`✓ TEST 9C: PLATINUM30 gives exactly 30% discount (Subtotal ₹${subtotal9c} -> Discount ₹${p2c.discountAmount}).`);
 
     // TEST 10: Two coupons cannot be stacked
     const p10 = await PricingEngine.calculateBookingPrice(
@@ -172,7 +265,7 @@ async function runCouponGstTestSuite() {
       checkOut,
       2,
       undefined,
-      'WELCOME10,WELCOME15',
+      'WELCOME10,PREMIUM15',
       'NON_CP',
       false,
       validGstin
@@ -303,14 +396,32 @@ async function runCouponGstTestSuite() {
     assert.strictEqual(p1.totalAmount, expectedTotal21, 'TEST 21 Failed: Total amount mismatch');
     console.log(`✓ TEST 21: WELCOME10 + valid GSTIN produces correct final total (Sub ₹${subtotal21} - Dis ₹${discount21} + Tax ₹${tax21} = ₹${p1.totalAmount}).`);
 
-    // TEST 22: WELCOME15 + valid GSTIN produces correct final total (Example B)
+    // TEST 22: PREMIUM15 + valid GSTIN produces correct final total (Example B)
     const subtotal22 = p2.subtotal;
     const discount22 = Math.round((subtotal22 * 15) / 100);
     const taxable22 = subtotal22 - discount22;
     const tax22 = Math.round((taxable22 * 5) / 100);
     const expectedTotal22 = taxable22 + tax22;
-    assert.strictEqual(p2.totalAmount, expectedTotal22, 'TEST 22 Failed: WELCOME15 total amount mismatch');
-    console.log(`✓ TEST 22: WELCOME15 + valid GSTIN produces correct final total (Sub ₹${subtotal22} - Dis ₹${discount22} + Tax ₹${tax22} = ₹${p2.totalAmount}).`);
+    assert.strictEqual(p2.totalAmount, expectedTotal22, 'TEST 22 Failed: PREMIUM15 total amount mismatch');
+    console.log(`✓ TEST 22: PREMIUM15 + valid GSTIN produces correct final total (Sub ₹${subtotal22} - Dis ₹${discount22} + Tax ₹${tax22} = ₹${p2.totalAmount}).`);
+
+    // TEST 22B: MEGA25 + valid GSTIN produces correct final total
+    const subtotal22b = p2b.subtotal;
+    const discount22b = Math.round((subtotal22b * 25) / 100);
+    const taxable22b = subtotal22b - discount22b;
+    const tax22b = Math.round((taxable22b * 5) / 100);
+    const expectedTotal22b = taxable22b + tax22b;
+    assert.strictEqual(p2b.totalAmount, expectedTotal22b, 'TEST 22B Failed: MEGA25 total amount mismatch');
+    console.log(`✓ TEST 22B: MEGA25 + valid GSTIN produces correct final total (Sub ₹${subtotal22b} - Dis ₹${discount22b} + Tax ₹${tax22b} = ₹${p2b.totalAmount}).`);
+
+    // TEST 22C: PLATINUM30 + valid GSTIN produces correct final total
+    const subtotal22c = p2c.subtotal;
+    const discount22c = Math.round((subtotal22c * 30) / 100);
+    const taxable22c = subtotal22c - discount22c;
+    const tax22c = Math.round((taxable22c * 5) / 100);
+    const expectedTotal22c = taxable22c + tax22c;
+    assert.strictEqual(p2c.totalAmount, expectedTotal22c, 'TEST 22C Failed: PLATINUM30 total amount mismatch');
+    console.log(`✓ TEST 22C: PLATINUM30 + valid GSTIN produces correct final total (Sub ₹${subtotal22c} - Dis ₹${discount22c} + Tax ₹${tax22c} = ₹${p2c.totalAmount}).`);
 
     // TEST 23: No coupon + no GSTIN still allows normal booking
     const p23 = await PricingEngine.calculateBookingPrice(
@@ -330,14 +441,14 @@ async function runCouponGstTestSuite() {
     assert.strictEqual(p23.totalAmount, expectedTotal23, 'TEST 23 Failed: Normal total calculation mismatch');
     console.log(`✓ TEST 23: No coupon + no GSTIN allows normal booking (Subtotal ₹${p23.subtotal} -> Total ₹${p23.totalAmount}).`);
 
-    // TEST 24: Invalid GSTIN + coupon does not allow discounted booking (Example E)
+    // TEST 24: Invalid GSTIN + coupon does not allow discounted booking
     const p24 = await PricingEngine.calculateBookingPrice(
       testRoomType._id.toString(),
       checkIn,
       checkOut,
       2,
       undefined,
-      'WELCOME15',
+      'PREMIUM15',
       'NON_CP',
       false,
       '22INVALID0000Z1'
@@ -361,6 +472,23 @@ async function runCouponGstTestSuite() {
     assert.strictEqual(p25.discountAmount, 0, 'TEST 25 Failed: Old RAAMA5 must fail even with GSTIN');
     assert.strictEqual(p25.couponError, 'Invalid coupon code.');
     console.log('✓ TEST 25: Old RAAMA5 + GSTIN still fails.');
+
+    // TEST 25B: Obsolete WELCOME15 + valid GSTIN still fails
+    const p25b = await PricingEngine.calculateBookingPrice(
+      testRoomType._id.toString(),
+      checkIn,
+      checkOut,
+      2,
+      undefined,
+      'WELCOME15',
+      'NON_CP',
+      false,
+      validGstin
+    );
+    assert.strictEqual(p25b.discountAmount, 0, 'TEST 25B Failed: WELCOME15 must yield 0 discount');
+    assert.strictEqual(p25b.couponCode, undefined, 'TEST 25B Failed: WELCOME15 must not be accepted');
+    assert.strictEqual(p25b.couponError, 'Invalid coupon code.', 'TEST 25B Failed: Expected Invalid coupon code error');
+    console.log('✓ TEST 25B: Obsolete WELCOME15 + valid GSTIN is strictly rejected.');
 
     // TEST 26: Frontend cannot manipulate discountAmount (Authoritative server pricing)
     // Server recalculates discount independently in createBooking logic

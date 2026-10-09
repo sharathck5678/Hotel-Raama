@@ -211,23 +211,23 @@ async function runDateWiseInventoryTests() {
     if (!test7Pass) throw new Error(`TEST 7 Failed: Expected discount 470, got ${priceWelcome10.discountAmount}`);
 
     // -------------------------------------------------------------
-    // TEST 8: WELCOME15 applies 15%
+    // TEST 8: PREMIUM15 applies 15%
     // -------------------------------------------------------------
-    const priceWelcome15 = await PricingEngine.calculateBookingPrice(
+    const pricePremium15 = await PricingEngine.calculateBookingPrice(
       execType._id.toString(),
       oct5Date,
       oct7Date,
       2,
       undefined,
-      'WELCOME15',
+      'PREMIUM15',
       'NON_CP',
       false,
       '22AAAAA0000A1Z5'
     );
     const expectedDiscount15 = Math.round((4700 * 15) / 100); // 705
-    const test8Pass = priceWelcome15.discountAmount === expectedDiscount15 && priceWelcome15.couponCode === 'WELCOME15';
-    console.log(`[TEST 8] WELCOME15 coupon gives 15% discount: ${test8Pass} (discount = ₹${priceWelcome15.discountAmount})`);
-    if (!test8Pass) throw new Error(`TEST 8 Failed: Expected discount 705, got ${priceWelcome15.discountAmount}`);
+    const test8Pass = pricePremium15.discountAmount === expectedDiscount15 && pricePremium15.couponCode === 'PREMIUM15';
+    console.log(`[TEST 8] PREMIUM15 coupon gives 15% discount: ${test8Pass} (discount = ₹${pricePremium15.discountAmount})`);
+    if (!test8Pass) throw new Error(`TEST 8 Failed: Expected discount 705, got ${pricePremium15.discountAmount}`);
 
     // -------------------------------------------------------------
     // TEST 9: Stop Sell ON. Customer cannot book.

@@ -72,6 +72,23 @@ export class EmailService {
   }
 
   /**
+   * Resolve discount percentage safely across active and historical coupons
+   */
+  public static getBookingDiscountPercentage(booking: any): number {
+    if (typeof booking.discountPercentageSnapshot === 'number' && booking.discountPercentageSnapshot > 0) {
+      return booking.discountPercentageSnapshot;
+    }
+    const map: Record<string, number> = {
+      WELCOME10: 10,
+      WELCOME15: 15,
+      PREMIUM15: 15,
+      MEGA25: 25,
+      PLATINUM30: 30,
+    };
+    return (booking.couponCodeSnapshot && map[booking.couponCodeSnapshot]) || 10;
+  }
+
+  /**
    * Initialize or retrieve the active Nodemailer SMTP transporter
    */
   public static getTransporter(): nodemailer.Transporter | null {
@@ -279,9 +296,9 @@ export class EmailService {
       <table class="grid-table">
         <tr><td class="label">Room Tariff (Snapshot)</td><td class="value">${this.formatCurrency(booking.roomPricePerNightSnapshot)} / night</td></tr>
         ${booking.extraPerson ? `<tr><td class="label">Extra Person Total</td><td class="value">${this.formatCurrency(booking.extraPersonChargeSnapshot || 0)}</td></tr>` : ''}
-        ${booking.mealPlanSelection?.pricePerNight ? `<tr><td class="label">Meal Plan Total</td><td class="value">${this.formatCurrency((booking.mealPlanSelection.pricePerNight || 0) * booking.numNights)}</td></tr>` : ''}
+        ${(booking.mealPlanSelection && ((booking.mealPlanSelection.totalPrice !== undefined && booking.mealPlanSelection.totalPrice > 0) || (booking.mealPlanSelection.pricePerNight || 0) > 0)) ? `<tr><td class="label">Meal Plan Total</td><td class="value">${this.formatCurrency(booking.mealPlanSelection.totalPrice !== undefined ? booking.mealPlanSelection.totalPrice : (booking.mealPlanSelection.pricePerNight || 0) * booking.numNights)}</td></tr>` : ''}
         ${booking.gstin ? `<tr><td class="label">Guest GSTIN</td><td class="value"><strong>${booking.gstin}</strong></td></tr>` : ''}
-        ${booking.discountAmountSnapshot ? `<tr><td class="label">Discount Applied (${booking.couponCodeSnapshot || 'Coupon'} - ${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%)</td><td class="value" style="color: #dc2626;">-${this.formatCurrency(booking.discountAmountSnapshot)}</td></tr>` : ''}
+        ${booking.discountAmountSnapshot ? `<tr><td class="label">Discount Applied (${booking.couponCodeSnapshot || 'Coupon'} - ${this.getBookingDiscountPercentage(booking)}%)</td><td class="value" style="color: #dc2626;">-${this.formatCurrency(booking.discountAmountSnapshot)}</td></tr>` : ''}
         <tr><td class="label">GST (${booking.taxRateSnapshot ?? 5}% Snapshot)</td><td class="value">${this.formatCurrency(booking.taxAmountSnapshot)}</td></tr>
         <tr style="background-color: #fefce8;"><td class="label" style="font-size: 14px; color: #0b1849;"><strong>Total Amount Collected</strong></td><td class="value" style="font-size: 16px; color: #0b1849; font-weight: bold;">${this.formatCurrency(booking.totalAmount)}</td></tr>
       </table>
@@ -322,7 +339,7 @@ STAY DETAILS:
 
 FINANCIAL BREAKDOWN:
 - Room Rate per Night: ${this.formatCurrency(booking.roomPricePerNightSnapshot)}
-${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmountSnapshot ? `- Coupon Applied: ${booking.couponCodeSnapshot} (${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%): -${this.formatCurrency(booking.discountAmountSnapshot)}\n` : ''}- GST Tax (${booking.taxRateSnapshot ?? 5}%): ${this.formatCurrency(booking.taxAmountSnapshot)}
+${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmountSnapshot ? `- Coupon Applied: ${booking.couponCodeSnapshot} (${this.getBookingDiscountPercentage(booking)}%): -${this.formatCurrency(booking.discountAmountSnapshot)}\n` : ''}- GST Tax (${booking.taxRateSnapshot ?? 5}%): ${this.formatCurrency(booking.taxAmountSnapshot)}
 - Total Amount Paid: ${this.formatCurrency(booking.totalAmount)}
 ===============================================
     `.trim();
@@ -453,7 +470,7 @@ ${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmo
         ${booking.gstin ? `<div class="details-row"><span class="details-label">GSTIN</span><span class="details-value">${booking.gstin}</span></div>` : ''}
         ${booking.discountAmountSnapshot ? `
         <div class="details-row"><span class="details-label">Coupon Code</span><span class="details-value">${booking.couponCodeSnapshot}</span></div>
-        <div class="details-row"><span class="details-label">Discount (${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%)</span><span class="details-value" style="color: #dc2626;">-${this.formatCurrency(booking.discountAmountSnapshot)}</span></div>` : ''}
+        <div class="details-row"><span class="details-label">Discount (${this.getBookingDiscountPercentage(booking)}%)</span><span class="details-value" style="color: #dc2626;">-${this.formatCurrency(booking.discountAmountSnapshot)}</span></div>` : ''}
         <div class="details-row"><span class="details-label">GST Tax (${booking.taxRateSnapshot ?? 5}%)</span><span class="details-value">${this.formatCurrency(booking.taxAmountSnapshot)}</span></div>
         <div class="details-row" style="padding-top: 10px;"><span class="details-label" style="font-size: 14px; font-weight: bold; color: #0b1849;">Total Paid</span><span class="details-value" style="font-size: 15px; color: #0b1849;">${this.formatCurrency(booking.totalAmount)}</span></div>
       </div>
@@ -494,7 +511,7 @@ Check-In: ${checkInStr} (From 12:00 PM)
 Check-Out: ${checkOutStr} (Until 12:00 PM)
 Guests: ${booking.numGuests} (${booking.numNights} nights)
 Meal Plan: ${mealPlanSummary}
-${booking.gstin ? `GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmountSnapshot ? `Coupon: ${booking.couponCodeSnapshot}\nDiscount (${booking.discountPercentageSnapshot || (booking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}%): -${this.formatCurrency(booking.discountAmountSnapshot)}\n` : ''}GST Tax: ${this.formatCurrency(booking.taxAmountSnapshot)} (${booking.taxRateSnapshot ?? 5}%)
+${booking.gstin ? `GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmountSnapshot ? `Coupon: ${booking.couponCodeSnapshot}\nDiscount (${this.getBookingDiscountPercentage(booking)}%): -${this.formatCurrency(booking.discountAmountSnapshot)}\n` : ''}GST Tax: ${this.formatCurrency(booking.taxAmountSnapshot)} (${booking.taxRateSnapshot ?? 5}%)
 Total Amount Paid: ${this.formatCurrency(booking.totalAmount)} (Includes ${booking.taxRateSnapshot ?? 5}% GST)
 
 View or track your booking online:

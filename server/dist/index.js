@@ -92,36 +92,32 @@ const Room_1 = require("./models/Room");
 const RoomType_1 = require("./models/RoomType");
 const Coupon_1 = require("./models/Coupon");
 const HotelSetting_1 = require("./models/HotelSetting");
-// Helper to ensure official coupons in active database (WELCOME10 and WELCOME15 only)
+// Helper to ensure official coupons in active database (WELCOME10, PREMIUM15, MEGA25, PLATINUM30)
 const ensureCoupons = async () => {
     try {
-        // Delete any old corporate/promotional coupons such as RAAMA5, HotelRaama5, etc.
-        await Coupon_1.Coupon.deleteMany({ code: { $nin: ['WELCOME10', 'WELCOME15'] } });
+        // Safely deactivate WELCOME15 and any other obsolete coupons
+        await Coupon_1.Coupon.updateMany({ code: { $nin: ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'] } }, { $set: { isActive: false } });
         const now = new Date(2020, 0, 1);
         const futureDate = new Date(new Date().getFullYear() + 5, 11, 31);
-        // Ensure WELCOME10 (10% discount)
-        await Coupon_1.Coupon.findOneAndUpdate({ code: 'WELCOME10' }, {
-            code: 'WELCOME10',
-            discountType: 'PERCENTAGE',
-            discountValue: 10,
-            minBookingAmount: 0,
-            startDate: now,
-            endDate: futureDate,
-            maxUsage: 100000,
-            isActive: true,
-        }, { upsert: true, new: true });
-        // Ensure WELCOME15 (15% discount)
-        await Coupon_1.Coupon.findOneAndUpdate({ code: 'WELCOME15' }, {
-            code: 'WELCOME15',
-            discountType: 'PERCENTAGE',
-            discountValue: 15,
-            minBookingAmount: 0,
-            startDate: now,
-            endDate: futureDate,
-            maxUsage: 100000,
-            isActive: true,
-        }, { upsert: true, new: true });
-        console.log('[Setup] Verified active coupons: WELCOME10 (10%) and WELCOME15 (15%).');
+        const activeCouponsConfig = [
+            { code: 'WELCOME10', discountValue: 10 },
+            { code: 'PREMIUM15', discountValue: 15 },
+            { code: 'MEGA25', discountValue: 25 },
+            { code: 'PLATINUM30', discountValue: 30 },
+        ];
+        for (const coup of activeCouponsConfig) {
+            await Coupon_1.Coupon.findOneAndUpdate({ code: coup.code }, {
+                code: coup.code,
+                discountType: 'PERCENTAGE',
+                discountValue: coup.discountValue,
+                minBookingAmount: 0,
+                startDate: now,
+                endDate: futureDate,
+                maxUsage: 100000,
+                isActive: true,
+            }, { upsert: true, new: true });
+        }
+        console.log('[Setup] Verified active coupons: WELCOME10 (10%), PREMIUM15 (15%), MEGA25 (25%), PLATINUM30 (30%). Obsolete coupons (including WELCOME15) deactivated.');
     }
     catch (err) {
         console.warn('[Setup] Coupon sync warning:', err);

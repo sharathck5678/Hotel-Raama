@@ -24,6 +24,7 @@ import { EmailService } from '../services/EmailService';
 import { SocketService } from '../services/SocketService';
 import { InvoicePdfService } from '../services/InvoicePdfService';
 import { AvailabilityEngine } from '../services/AvailabilityEngine';
+import { MealPricingService } from '../services/MealPricingService';
 import { ensureDatabaseSeeded, runSeedLogic, OFFICIAL_ROOMS_SPEC } from '../seed/seedDatabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'raama_super_secret_jwt_key_2026_production';
@@ -2029,6 +2030,203 @@ export class AdminController {
     } catch (error: any) {
       console.error('[AdminController] Quick cell update error:', error);
       return res.status(500).json({ success: false, message: error.message || 'Failed to update cell.' });
+    }
+  }
+
+  /**
+   * GET /api/admin/meals/base-rates
+   * Fetches permanent base meal prices (Breakfast, Lunch, Dinner)
+   */
+  static async getBaseMealPrices(req: AuthRequest, res: Response) {
+    try {
+      const prices = await MealPricingService.getBasePrices();
+      return res.json({ success: true, data: prices });
+    } catch (error: any) {
+      console.error('[AdminController] Error fetching base meal prices:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to fetch base meal prices.' });
+    }
+  }
+
+  /**
+   * PUT /api/admin/meals/base-rates
+   * Permanently updates base meal prices (Breakfast, Lunch, Dinner)
+   */
+  static async updateBaseMealPrices(req: AuthRequest, res: Response) {
+    try {
+      const { breakfast, lunch, dinner } = req.body;
+
+      if (breakfast === undefined && lunch === undefined && dinner === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: 'At least one meal price (breakfast, lunch, or dinner) must be provided.',
+        });
+      }
+
+      const oldPrices = await MealPricingService.getBasePrices();
+      const updated = await MealPricingService.updateBasePrices(
+        { breakfast, lunch, dinner },
+        req.admin?.email || 'admin'
+      );
+
+      // Audit Log
+      if (req.admin) {
+        try {
+          await AuditLog.create({
+            adminId: req.admin.id,
+            adminEmail: req.admin.email,
+            action: 'BASE_MEAL_RATES_UPDATED',
+            entity: 'MealPlan',
+            details: {
+              oldPrices,
+              newPrices: updated,
+              ip: req.ip,
+            },
+          });
+        } catch (auditErr) {
+          console.error('[AdminController] Base meal rate audit log error (non-fatal):', auditErr);
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: 'Base meal prices updated successfully.',
+        data: updated,
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Error updating base meal prices:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to update base meal prices.',
+      });
+    }
+  }
+
+  /**
+   * GET /api/admin/meals/date-wise
+   * Returns date-specific meal price overrides
+   */
+  static async getDateWiseMealPrices(req: AuthRequest, res: Response) {
+    try {
+      const { startDate, endDate } = req.query;
+      const overrides = await MealPricingService.getDateWiseOverrides(
+        startDate as string | undefined,
+        endDate as string | undefined
+      );
+      return res.json({ success: true, data: overrides });
+    } catch (error: any) {
+      console.error('[AdminController] Error fetching date-wise meal prices:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to fetch date-wise meal prices.' });
+    }
+  }
+
+  /**
+   * POST /api/admin/meals/bulk-update
+   * Bulk updates date-range meal prices
+   */
+  static async bulkUpdateDateWiseMealPrices(req: AuthRequest, res: Response) {
+    try {
+      const { startDate, endDate, breakfastPrice, lunchPrice, dinnerPrice } = req.body;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({ success: false, message: 'startDate and endDate are required.' });
+      }
+
+      const result = await MealPricingService.bulkUpdateDateWisePrices({
+        startDate,
+        endDate,
+        breakfastPrice,
+        lunchPrice,
+        dinnerPrice,
+        adminEmail: req.admin?.email || 'admin',
+      });
+
+      // Audit Log
+      if (req.admin) {
+        try {
+          await AuditLog.create({
+            adminId: req.admin.id,
+            adminEmail: req.admin.email,
+            action: 'BULK_MEAL_RATE_UPDATE',
+            entity: 'DailyMealPrice',
+            details: {
+              startDate,
+              endDate,
+              datesCount: result.updatedCount,
+              prices: { breakfastPrice, lunchPrice, dinnerPrice },
+              ip: req.ip,
+            },
+          });
+        } catch (auditErr) {
+          console.error('[AdminController] Bulk meal rate audit log error (non-fatal):', auditErr);
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: `Successfully applied meal prices across ${result.updatedCount} date(s) from ${startDate} to ${endDate}.`,
+        data: result,
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Bulk meal price update error:', error);
+      return res.status(400).json({ success: false, message: error.message || 'Failed to update date-wise meal prices.' });
+    }
+  }
+
+  /**
+   * DELETE /api/admin/meals/date-wise/:date
+   * Removes date override, naturally reverting to base prices
+   */
+  static async deleteDateWiseMealPrice(req: AuthRequest, res: Response) {
+    try {
+      const { date } = req.params;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ success: false, message: 'Invalid date format (must be YYYY-MM-DD).' });
+      }
+
+      const deleted = await MealPricingService.deleteDateWiseOverride(date);
+
+      if (req.admin) {
+        try {
+          await AuditLog.create({
+            adminId: req.admin.id,
+            adminEmail: req.admin.email,
+            action: 'DELETE_MEAL_RATE_OVERRIDE',
+            entity: 'DailyMealPrice',
+            details: { date, revertedToBase: true, ip: req.ip },
+          });
+        } catch (auditErr) {
+          console.error('[AdminController] Delete meal override audit log error (non-fatal):', auditErr);
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: deleted ? `Date override for ${date} removed. Reverted to base meal prices.` : `No override found for ${date}.`,
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Error removing date-wise meal override:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to delete date override.' });
+    }
+  }
+
+  /**
+   * GET /api/admin/meals/effective-rates?checkIn=...&checkOut=...
+   */
+  static async getEffectiveMealRates(req: AuthRequest, res: Response) {
+    try {
+      const { checkIn, checkOut } = req.query;
+      if (!checkIn || typeof checkIn !== 'string') {
+        const base = await MealPricingService.getBasePrices();
+        return res.json({ success: true, data: { basePrices: base } });
+      }
+
+      const rates = await MealPricingService.getEffectiveMealPrices(
+        checkIn,
+        typeof checkOut === 'string' ? checkOut : undefined
+      );
+      return res.json({ success: true, data: rates });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message || 'Failed to fetch effective rates.' });
     }
   }
 }

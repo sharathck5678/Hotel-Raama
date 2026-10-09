@@ -12,6 +12,19 @@ export const AdminBookingsView: React.FC = () => {
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
 
+  const getCouponDiscountPercent = (code?: string, snapshotPct?: number) => {
+    if (snapshotPct) return snapshotPct;
+    if (!code) return 0;
+    const map: Record<string, number> = {
+      WELCOME10: 10,
+      WELCOME15: 15,
+      PREMIUM15: 15,
+      MEGA25: 25,
+      PLATINUM30: 30,
+    };
+    return map[code] || 10;
+  };
+
   const loadBookings = () => {
     fetchAdminBookings()
       .then((res) => {
@@ -138,7 +151,7 @@ export const AdminBookingsView: React.FC = () => {
                       <div className="font-serif font-bold text-[#00174A] text-sm">₹{b.totalAmount}</div>
                       {b.couponCodeSnapshot ? (
                         <div className="text-[9px] font-bold text-purple-800 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded mt-0.5 inline-block">
-                          {b.couponCodeSnapshot} (-{b.discountPercentageSnapshot || (b.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}% | ₹{b.discountAmountSnapshot})
+                          {b.couponCodeSnapshot} (-{getCouponDiscountPercent(b.couponCodeSnapshot, b.discountPercentageSnapshot)}% | ₹{b.discountAmountSnapshot})
                         </div>
                       ) : (
                         <div className="text-[9px] text-slate-400">No coupon</div>
@@ -333,10 +346,10 @@ export const AdminBookingsView: React.FC = () => {
                     <span>+ ₹{selectedBooking.extraPersonChargeSnapshot}</span>
                   </div>
                 )}
-                {selectedBooking.mealPlanSelection?.pricePerNight > 0 && (
+                {((selectedBooking.mealPlanSelection?.totalPrice !== undefined ? selectedBooking.mealPlanSelection.totalPrice > 0 : (selectedBooking.mealPlanSelection?.pricePerNight || 0) > 0)) && (
                   <div className="flex justify-between text-slate-600">
                     <span>Meal Additions:</span>
-                    <span>+ ₹{(selectedBooking.mealPlanSelection.pricePerNight || 0) * (selectedBooking.numNights || 1)}</span>
+                    <span>+ ₹{selectedBooking.mealPlanSelection.totalPrice !== undefined ? selectedBooking.mealPlanSelection.totalPrice : (selectedBooking.mealPlanSelection.pricePerNight || 0) * (selectedBooking.numNights || 1)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-slate-700 font-medium pt-1 border-t border-dashed border-slate-200">
@@ -344,14 +357,14 @@ export const AdminBookingsView: React.FC = () => {
                   <span>₹{
                     ((selectedBooking.roomPricePerNightSnapshot || 0) * (selectedBooking.numNights || 1)) +
                     (selectedBooking.extraPersonChargeSnapshot || 0) +
-                    (((selectedBooking.mealPlanSelection?.pricePerNight || 0) * (selectedBooking.numNights || 1)))
+                    (selectedBooking.mealPlanSelection?.totalPrice !== undefined ? selectedBooking.mealPlanSelection.totalPrice : (((selectedBooking.mealPlanSelection?.pricePerNight || 0) * (selectedBooking.numNights || 1))))
                   }</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Promotional Coupon:</span>
                   {selectedBooking.couponCodeSnapshot ? (
                     <span className="font-bold text-purple-700">
-                      {selectedBooking.couponCodeSnapshot} ({selectedBooking.discountPercentageSnapshot || (selectedBooking.couponCodeSnapshot === 'WELCOME15' ? 15 : 10)}% off)
+                      {selectedBooking.couponCodeSnapshot} ({getCouponDiscountPercent(selectedBooking.couponCodeSnapshot, selectedBooking.discountPercentageSnapshot)}% off)
                     </span>
                   ) : (
                     <span className="text-slate-400">No coupon applied</span>

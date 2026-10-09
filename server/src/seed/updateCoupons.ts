@@ -16,40 +16,41 @@ async function updateCouponsAndGst() {
     const settingResult = await HotelSetting.updateMany({}, { $set: { taxPercentage: 5 } });
     console.log(`[HotelSetting] Updated tax percentage to 5% GST:`, settingResult);
 
-    // 2. Delete all existing old coupons (RAAMA5, HotelRaama5, etc.)
-    const deleteRes = await Coupon.deleteMany({});
-    console.log(`[Coupons] Deleted ${deleteRes.deletedCount} old coupons.`);
+    // 2. Safely deactivate obsolete coupons including WELCOME15
+    await Coupon.updateMany(
+      { code: { $nin: ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'] } },
+      { $set: { isActive: false } }
+    );
 
-    // 3. Insert official active coupons: WELCOME10 (10%) and WELCOME15 (15%)
+    // 3. Upsert official active coupons: WELCOME10 (10%), PREMIUM15 (15%), MEGA25 (25%), PLATINUM30 (30%)
     const now = new Date(2020, 0, 1);
     const nextYears = new Date(new Date().getFullYear() + 5, 11, 31);
 
-    const coupon10 = await Coupon.create({
-      code: 'WELCOME10',
-      discountType: 'PERCENTAGE',
-      discountValue: 10,
-      minBookingAmount: 0,
-      startDate: now,
-      endDate: nextYears,
-      maxUsage: 100000,
-      usedCount: 0,
-      isActive: true,
-    });
+    const activeList = [
+      { code: 'WELCOME10', discountValue: 10 },
+      { code: 'PREMIUM15', discountValue: 15 },
+      { code: 'MEGA25', discountValue: 25 },
+      { code: 'PLATINUM30', discountValue: 30 },
+    ];
 
-    const coupon15 = await Coupon.create({
-      code: 'WELCOME15',
-      discountType: 'PERCENTAGE',
-      discountValue: 15,
-      minBookingAmount: 0,
-      startDate: now,
-      endDate: nextYears,
-      maxUsage: 100000,
-      usedCount: 0,
-      isActive: true,
-    });
-
-    console.log('[Coupons] Successfully created WELCOME10 (10%):', coupon10.code);
-    console.log('[Coupons] Successfully created WELCOME15 (15%):', coupon15.code);
+    for (const coup of activeList) {
+      await Coupon.findOneAndUpdate(
+        { code: coup.code },
+        {
+          code: coup.code,
+          discountType: 'PERCENTAGE',
+          discountValue: coup.discountValue,
+          minBookingAmount: 0,
+          startDate: now,
+          endDate: nextYears,
+          maxUsage: 100000,
+          usedCount: 0,
+          isActive: true,
+        },
+        { upsert: true, new: true }
+      );
+      console.log(`[Coupons] Verified active coupon ${coup.code} (${coup.discountValue}%).`);
+    }
 
     const allCoupons = await Coupon.find();
     console.log(

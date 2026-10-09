@@ -15,6 +15,7 @@ export interface IBookingMealSelection {
   lunch: boolean;
   dinner: boolean;
   pricePerNight: number;
+  totalPrice?: number;
 }
 
 export interface IBooking extends Document {
@@ -105,6 +106,7 @@ const BookingSchema = new Schema<IBooking>(
       lunch: { type: Boolean, default: false },
       dinner: { type: Boolean, default: false },
       pricePerNight: { type: Number, default: 0 },
+      totalPrice: { type: Number },
     },
     extraPerson: { type: Boolean, default: false },
     extraPersonChargeSnapshot: { type: Number, default: 0 },

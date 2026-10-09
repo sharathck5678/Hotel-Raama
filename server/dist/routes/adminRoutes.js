@@ -43,6 +43,14 @@ router.post('/inventory/bulk-update', adminController_1.AdminController.bulkUpda
 router.post('/restrictions/bulk-update', adminController_1.AdminController.bulkUpdateRestrictions);
 router.post('/inventory/quick-update', adminController_1.AdminController.quickUpdateCell);
 router.post('/inventory/cell-update', adminController_1.AdminController.quickUpdateCell);
+// Meal Addon Pricing Management (Base & Date-Wise Overrides)
+router.get('/meals/base-rates', adminController_1.AdminController.getBaseMealPrices);
+router.put('/meals/base-rates', adminController_1.AdminController.updateBaseMealPrices);
+router.patch('/meals/base-rates', adminController_1.AdminController.updateBaseMealPrices);
+router.get('/meals/date-wise', adminController_1.AdminController.getDateWiseMealPrices);
+router.post('/meals/bulk-update', adminController_1.AdminController.bulkUpdateDateWiseMealPrices);
+router.delete('/meals/date-wise/:date', adminController_1.AdminController.deleteDateWiseMealPrice);
+router.get('/meals/effective-rates', adminController_1.AdminController.getEffectiveMealRates);
 // Reports & Billing
 router.get('/reports/customer-history', adminController_1.AdminController.getCustomerHistory);
 router.get('/billing/invoice/:type/:id', adminController_1.AdminController.downloadInvoicePdf);

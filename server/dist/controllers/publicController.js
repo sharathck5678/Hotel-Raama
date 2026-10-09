@@ -25,6 +25,7 @@ const EmailService_1 = require("../services/EmailService");
 const seedDatabase_1 = require("../seed/seedDatabase");
 const aadharValidator_1 = require("../utils/aadharValidator");
 const gstinValidator_1 = require("../utils/gstinValidator");
+const MealPricingService_1 = require("../services/MealPricingService");
 class PublicController {
     static async resolveRoomTypeId(roomTypeId) {
         if (!roomTypeId)
@@ -52,125 +53,144 @@ class PublicController {
      */
     static async getRoomTypes(req, res) {
         try {
+            if (typeof res.setHeader === 'function') {
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                res.setHeader('Pragma', 'no-cache');
+                res.setHeader('Expires', '0');
+            }
             let roomTypes = await RoomType_1.RoomType.find({ isActive: true }).lean();
             if (roomTypes.length === 0) {
                 await (0, seedDatabase_1.ensureDatabaseSeeded)();
                 roomTypes = await RoomType_1.RoomType.find({ isActive: true }).lean();
             }
             const { checkIn, checkOut, planType, guests } = req.query;
+            let checkInDate = null;
+            let checkOutDate = null;
             if (checkIn && checkOut && typeof checkIn === 'string' && typeof checkOut === 'string') {
-                const checkInDate = new Date(checkIn);
-                const checkOutDate = new Date(checkOut);
-                if (!isNaN(checkInDate.getTime()) && !isNaN(checkOutDate.getTime()) && checkOutDate > checkInDate) {
-                    const requestedPlan = (planType === 'CP' ? 'CP' : 'NON_CP');
-                    const queryGuests = guests ? Math.max(1, parseInt(guests, 10) || 1) : 1;
-                    // ==========================================
-                    // PHASE 2B: BATCH DATA FETCHING
-                    // ==========================================
-                    const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
-                    const allRoomTypeIds = roomTypes.map((rt) => rt._id);
-                    const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
-                    const now = new Date();
-                    const [allOfficialRooms, allStayBookings, allDailyInventories, allDailyRates] = await Promise.all([
-                        // 1. All official active guest rooms sorted by floor, roomNumber
-                        Room_1.Room.find({
-                            isActive: true,
-                            isVenue: { $ne: true },
-                            roomNumber: { $in: officialRoomNumbers },
-                        })
-                            .sort({ floor: 1, roomNumber: 1 })
-                            .lean(),
-                        // 2. All potentially conflicting active bookings overlapping checkIn & checkOut
-                        Booking_1.Booking.find({
-                            checkIn: { $lt: checkOutDate },
-                            checkOut: { $gt: checkInDate },
-                            $or: [
-                                { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
-                                {
-                                    bookingStatus: 'PENDING',
-                                    expiresAt: { $gt: now },
-                                },
-                            ],
-                        })
-                            .select('checkIn checkOut bookingStatus assignedRoomId roomTypeId')
-                            .lean(),
-                        // 3. All DailyInventory records for active room types across stay dates
-                        DailyInventory_1.DailyInventory.find({
-                            roomTypeId: { $in: allRoomTypeIds },
-                            date: { $in: stayDates },
-                        })
-                            .select('roomTypeId date stopSell minStay blockedRooms inventoryOverride notes')
-                            .lean(),
-                        // 4. All DailyRate records for active room types and stay dates
-                        DailyRate_1.DailyRate.find({
-                            roomTypeId: { $in: allRoomTypeIds },
-                            ratePlanCode: { $in: ['ROOM_ONLY', 'BREAKFAST_INCLUDED'] },
-                            date: { $in: stayDates },
-                        }).lean(),
-                    ]);
-                    const availContext = {
-                        allRoomTypes: roomTypes,
-                        allOfficialRooms,
-                        allStayBookings,
-                        allDailyInventories,
-                    };
-                    const enrichedRoomTypes = await Promise.all(roomTypes.map(async (rt) => {
-                        const rtObj = rt.toObject ? rt.toObject() : { ...rt };
-                        const applicableGuests = Math.min(queryGuests, rt.maxOccupancy || 1);
-                        const pricingContext = {
-                            roomType: rt,
-                            dailyRates: allDailyRates,
-                        };
-                        try {
-                            // Authoritative stay pricing using PricingEngine
-                            const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, requestedPlan, false, undefined, pricingContext);
-                            // Authoritative stay pricing for EP (Room only)
-                            const epPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'NON_CP', false, undefined, pricingContext);
-                            // Authoritative stay pricing for CP (Breakfast included)
-                            const cpPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'CP', false, undefined, pricingContext);
-                            // Authoritative availability using AvailabilityEngine
-                            const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(rt._id.toString(), checkInDate, checkOutDate, availContext);
-                            const nightlyRates = pricing.nightlyRates || [];
-                            const rates = nightlyRates.map((r) => r.rate);
-                            const minRate = rates.length > 0 ? Math.min(...rates) : pricing.roomPricePerNight;
-                            const maxRate = rates.length > 0 ? Math.max(...rates) : pricing.roomPricePerNight;
-                            const hasVaryingRates = minRate !== maxRate;
-                            return {
-                                ...rtObj,
-                                dateWiseRate: pricing.roomPricePerNight,
-                                roomTotal: pricing.roomTotal,
-                                numNights: pricing.numNights,
-                                minRate,
-                                maxRate,
-                                hasVaryingRates,
-                                nightlyRates,
-                                epRate: epPricing.roomPricePerNight,
-                                epTotal: epPricing.roomTotal,
-                                cpRate: cpPricing.roomPricePerNight,
-                                cpTotal: cpPricing.roomTotal,
-                                isAvailable: availability.isAvailable,
-                                availableRooms: availability.availableRooms,
-                            };
-                        }
-                        catch (err) {
-                            return {
-                                ...rtObj,
-                                dateWiseRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
-                                roomTotal: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
-                                numNights: 1,
-                                minRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
-                                maxRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
-                                hasVaryingRates: false,
-                                epRate: rt.basePrice,
-                                cpRate: rt.cpPrice || rt.basePrice,
-                                isAvailable: true,
-                            };
-                        }
-                    }));
-                    return res.json({ success: true, data: enrichedRoomTypes });
+                const inD = new Date(checkIn);
+                const outD = new Date(checkOut);
+                if (!isNaN(inD.getTime()) && !isNaN(outD.getTime()) && outD > inD) {
+                    checkInDate = inD;
+                    checkOutDate = outD;
                 }
             }
-            return res.json({ success: true, data: roomTypes });
+            // Default stay window if checkIn or checkOut is omitted or invalid:
+            // (Tomorrow to day-after-tomorrow in Asia/Kolkata timezone)
+            if (!checkInDate || !checkOutDate) {
+                const now = new Date();
+                const todayStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(now);
+                const [y, m, d] = todayStr.split('-').map(Number);
+                const tomorrow = new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0, 0));
+                const dayAfter = new Date(Date.UTC(y, m - 1, d + 2, 12, 0, 0, 0));
+                checkInDate = new Date(AvailabilityEngine_1.AvailabilityEngine.formatDateStr(tomorrow));
+                checkOutDate = new Date(AvailabilityEngine_1.AvailabilityEngine.formatDateStr(dayAfter));
+            }
+            const requestedPlan = (planType === 'CP' ? 'CP' : 'NON_CP');
+            const queryGuests = guests ? Math.max(1, parseInt(guests, 10) || 1) : 1;
+            // ==========================================
+            // PHASE 2B: BATCH DATA FETCHING
+            // ==========================================
+            const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
+            const allRoomTypeIds = roomTypes.map((rt) => rt._id);
+            const officialRoomNumbers = seedDatabase_1.OFFICIAL_ROOMS_SPEC.map((r) => r.roomNumber);
+            const now = new Date();
+            const [allOfficialRooms, allStayBookings, allDailyInventories, allDailyRates] = await Promise.all([
+                // 1. All official active guest rooms sorted by floor, roomNumber
+                Room_1.Room.find({
+                    isActive: true,
+                    isVenue: { $ne: true },
+                    roomNumber: { $in: officialRoomNumbers },
+                })
+                    .sort({ floor: 1, roomNumber: 1 })
+                    .lean(),
+                // 2. All potentially conflicting active bookings overlapping checkIn & checkOut
+                Booking_1.Booking.find({
+                    checkIn: { $lt: checkOutDate },
+                    checkOut: { $gt: checkInDate },
+                    $or: [
+                        { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                        {
+                            bookingStatus: 'PENDING',
+                            expiresAt: { $gt: now },
+                        },
+                    ],
+                })
+                    .select('checkIn checkOut bookingStatus assignedRoomId roomTypeId')
+                    .lean(),
+                // 3. All DailyInventory records for active room types across stay dates
+                DailyInventory_1.DailyInventory.find({
+                    roomTypeId: { $in: allRoomTypeIds },
+                    date: { $in: stayDates },
+                })
+                    .select('roomTypeId date stopSell minStay blockedRooms inventoryOverride notes')
+                    .lean(),
+                // 4. All DailyRate records for active room types and stay dates
+                DailyRate_1.DailyRate.find({
+                    roomTypeId: { $in: allRoomTypeIds },
+                    ratePlanCode: { $in: ['ROOM_ONLY', 'BREAKFAST_INCLUDED'] },
+                    date: { $in: stayDates },
+                }).lean(),
+            ]);
+            const availContext = {
+                allRoomTypes: roomTypes,
+                allOfficialRooms,
+                allStayBookings,
+                allDailyInventories,
+            };
+            const enrichedRoomTypes = await Promise.all(roomTypes.map(async (rt) => {
+                const rtObj = rt.toObject ? rt.toObject() : { ...rt };
+                const applicableGuests = Math.min(queryGuests, rt.maxOccupancy || 1);
+                const pricingContext = {
+                    roomType: rt,
+                    dailyRates: allDailyRates,
+                };
+                try {
+                    // Authoritative stay pricing using PricingEngine
+                    const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, requestedPlan, false, undefined, pricingContext);
+                    // Authoritative stay pricing for EP (Room only)
+                    const epPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'NON_CP', false, undefined, pricingContext);
+                    // Authoritative stay pricing for CP (Breakfast included)
+                    const cpPricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(rt._id, checkInDate, checkOutDate, applicableGuests, undefined, undefined, 'CP', false, undefined, pricingContext);
+                    // Authoritative availability using AvailabilityEngine
+                    const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(rt._id.toString(), checkInDate, checkOutDate, availContext);
+                    const nightlyRates = pricing.nightlyRates || [];
+                    const rates = nightlyRates.map((r) => r.rate);
+                    const minRate = rates.length > 0 ? Math.min(...rates) : pricing.roomPricePerNight;
+                    const maxRate = rates.length > 0 ? Math.max(...rates) : pricing.roomPricePerNight;
+                    const hasVaryingRates = minRate !== maxRate;
+                    return {
+                        ...rtObj,
+                        dateWiseRate: pricing.roomPricePerNight,
+                        roomTotal: pricing.roomTotal,
+                        numNights: pricing.numNights,
+                        minRate,
+                        maxRate,
+                        hasVaryingRates,
+                        nightlyRates,
+                        epRate: epPricing.roomPricePerNight,
+                        epTotal: epPricing.roomTotal,
+                        cpRate: cpPricing.roomPricePerNight,
+                        cpTotal: cpPricing.roomTotal,
+                        isAvailable: availability.isAvailable,
+                        availableRooms: availability.availableRooms,
+                    };
+                }
+                catch (err) {
+                    return {
+                        ...rtObj,
+                        dateWiseRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                        roomTotal: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                        numNights: 1,
+                        minRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                        maxRate: requestedPlan === 'CP' ? (rt.cpPrice || rt.basePrice) : rt.basePrice,
+                        hasVaryingRates: false,
+                        epRate: rt.basePrice,
+                        cpRate: rt.cpPrice || rt.basePrice,
+                        isAvailable: true,
+                    };
+                }
+            }));
+            return res.json({ success: true, data: enrichedRoomTypes });
         }
         catch (error) {
             return res.status(500).json({ success: false, message: 'Failed to fetch rooms.' });
@@ -201,11 +221,13 @@ class PublicController {
             const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
             // Calculate server pricing
             const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, checkInDate, checkOutDate, numGuests || 1, mealSelection, couponCode, planType || 'NON_CP', !!extraPerson, gstin);
+            const effectiveMealRates = pricing.effectiveMealRates || (await MealPricingService_1.MealPricingService.getEffectiveMealPrices(checkInDate, checkOutDate));
             return res.json({
                 success: true,
                 data: {
                     availability,
                     pricing,
+                    effectiveMealRates,
                 },
             });
         }
@@ -270,6 +292,7 @@ class PublicController {
                     lunch: !!mealSelection?.lunch,
                     dinner: !!mealSelection?.dinner,
                     pricePerNight: pricing.mealPlanPricePerNight,
+                    totalPrice: pricing.mealPlanTotal,
                 },
                 extraPerson: !!extraPerson,
                 extraPersonChargeSnapshot: pricing.extraPersonTotal,
@@ -1039,7 +1062,7 @@ class PublicController {
                 });
             }
             const cleanCode = rawCode.toUpperCase();
-            // The ONLY permitted active coupons are WELCOME10 and WELCOME15
+            // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
             if (!(cleanCode in PricingEngine_1.OFFICIAL_COUPONS)) {
                 return res.status(400).json({
                     success: false,
@@ -1094,6 +1117,70 @@ class PublicController {
                 success: false,
                 message: 'Unable to apply coupon. Please try again.',
             });
+        }
+    }
+    /**
+     * GET /api/meals/effective-rates?checkIn=...&checkOut=...
+     */
+    static async getEffectiveMealRates(req, res) {
+        try {
+            const { checkIn, checkOut } = req.query;
+            if (checkIn && typeof checkIn === 'string') {
+                const rates = await MealPricingService_1.MealPricingService.getEffectiveMealPrices(checkIn, typeof checkOut === 'string' ? checkOut : undefined);
+                return res.json({ success: true, data: rates });
+            }
+            const base = await MealPricingService_1.MealPricingService.getBasePrices();
+            return res.json({
+                success: true,
+                data: {
+                    stayDates: [],
+                    numNights: 1,
+                    basePrices: base,
+                    breakfast: {
+                        minPrice: base.breakfast,
+                        maxPrice: base.breakfast,
+                        avgPrice: base.breakfast,
+                        totalPerGuest: base.breakfast,
+                        effectivePrice: base.breakfast,
+                        isVariable: false,
+                        hasOverride: false,
+                    },
+                    lunch: {
+                        minPrice: base.lunch,
+                        maxPrice: base.lunch,
+                        avgPrice: base.lunch,
+                        totalPerGuest: base.lunch,
+                        effectivePrice: base.lunch,
+                        isVariable: false,
+                        hasOverride: false,
+                    },
+                    dinner: {
+                        minPrice: base.dinner,
+                        maxPrice: base.dinner,
+                        avgPrice: base.dinner,
+                        totalPerGuest: base.dinner,
+                        effectivePrice: base.dinner,
+                        isVariable: false,
+                        hasOverride: false,
+                    },
+                    nightlyBreakdown: [],
+                },
+            });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message || 'Failed to fetch meal rates.' });
+        }
+    }
+    /**
+     * GET /api/meals/base-rates
+     */
+    static async getBaseMealRates(req, res) {
+        try {
+            const base = await MealPricingService_1.MealPricingService.getBasePrices();
+            return res.json({ success: true, data: base });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: 'Failed to fetch base meal prices.' });
         }
     }
 }
