@@ -10,8 +10,8 @@ const gstinValidator_1 = require("../utils/gstinValidator");
 const AvailabilityEngine_1 = require("./AvailabilityEngine");
 const MealPricingService_1 = require("./MealPricingService");
 exports.OFFICIAL_COUPONS = {
-    WELCOME10: 10,
     PREMIUM15: 15,
+    GRAND20: 20,
     MEGA25: 25,
     PLATINUM30: 30,
 };
@@ -159,7 +159,7 @@ class PricingEngine {
             }
             else {
                 const cleanCode = rawCode.toUpperCase();
-                // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
+                // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
                 if (!(cleanCode in exports.OFFICIAL_COUPONS)) {
                     couponError = 'Invalid coupon code.';
                 }
@@ -172,19 +172,49 @@ class PricingEngine {
                         couponError = 'Invalid coupon code.';
                     }
                     else {
-                        gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
-                        if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
-                            couponError = 'GSTIN is required to apply this coupon.';
-                        }
-                        else if (!gstinValidation.isValid) {
-                            couponError = 'Please enter a valid GSTIN.';
+                        const percentage = exports.OFFICIAL_COUPONS[cleanCode];
+                        const requiresGSTIN = percentage > 15;
+                        const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
+                        if (requiresGSTIN) {
+                            if (!hasGstin) {
+                                couponError = 'GSTIN is required to apply this coupon.';
+                            }
+                            else {
+                                gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
+                                if (!gstinValidation.isValid) {
+                                    couponError = 'Please enter a valid GSTIN.';
+                                }
+                                else {
+                                    validCouponCode = cleanCode;
+                                    discountPercentage = percentage;
+                                    discountAmount = Math.round((subtotal * discountPercentage) / 100);
+                                    discountAmount = Math.min(discountAmount, subtotal);
+                                    couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+                                }
+                            }
                         }
                         else {
-                            validCouponCode = cleanCode;
-                            discountPercentage = exports.OFFICIAL_COUPONS[cleanCode];
-                            discountAmount = Math.round((subtotal * discountPercentage) / 100);
-                            discountAmount = Math.min(discountAmount, subtotal);
-                            couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+                            // Discounts <= 15% (e.g. WELCOME10, PREMIUM15): GSTIN is optional
+                            if (hasGstin) {
+                                gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
+                                if (!gstinValidation.isValid) {
+                                    couponError = 'Please enter a valid GSTIN.';
+                                }
+                                else {
+                                    validCouponCode = cleanCode;
+                                    discountPercentage = percentage;
+                                    discountAmount = Math.round((subtotal * discountPercentage) / 100);
+                                    discountAmount = Math.min(discountAmount, subtotal);
+                                    couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+                                }
+                            }
+                            else {
+                                validCouponCode = cleanCode;
+                                discountPercentage = percentage;
+                                discountAmount = Math.round((subtotal * discountPercentage) / 100);
+                                discountAmount = Math.min(discountAmount, subtotal);
+                                couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+                            }
                         }
                     }
                 }

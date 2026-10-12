@@ -5,6 +5,7 @@ import { RoomType } from '../models/RoomType';
 import { Room } from '../models/Room';
 import { Booking } from '../models/Booking';
 import { Feedback } from '../models/Feedback';
+import { Coupon } from '../models/Coupon';
 import { Order } from '../models/Order';
 import { MenuCategory } from '../models/MenuCategory';
 import { MenuItem } from '../models/MenuItem';
@@ -1272,7 +1273,7 @@ export class PublicController {
 
       const cleanCode = rawCode.toUpperCase();
 
-      // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
+      // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
       if (!(cleanCode in OFFICIAL_COUPONS)) {
         return res.status(400).json({
           success: false,
@@ -1281,25 +1282,55 @@ export class PublicController {
         });
       }
 
-      // GSTIN is strictly required for promotional coupons
-      if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'GSTIN is required to apply this coupon.',
-          data: { valid: false, gstinValid: false },
-        });
-      }
+      const dbCoupon = await Coupon.findOne({
+        code: cleanCode,
+        isActive: true,
+      });
 
-      const gstinResult = validateGSTIN(gstin);
-      if (!gstinResult.isValid) {
+      if (dbCoupon && !dbCoupon.isActive) {
         return res.status(400).json({
           success: false,
-          message: 'Please enter a valid GSTIN.',
-          data: { valid: false, gstinValid: false, code: gstinResult.code },
+          message: 'Invalid coupon code.',
+          data: { valid: false },
         });
       }
 
       const discountPercentage = OFFICIAL_COUPONS[cleanCode];
+      const requiresGSTIN = discountPercentage > 15;
+      const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
+
+      let gstinResult: ReturnType<typeof validateGSTIN> | undefined;
+
+      if (requiresGSTIN) {
+        if (!hasGstin) {
+          return res.status(400).json({
+            success: false,
+            message: 'GSTIN is required to apply this coupon.',
+            data: { valid: false, gstinValid: false },
+          });
+        }
+
+        gstinResult = validateGSTIN(gstin);
+        if (!gstinResult.isValid) {
+          return res.status(400).json({
+            success: false,
+            message: 'Please enter a valid GSTIN.',
+            data: { valid: false, gstinValid: false, code: gstinResult.code },
+          });
+        }
+      } else {
+        // GSTIN is optional for <= 15% discount (WELCOME10, PREMIUM15)
+        if (hasGstin) {
+          gstinResult = validateGSTIN(gstin);
+          if (!gstinResult.isValid) {
+            return res.status(400).json({
+              success: false,
+              message: 'Please enter a valid GSTIN.',
+              data: { valid: false, gstinValid: false, code: gstinResult.code },
+            });
+          }
+        }
+      }
 
       let pricingSummary = null;
       let discountAmount = 0;
@@ -1316,7 +1347,7 @@ export class PublicController {
             cleanCode,
             planType || 'NON_CP',
             !!extraPerson,
-            gstinResult.normalizedGstin
+            gstinResult?.normalizedGstin
           );
           pricingSummary = pricing;
           discountAmount = pricing.discountAmount;
@@ -1331,8 +1362,8 @@ export class PublicController {
           couponCode: cleanCode,
           discountPercentage,
           discountAmount,
-          gstinValid: true,
-          gstin: gstinResult.normalizedGstin,
+          gstinValid: gstinResult ? gstinResult.isValid : true,
+          gstin: gstinResult?.normalizedGstin,
           message: `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`,
           pricing: pricingSummary,
         },

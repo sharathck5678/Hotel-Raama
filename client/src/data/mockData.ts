@@ -5629,17 +5629,38 @@ export const mockCalculateAvailability = (payload: any) => {
   if (payload.couponCode && typeof payload.couponCode === 'string' && payload.couponCode.trim().length > 0) {
     const cleanCode = payload.couponCode.trim().toUpperCase();
     const mockCoupons: Record<string, number> = {
-      WELCOME10: 10,
       PREMIUM15: 15,
+      GRAND20: 20,
       MEGA25: 25,
       PLATINUM30: 30,
     };
     if (cleanCode in mockCoupons) {
-      const gstinCheck = validateGSTIN(payload.gstin);
-      if (gstinCheck.isValid) {
-        validCouponCode = cleanCode;
-        discountPercentage = mockCoupons[cleanCode];
-        discountAmount = Math.round((subtotal * discountPercentage) / 100);
+      const discountPct = mockCoupons[cleanCode];
+      const requiresGSTIN = discountPct > 15;
+      const hasGstin = typeof payload.gstin === 'string' && payload.gstin.trim().length > 0;
+
+      if (requiresGSTIN) {
+        if (hasGstin) {
+          const gstinCheck = validateGSTIN(payload.gstin);
+          if (gstinCheck.isValid) {
+            validCouponCode = cleanCode;
+            discountPercentage = discountPct;
+            discountAmount = Math.round((subtotal * discountPercentage) / 100);
+          }
+        }
+      } else {
+        if (hasGstin) {
+          const gstinCheck = validateGSTIN(payload.gstin);
+          if (gstinCheck.isValid) {
+            validCouponCode = cleanCode;
+            discountPercentage = discountPct;
+            discountAmount = Math.round((subtotal * discountPercentage) / 100);
+          }
+        } else {
+          validCouponCode = cleanCode;
+          discountPercentage = discountPct;
+          discountAmount = Math.round((subtotal * discountPercentage) / 100);
+        }
       }
     }
   }

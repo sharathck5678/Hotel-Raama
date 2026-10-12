@@ -16,19 +16,19 @@ async function updateCouponsAndGst() {
     const settingResult = await HotelSetting.updateMany({}, { $set: { taxPercentage: 5 } });
     console.log(`[HotelSetting] Updated tax percentage to 5% GST:`, settingResult);
 
-    // 2. Safely deactivate obsolete coupons including WELCOME15
+    // 2. Safely deactivate obsolete coupons including WELCOME10, WELCOME15
     await Coupon.updateMany(
-      { code: { $nin: ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'] } },
+      { code: { $nin: ['PREMIUM15', 'GRAND20', 'MEGA25', 'PLATINUM30'] } },
       { $set: { isActive: false } }
     );
 
-    // 3. Upsert official active coupons: WELCOME10 (10%), PREMIUM15 (15%), MEGA25 (25%), PLATINUM30 (30%)
+    // 3. Upsert official active coupons: PREMIUM15 (15%), GRAND20 (20%), MEGA25 (25%), PLATINUM30 (30%)
     const now = new Date(2020, 0, 1);
     const nextYears = new Date(new Date().getFullYear() + 5, 11, 31);
 
     const activeList = [
-      { code: 'WELCOME10', discountValue: 10 },
       { code: 'PREMIUM15', discountValue: 15 },
+      { code: 'GRAND20', discountValue: 20 },
       { code: 'MEGA25', discountValue: 25 },
       { code: 'PLATINUM30', discountValue: 30 },
     ];

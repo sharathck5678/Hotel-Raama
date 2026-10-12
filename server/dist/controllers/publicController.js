@@ -10,6 +10,7 @@ const RoomType_1 = require("../models/RoomType");
 const Room_1 = require("../models/Room");
 const Booking_1 = require("../models/Booking");
 const Feedback_1 = require("../models/Feedback");
+const Coupon_1 = require("../models/Coupon");
 const Order_1 = require("../models/Order");
 const MenuCategory_1 = require("../models/MenuCategory");
 const MenuItem_1 = require("../models/MenuItem");
@@ -1062,7 +1063,7 @@ class PublicController {
                 });
             }
             const cleanCode = rawCode.toUpperCase();
-            // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
+            // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
             if (!(cleanCode in PricingEngine_1.OFFICIAL_COUPONS)) {
                 return res.status(400).json({
                     success: false,
@@ -1070,29 +1071,57 @@ class PublicController {
                     data: { valid: false },
                 });
             }
-            // GSTIN is strictly required for promotional coupons
-            if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
+            const dbCoupon = await Coupon_1.Coupon.findOne({
+                code: cleanCode,
+                isActive: true,
+            });
+            if (dbCoupon && !dbCoupon.isActive) {
                 return res.status(400).json({
                     success: false,
-                    message: 'GSTIN is required to apply this coupon.',
-                    data: { valid: false, gstinValid: false },
-                });
-            }
-            const gstinResult = (0, gstinValidator_1.validateGSTIN)(gstin);
-            if (!gstinResult.isValid) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please enter a valid GSTIN.',
-                    data: { valid: false, gstinValid: false, code: gstinResult.code },
+                    message: 'Invalid coupon code.',
+                    data: { valid: false },
                 });
             }
             const discountPercentage = PricingEngine_1.OFFICIAL_COUPONS[cleanCode];
+            const requiresGSTIN = discountPercentage > 15;
+            const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
+            let gstinResult;
+            if (requiresGSTIN) {
+                if (!hasGstin) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'GSTIN is required to apply this coupon.',
+                        data: { valid: false, gstinValid: false },
+                    });
+                }
+                gstinResult = (0, gstinValidator_1.validateGSTIN)(gstin);
+                if (!gstinResult.isValid) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Please enter a valid GSTIN.',
+                        data: { valid: false, gstinValid: false, code: gstinResult.code },
+                    });
+                }
+            }
+            else {
+                // GSTIN is optional for <= 15% discount (WELCOME10, PREMIUM15)
+                if (hasGstin) {
+                    gstinResult = (0, gstinValidator_1.validateGSTIN)(gstin);
+                    if (!gstinResult.isValid) {
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Please enter a valid GSTIN.',
+                            data: { valid: false, gstinValid: false, code: gstinResult.code },
+                        });
+                    }
+                }
+            }
             let pricingSummary = null;
             let discountAmount = 0;
             if (roomTypeId && checkIn && checkOut) {
                 const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
                 if (resolvedRoomTypeId) {
-                    const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, new Date(checkIn), new Date(checkOut), numGuests || 1, mealSelection, cleanCode, planType || 'NON_CP', !!extraPerson, gstinResult.normalizedGstin);
+                    const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, new Date(checkIn), new Date(checkOut), numGuests || 1, mealSelection, cleanCode, planType || 'NON_CP', !!extraPerson, gstinResult?.normalizedGstin);
                     pricingSummary = pricing;
                     discountAmount = pricing.discountAmount;
                 }
@@ -1105,8 +1134,8 @@ class PublicController {
                     couponCode: cleanCode,
                     discountPercentage,
                     discountAmount,
-                    gstinValid: true,
-                    gstin: gstinResult.normalizedGstin,
+                    gstinValid: gstinResult ? gstinResult.isValid : true,
+                    gstin: gstinResult?.normalizedGstin,
                     message: `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`,
                     pricing: pricingSummary,
                 },

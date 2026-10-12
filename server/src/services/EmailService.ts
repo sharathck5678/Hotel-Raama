@@ -82,6 +82,7 @@ export class EmailService {
       WELCOME10: 10,
       WELCOME15: 15,
       PREMIUM15: 15,
+      GRAND20: 20,
       MEGA25: 25,
       PLATINUM30: 30,
     };

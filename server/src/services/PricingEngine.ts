@@ -45,8 +45,8 @@ export interface IPricingCalculationResult {
 }
 
 export const OFFICIAL_COUPONS: Record<string, number> = {
-  WELCOME10: 10,
   PREMIUM15: 15,
+  GRAND20: 20,
   MEGA25: 25,
   PLATINUM30: 30,
 };
@@ -226,7 +226,7 @@ export class PricingEngine {
       } else {
         const cleanCode = rawCode.toUpperCase();
 
-        // The ONLY permitted active coupons are WELCOME10, PREMIUM15, MEGA25, PLATINUM30
+        // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
         if (!(cleanCode in OFFICIAL_COUPONS)) {
           couponError = 'Invalid coupon code.';
         } else {
@@ -238,18 +238,45 @@ export class PricingEngine {
           if (dbCoupon && !dbCoupon.isActive) {
             couponError = 'Invalid coupon code.';
           } else {
-            gstinValidation = validateGSTIN(gstin);
+            const percentage = OFFICIAL_COUPONS[cleanCode];
+            const requiresGSTIN = percentage > 15;
+            const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
 
-            if (!gstin || typeof gstin !== 'string' || gstin.trim().length === 0) {
-              couponError = 'GSTIN is required to apply this coupon.';
-            } else if (!gstinValidation.isValid) {
-              couponError = 'Please enter a valid GSTIN.';
+            if (requiresGSTIN) {
+              if (!hasGstin) {
+                couponError = 'GSTIN is required to apply this coupon.';
+              } else {
+                gstinValidation = validateGSTIN(gstin);
+                if (!gstinValidation.isValid) {
+                  couponError = 'Please enter a valid GSTIN.';
+                } else {
+                  validCouponCode = cleanCode;
+                  discountPercentage = percentage;
+                  discountAmount = Math.round((subtotal * discountPercentage) / 100);
+                  discountAmount = Math.min(discountAmount, subtotal);
+                  couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+                }
+              }
             } else {
-              validCouponCode = cleanCode;
-              discountPercentage = OFFICIAL_COUPONS[cleanCode];
-              discountAmount = Math.round((subtotal * discountPercentage) / 100);
-              discountAmount = Math.min(discountAmount, subtotal);
-              couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+              // Discounts <= 15% (e.g. WELCOME10, PREMIUM15): GSTIN is optional
+              if (hasGstin) {
+                gstinValidation = validateGSTIN(gstin);
+                if (!gstinValidation.isValid) {
+                  couponError = 'Please enter a valid GSTIN.';
+                } else {
+                  validCouponCode = cleanCode;
+                  discountPercentage = percentage;
+                  discountAmount = Math.round((subtotal * discountPercentage) / 100);
+                  discountAmount = Math.min(discountAmount, subtotal);
+                  couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+                }
+              } else {
+                validCouponCode = cleanCode;
+                discountPercentage = percentage;
+                discountAmount = Math.round((subtotal * discountPercentage) / 100);
+                discountAmount = Math.min(discountAmount, subtotal);
+                couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+              }
             }
           }
         }

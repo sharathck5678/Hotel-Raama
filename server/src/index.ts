@@ -101,12 +101,12 @@ import { RoomType } from './models/RoomType';
 import { Coupon } from './models/Coupon';
 import { HotelSetting } from './models/HotelSetting';
 
-// Helper to ensure official coupons in active database (WELCOME10, PREMIUM15, MEGA25, PLATINUM30)
+// Helper to ensure official coupons in active database (PREMIUM15, GRAND20, MEGA25, PLATINUM30)
 const ensureCoupons = async () => {
   try {
-    // Safely deactivate WELCOME15 and any other obsolete coupons
+    // Safely deactivate WELCOME10, WELCOME15 and any other obsolete coupons
     await Coupon.updateMany(
-      { code: { $nin: ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'] } },
+      { code: { $nin: ['PREMIUM15', 'GRAND20', 'MEGA25', 'PLATINUM30'] } },
       { $set: { isActive: false } }
     );
 
@@ -114,8 +114,8 @@ const ensureCoupons = async () => {
     const futureDate = new Date(new Date().getFullYear() + 5, 11, 31);
 
     const activeCouponsConfig = [
-      { code: 'WELCOME10', discountValue: 10 },
       { code: 'PREMIUM15', discountValue: 15 },
+      { code: 'GRAND20', discountValue: 20 },
       { code: 'MEGA25', discountValue: 25 },
       { code: 'PLATINUM30', discountValue: 30 },
     ];
@@ -137,7 +137,7 @@ const ensureCoupons = async () => {
       );
     }
 
-    console.log('[Setup] Verified active coupons: WELCOME10 (10%), PREMIUM15 (15%), MEGA25 (25%), PLATINUM30 (30%). Obsolete coupons (including WELCOME15) deactivated.');
+    console.log('[Setup] Verified active coupons: PREMIUM15 (15%), GRAND20 (20%), MEGA25 (25%), PLATINUM30 (30%). Obsolete coupons (including WELCOME10, WELCOME15) deactivated.');
   } catch (err) {
     console.warn('[Setup] Coupon sync warning:', err);
   }

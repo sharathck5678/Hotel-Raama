@@ -11,6 +11,13 @@ import { validateGSTIN } from '../utils/gstinValidator';
 import { loadRazorpay } from '../utils/loadRazorpay';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
+export const ACTIVE_COUPONS: Record<string, { discount: number; requiresGstin: boolean }> = {
+  PREMIUM15: { discount: 15, requiresGstin: false },
+  GRAND20: { discount: 20, requiresGstin: true },
+  MEGA25: { discount: 25, requiresGstin: true },
+  PLATINUM30: { discount: 30, requiresGstin: true },
+};
+
 // Interactive Room Image Slideshow Component
 const RoomSlideshow: React.FC<{
   images?: string[];
@@ -193,6 +200,10 @@ export const RoomsPage: React.FC = () => {
   const [gstinError, setGstinError] = useState('');
   const [couponStatus, setCouponStatus] = useState<{ valid: boolean; message: string } | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+
+  const cleanCouponCode = couponCode.trim().toUpperCase();
+  const currentCouponMeta = ACTIVE_COUPONS[cleanCouponCode];
+  const isGstinRequired = !!currentCouponMeta && currentCouponMeta.requiresGstin;
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
@@ -427,28 +438,44 @@ export const RoomsPage: React.FC = () => {
       return;
     }
 
-    const cleanCode = rawCode.toUpperCase();
-    const ACTIVE_COUPONS = ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'];
-    if (!ACTIVE_COUPONS.includes(cleanCode)) {
+    const cleanCodeToApply = rawCode.toUpperCase();
+    const couponMeta = ACTIVE_COUPONS[cleanCodeToApply];
+    if (!couponMeta) {
       toast.error('Invalid coupon code.');
       setCouponStatus({ valid: false, message: 'Invalid coupon code.' });
       return;
     }
 
     const cleanGstin = gstin.trim().toUpperCase();
-    if (!cleanGstin) {
-      toast.error('GSTIN is required to apply this coupon.');
-      setGstinError('GSTIN is required to apply this coupon.');
-      setCouponStatus({ valid: false, message: 'GSTIN is required to apply this coupon.' });
-      return;
-    }
+    const requiresGSTIN = couponMeta.discount > 15;
 
-    const gstinCheck = validateGSTIN(cleanGstin);
-    if (!gstinCheck.isValid) {
-      toast.error('Please enter a valid GSTIN.');
-      setGstinError('Please enter a valid GSTIN.');
-      setCouponStatus({ valid: false, message: 'Please enter a valid GSTIN.' });
-      return;
+    if (requiresGSTIN) {
+      if (!cleanGstin) {
+        toast.error('GSTIN is required to apply this coupon.');
+        setGstinError('GSTIN is required to apply this coupon.');
+        setCouponStatus({ valid: false, message: 'GSTIN is required to apply this coupon.' });
+        return;
+      }
+
+      const gstinCheck = validateGSTIN(cleanGstin);
+      if (!gstinCheck.isValid) {
+        toast.error('Please enter a valid GSTIN.');
+        setGstinError('Please enter a valid GSTIN.');
+        setCouponStatus({ valid: false, message: 'Please enter a valid GSTIN.' });
+        return;
+      }
+    } else {
+      // For <= 15% (e.g. PREMIUM15), GSTIN is optional.
+      // If entered, preserve validation
+      if (cleanGstin) {
+        const gstinCheck = validateGSTIN(cleanGstin);
+        if (!gstinCheck.isValid) {
+          toast.error('Please enter a valid GSTIN.');
+          setGstinError('Please enter a valid GSTIN.');
+          setCouponStatus({ valid: false, message: 'Please enter a valid GSTIN.' });
+          return;
+        }
+      }
     }
 
     setGstinError('');
@@ -456,8 +483,8 @@ export const RoomsPage: React.FC = () => {
 
     try {
       const res = await validateCoupon({
-        couponCode: cleanCode,
-        gstin: cleanGstin,
+        couponCode: cleanCodeToApply,
+        gstin: cleanGstin || undefined,
         roomTypeId: selectedRoom?._id,
         checkIn,
         checkOut,
@@ -468,8 +495,8 @@ export const RoomsPage: React.FC = () => {
       });
 
       if (res.success && res.data?.valid) {
-        toast.success(res.message || `Coupon ${cleanCode} applied!`);
-        setCouponStatus({ valid: true, message: `✓ Coupon ${cleanCode} applied (${res.data.discountPercentage}% discount)` });
+        toast.success(res.message || `Coupon ${cleanCodeToApply} applied!`);
+        setCouponStatus({ valid: true, message: `✓ Coupon ${cleanCodeToApply} applied (${res.data.discountPercentage}% discount)` });
         if (res.data?.pricing) {
           setCalcResult((prev: any) => ({ ...prev, pricing: res.data.pricing }));
         }
@@ -501,6 +528,33 @@ export const RoomsPage: React.FC = () => {
       setAadharError(aadharCheck.message || 'Please enter a valid 12-digit Aadhaar number.');
       toast.error(aadharCheck.message || 'Please enter a valid 12-digit Aadhaar number.');
       return;
+    }
+
+    // Validate coupon and GSTIN requirements authoritatively on submit
+    if (couponCode.trim()) {
+      const submitCleanCode = couponCode.trim().toUpperCase();
+      const meta = ACTIVE_COUPONS[submitCleanCode];
+      const cleanGstin = gstin.trim().toUpperCase();
+      if (meta && meta.discount > 15) {
+        if (!cleanGstin) {
+          toast.error('GSTIN is required to apply this coupon.');
+          setGstinError('GSTIN is required to apply this coupon.');
+          return;
+        }
+        const gstinCheck = validateGSTIN(cleanGstin);
+        if (!gstinCheck.isValid) {
+          toast.error('Please enter a valid GSTIN.');
+          setGstinError('Please enter a valid GSTIN.');
+          return;
+        }
+      } else if (cleanGstin) {
+        const gstinCheck = validateGSTIN(cleanGstin);
+        if (!gstinCheck.isValid) {
+          toast.error('Please enter a valid GSTIN.');
+          setGstinError('Please enter a valid GSTIN.');
+          return;
+        }
+      }
     }
 
     if (!termsAccepted) {
@@ -1062,12 +1116,22 @@ export const RoomsPage: React.FC = () => {
                 </label>
               </div>
 
-              {/* Promotional Coupon & GSTIN Section */}
-              <div className="space-y-2 pt-2 border-t border-[#cbc0ad]/60">
+              {/* Promotional Offer & Coupon Section */}
+              <div className="space-y-2.5 pt-2 border-t border-[#cbc0ad]/60">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-sans font-bold text-[#D6B369] uppercase tracking-wider">
-                    Promotional Coupon
+                    Promotional Offer
                   </span>
+                </div>
+
+                {/* Promotional Banner */}
+                <div className="bg-gradient-to-r from-[#00174A]/[0.06] via-[#D6B369]/10 to-[#00174A]/[0.04] border border-[#cbc0ad]/60 rounded-sm p-2.5">
+                  <p className="text-xs font-serif font-bold text-[#00174A]">
+                    Get up to 15% off on your booking!
+                  </p>
+                  <p className="text-[11px] font-sans text-[#555555] mt-0.5">
+                    15% discount available now. Use coupon code <span className="font-semibold text-[#00174A] tracking-wider">PREMIUM15</span> to claim your offer.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -1083,6 +1147,10 @@ export const RoomsPage: React.FC = () => {
                         const val = e.target.value.toUpperCase().replace(/\s/g, '');
                         setCouponCode(val);
                         setCouponStatus(null);
+                        const newMeta = ACTIVE_COUPONS[val];
+                        if (newMeta && !newMeta.requiresGstin && gstinError === 'GSTIN is required to apply this coupon.') {
+                          setGstinError('');
+                        }
                       }}
                       className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans uppercase text-[#333333] placeholder-[#999999] focus:outline-none focus:border-[#00174A] transition-colors"
                     />
@@ -1090,7 +1158,7 @@ export const RoomsPage: React.FC = () => {
 
                   <div>
                     <label className="block text-[10px] font-bold text-[#00174A] uppercase mb-1">
-                      GSTIN (Required for coupon)
+                      {isGstinRequired ? 'GSTIN (Required for coupon)' : 'GSTIN (Optional)'}
                     </label>
                     <input
                       type="text"
@@ -1116,7 +1184,11 @@ export const RoomsPage: React.FC = () => {
 
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <p className="text-[10px] text-[#666666] font-sans italic">
-                      GSTIN is required to apply promotional coupons.
+                      {isGstinRequired
+                        ? `GSTIN is required for ${cleanCouponCode} (${currentCouponMeta?.discount}% off).`
+                        : currentCouponMeta
+                        ? `No GSTIN required for ${cleanCouponCode} (${currentCouponMeta?.discount}% off).`
+                        : 'GSTIN is required only for coupons offering discounts greater than 15%.'}
                     </p>
                     <button
                       type="button"

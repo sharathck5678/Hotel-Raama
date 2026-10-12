@@ -165,14 +165,14 @@ export const runSeedLogic = async (clearExisting = false) => {
 
     // 5. Official Promotional Coupons (Idempotent upsert by code)
     await Coupon.updateMany(
-      { code: { $nin: ['WELCOME10', 'PREMIUM15', 'MEGA25', 'PLATINUM30'] } },
+      { code: { $nin: ['PREMIUM15', 'GRAND20', 'MEGA25', 'PLATINUM30'] } },
       { $set: { isActive: false } }
     );
     const now = new Date(2020, 0, 1);
     const futureDate = new Date(new Date().getFullYear() + 5, 11, 31);
     const activeCoupons = [
-      { code: 'WELCOME10', discountValue: 10 },
       { code: 'PREMIUM15', discountValue: 15 },
+      { code: 'GRAND20', discountValue: 20 },
       { code: 'MEGA25', discountValue: 25 },
       { code: 'PLATINUM30', discountValue: 30 },
     ];
@@ -183,7 +183,7 @@ export const runSeedLogic = async (clearExisting = false) => {
         { upsert: true, new: true }
       );
     }
-    console.log('✓ Official coupons created/updated: WELCOME10 (10%), PREMIUM15 (15%), MEGA25 (25%), PLATINUM30 (30%)');
+    console.log('✓ Official coupons created/updated: PREMIUM15 (15%), GRAND20 (20%), MEGA25 (25%), PLATINUM30 (30%)');
 
     // 6. Attractions (Idempotent upsert by name)
     const attractionsData = [
