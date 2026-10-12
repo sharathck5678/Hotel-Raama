@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InvoicePdfService = void 0;
 const pdfkit_1 = __importDefault(require("pdfkit"));
+const bookingPlanHelper_1 = require("../utils/bookingPlanHelper");
 class InvoicePdfService {
     /**
      * Generate PDF buffer for Booking Tax Invoice (Pure White, Printer-Friendly)
@@ -32,6 +33,10 @@ class InvoicePdfService {
                 doc.font('Helvetica').text(`Date: ${new Date(booking.createdAt || Date.now()).toLocaleDateString()}`);
                 doc.text(`Booking Reference: ${booking.bookingId}`);
                 doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`);
+                const planLabel = (0, bookingPlanHelper_1.resolveBookingPlanLabel)(booking);
+                if (planLabel) {
+                    doc.text(`Booking Plan: ${planLabel}`);
+                }
                 doc.font('Helvetica-Bold').text(`Guest Details:`, 320, startY);
                 doc.font('Helvetica').text(`Name: ${booking.guestName || 'Valued Guest'}`, 320);
                 if (booking.guestEmail)
@@ -56,7 +61,9 @@ class InvoicePdfService {
                 // Table Row
                 let rowTop = tableTop + 30;
                 doc.fillColor('#333333').font('Helvetica');
-                doc.text(roomTypeName || booking.roomTypeId?.name || 'Room Accommodation', 50, rowTop);
+                const baseRoomDesc = roomTypeName || booking.roomTypeId?.name || 'Room Accommodation';
+                const roomDesc = planLabel ? `${baseRoomDesc} (${planLabel})` : baseRoomDesc;
+                doc.text(roomDesc, 50, rowTop);
                 doc.text(`${new Date(booking.checkIn).toLocaleDateString()} - ${new Date(booking.checkOut).toLocaleDateString()}`, 250, rowTop);
                 doc.text(`${booking.numNights}`, 430, rowTop);
                 const roomSubtotal = ((booking.roomPricePerNightSnapshot || 0) * (booking.numNights || 1)).toFixed(2);

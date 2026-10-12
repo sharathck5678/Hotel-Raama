@@ -187,8 +187,8 @@ class PricingEngine {
                                 else {
                                     validCouponCode = cleanCode;
                                     discountPercentage = percentage;
-                                    discountAmount = Math.round((subtotal * discountPercentage) / 100);
-                                    discountAmount = Math.min(discountAmount, subtotal);
+                                    discountAmount = Math.round((roomTotal * discountPercentage) / 100);
+                                    discountAmount = Math.min(discountAmount, roomTotal);
                                     couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
                                 }
                             }
@@ -203,16 +203,16 @@ class PricingEngine {
                                 else {
                                     validCouponCode = cleanCode;
                                     discountPercentage = percentage;
-                                    discountAmount = Math.round((subtotal * discountPercentage) / 100);
-                                    discountAmount = Math.min(discountAmount, subtotal);
+                                    discountAmount = Math.round((roomTotal * discountPercentage) / 100);
+                                    discountAmount = Math.min(discountAmount, roomTotal);
                                     couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
                                 }
                             }
                             else {
                                 validCouponCode = cleanCode;
                                 discountPercentage = percentage;
-                                discountAmount = Math.round((subtotal * discountPercentage) / 100);
-                                discountAmount = Math.min(discountAmount, subtotal);
+                                discountAmount = Math.round((roomTotal * discountPercentage) / 100);
+                                discountAmount = Math.min(discountAmount, roomTotal);
                                 couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
                             }
                         }

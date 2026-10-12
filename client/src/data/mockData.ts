@@ -5645,7 +5645,7 @@ export const mockCalculateAvailability = (payload: any) => {
           if (gstinCheck.isValid) {
             validCouponCode = cleanCode;
             discountPercentage = discountPct;
-            discountAmount = Math.round((subtotal * discountPercentage) / 100);
+            discountAmount = Math.round((roomTotal * discountPercentage) / 100);
           }
         }
       } else {
@@ -5654,12 +5654,12 @@ export const mockCalculateAvailability = (payload: any) => {
           if (gstinCheck.isValid) {
             validCouponCode = cleanCode;
             discountPercentage = discountPct;
-            discountAmount = Math.round((subtotal * discountPercentage) / 100);
+            discountAmount = Math.round((roomTotal * discountPercentage) / 100);
           }
         } else {
           validCouponCode = cleanCode;
           discountPercentage = discountPct;
-          discountAmount = Math.round((subtotal * discountPercentage) / 100);
+          discountAmount = Math.round((roomTotal * discountPercentage) / 100);
         }
       }
     }

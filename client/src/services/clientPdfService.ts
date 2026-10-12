@@ -40,6 +40,8 @@ export interface BookingPdfData {
     basePrice?: number;
   };
   roomPricePerNightSnapshot?: number;
+  bookingPlan?: string;
+  planType?: string;
   extraPerson?: boolean;
   extraPersonChargeSnapshot?: number;
   mealPlanSelection?: {
@@ -351,12 +353,24 @@ export const downloadBookingInvoicePdf = async (booking: BookingPdfData) => {
     doc.setLineWidth(0.3);
     doc.line(14, 38, pageWidth - 14, 38);
 
+    // Resolve booking plan
+    const rawPlan = booking.bookingPlan || (booking as any).planType;
+    let planLabel: string | null = null;
+    if (rawPlan && typeof rawPlan === 'string') {
+      const uPlan = rawPlan.trim().toUpperCase();
+      if (uPlan === 'EP' || uPlan === 'NON_CP' || uPlan === 'ROOM_ONLY' || uPlan === 'EP PLAN (ROOM ONLY)' || uPlan === 'ROOM ONLY') {
+        planLabel = 'EP Plan (Room Only)';
+      } else if (uPlan === 'CP' || uPlan === 'BREAKFAST_INCLUDED' || uPlan === 'CP PLAN (WITH BREAKFAST)' || uPlan === 'BREAKFAST INCLUDED') {
+        planLabel = 'CP Plan (With Breakfast)';
+      }
+    }
+
     // ==========================================
     // 2. INFORMATION SECTIONS (Bordered White Boxes)
     // ==========================================
     const boxY = 43;
     const boxWidth = (pageWidth - 28 - 6) / 2; // 88mm
-    const boxHeight = 44;
+    const boxHeight = planLabel ? 49 : 44;
     const leftBoxX = 14;
     const rightBoxX = 14 + boxWidth + 6; // 108mm
 
@@ -386,11 +400,20 @@ export const downloadBookingInvoicePdf = async (booking: BookingPdfData) => {
     doc.setLineWidth(0.2);
     doc.line(leftBoxX, boxY + 9, leftBoxX + boxWidth, boxY + 9);
 
-    renderInfoRow('Booking Ref:', String(bookingId), leftBoxX + 4, boxY + 15, 22);
-    renderInfoRow('Room Type:', String(roomTypeName), leftBoxX + 4, boxY + 21, 22);
-    renderInfoRow('Check-In:', String(checkIn), leftBoxX + 4, boxY + 27, 22);
-    renderInfoRow('Check-Out:', `${checkOut}  (${nights} Night${nights > 1 ? 's' : ''})`, leftBoxX + 4, boxY + 33, 22);
-    renderInfoRow('Duration:', `${nights} Night${nights > 1 ? 's' : ''}`, leftBoxX + 4, boxY + 39, 22);
+    let leftRowY = boxY + 14.5;
+    renderInfoRow('Booking Ref:', String(bookingId), leftBoxX + 4, leftRowY, 22);
+    leftRowY += 5.5;
+    renderInfoRow('Room Type:', String(roomTypeName), leftBoxX + 4, leftRowY, 22);
+    if (planLabel) {
+      leftRowY += 5.5;
+      renderInfoRow('Booking Plan:', String(planLabel), leftBoxX + 4, leftRowY, 22);
+    }
+    leftRowY += 5.5;
+    renderInfoRow('Check-In:', String(checkIn), leftBoxX + 4, leftRowY, 22);
+    leftRowY += 5.5;
+    renderInfoRow('Check-Out:', `${checkOut}  (${nights} Night${nights > 1 ? 's' : ''})`, leftBoxX + 4, leftRowY, 22);
+    leftRowY += 5.5;
+    renderInfoRow('Duration:', `${nights} Night${nights > 1 ? 's' : ''}`, leftBoxX + 4, leftRowY, 22);
 
     // Right Box: GUEST & PAYMENT INFORMATION
     doc.setDrawColor(189, 189, 189);
@@ -425,8 +448,11 @@ export const downloadBookingInvoicePdf = async (booking: BookingPdfData) => {
     // ==========================================
     // 3. ITEMIZED CHARGES TABLE (White Headers)
     // ==========================================
+    const roomTableDesc = planLabel
+      ? `${roomTypeName} (${nights} Night${nights > 1 ? 's' : ''}) - ${planLabel}`
+      : `${roomTypeName} (${nights} Night${nights > 1 ? 's' : ''})`;
     const tableBody: any[] = [
-      ['1', `${roomTypeName} (${nights} Night${nights > 1 ? 's' : ''})`, `${nights} Night(s)`, `Rs. ${roomRate.toFixed(2)}`, `Rs. ${(roomRate * nights).toFixed(2)}`],
+      ['1', roomTableDesc, `${nights} Night(s)`, `Rs. ${roomRate.toFixed(2)}`, `Rs. ${(roomRate * nights).toFixed(2)}`],
     ];
 
     if (extraPersonCharge > 0) {

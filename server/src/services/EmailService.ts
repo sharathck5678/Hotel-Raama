@@ -6,6 +6,7 @@ import { getHotelSettings } from './HotelSettingService';
 import { RoomType } from '../models/RoomType';
 import { InvoicePdfService } from './InvoicePdfService';
 import { IEmailProvider, ResendEmailProvider, NodemailerEmailProvider } from './email';
+import { resolveBookingPlanLabel } from '../utils/bookingPlanHelper';
 
 export interface EmailResult {
   success: boolean;
@@ -87,6 +88,18 @@ export class EmailService {
       PLATINUM30: 30,
     };
     return (booking.couponCodeSnapshot && map[booking.couponCodeSnapshot]) || 10;
+  }
+
+  /**
+   * Resolve authoritative room booking plan label (EP / CP).
+   * Uses authoritative saved plan on booking. Never infers from meal add-ons.
+   * Returns:
+   * - 'EP Plan (Room Only)' when EP / NON_CP / ROOM_ONLY
+   * - 'CP Plan (With Breakfast)' when CP / BREAKFAST_INCLUDED
+   * - null for missing, empty, or unknown plans (never silently labels unknown as EP/CP)
+   */
+  public static getBookingPlanLabel(booking: any): string | null {
+    return resolveBookingPlanLabel(booking);
   }
 
   /**
@@ -225,6 +238,7 @@ export class EmailService {
     if (booking.mealPlanSelection?.lunch) mealPlans.push('Lunch');
     if (booking.mealPlanSelection?.dinner) mealPlans.push('Dinner');
     const mealPlanText = mealPlans.length > 0 ? mealPlans.join(', ') : 'None (Room Only)';
+    const planLabel = this.getBookingPlanLabel(booking);
 
     const subject = `[New Booking Confirmed] ${booking.bookingId} - ${booking.guestName} (${roomTypeName})`;
 
@@ -284,6 +298,7 @@ export class EmailService {
       <div class="section-title">Stay & Room Details</div>
       <table class="grid-table">
         <tr><td class="label">Room Category</td><td class="value"><strong>${roomTypeName}</strong></td></tr>
+        ${planLabel ? `<tr><td class="label">Booking Plan</td><td class="value"><strong>${planLabel}</strong></td></tr>` : ''}
         <tr><td class="label">Check-In Date</td><td class="value"><strong>${checkInStr}</strong> (Standard: 12:00 PM)</td></tr>
         <tr><td class="label">Check-Out Date</td><td class="value"><strong>${checkOutStr}</strong> (Standard: 12:00 PM)</td></tr>
         <tr><td class="label">Duration</td><td class="value">${booking.numNights} Night(s)</td></tr>
@@ -330,7 +345,7 @@ GUEST DETAILS:
 
 STAY DETAILS:
 - Room Category: ${roomTypeName}
-- Check-In: ${checkInStr} (12:00 PM)
+${planLabel ? `- Booking Plan: ${planLabel}\n` : ''}- Check-In: ${checkInStr} (12:00 PM)
 - Check-Out: ${checkOutStr} (12:00 PM)
 - Duration: ${booking.numNights} Night(s)
 - Guests: ${booking.numGuests}
@@ -410,6 +425,7 @@ ${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmo
     if (booking.mealPlanSelection?.lunch) mealPlans.push('Lunch Included');
     if (booking.mealPlanSelection?.dinner) mealPlans.push('Dinner Included');
     const mealPlanSummary = mealPlans.length > 0 ? mealPlans.join(', ') : 'Room Only (EP Plan)';
+    const planLabel = this.getBookingPlanLabel(booking);
 
     const subject = `Booking Confirmation - Hotel Raama, Hassan (${booking.bookingId})`;
 
@@ -462,6 +478,7 @@ ${booking.gstin ? `- Guest GSTIN: ${booking.gstin}\n` : ''}${booking.discountAmo
         <div class="booking-ref-val">${booking.bookingId}</div>
 
         <div class="details-row"><span class="details-label">Room Category</span><span class="details-value">${roomTypeName}</span></div>
+        ${planLabel ? `<div class="details-row"><span class="details-label">Booking Plan</span><span class="details-value">${planLabel}</span></div>` : ''}
         <div class="details-row"><span class="details-label">Check-In Date</span><span class="details-value">${checkInStr} (From 12:00 PM)</span></div>
         <div class="details-row"><span class="details-label">Check-Out Date</span><span class="details-value">${checkOutStr} (Until 12:00 PM)</span></div>
         <div class="details-row"><span class="details-label">Guests</span><span class="details-value">${booking.numGuests} Guest(s)${booking.extraPerson ? ' + Extra Bed' : ''}</span></div>
@@ -508,7 +525,7 @@ Your reservation at Hotel Raama has been confirmed and paid in full.
 
 Booking Reference: ${booking.bookingId}
 Room Category: ${roomTypeName}
-Check-In: ${checkInStr} (From 12:00 PM)
+${planLabel ? `Booking Plan: ${planLabel}\n` : ''}Check-In: ${checkInStr} (From 12:00 PM)
 Check-Out: ${checkOutStr} (Until 12:00 PM)
 Guests: ${booking.numGuests} (${booking.numNights} nights)
 Meal Plan: ${mealPlanSummary}

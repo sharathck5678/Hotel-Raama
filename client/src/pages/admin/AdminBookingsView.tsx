@@ -321,6 +321,14 @@ export const AdminBookingsView: React.FC = () => {
                   <span className="text-slate-500">Room Category:</span>
                   <span className="font-semibold">{selectedBooking.roomTypeId?.name || 'Executive Room'}</span>
                 </div>
+                {(selectedBooking.bookingPlan || selectedBooking.planType) && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Booking Plan:</span>
+                    <span className="font-semibold text-[#00174A]">
+                      {selectedBooking.bookingPlan || (selectedBooking.planType === 'CP' ? 'CP Plan (With Breakfast)' : 'EP Plan (Room Only)')}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-slate-500">Assigned Room:</span>
                   <span>{selectedBooking.assignedRoomId?.roomNumber ? `Room #${selectedBooking.assignedRoomId.roomNumber}` : 'Not assigned'}</span>

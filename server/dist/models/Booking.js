@@ -19,6 +19,8 @@ const BookingSchema = new mongoose_1.Schema({
     adminNotes: { type: String, trim: true },
     createdBy: { type: String, trim: true },
     roomPricePerNightSnapshot: { type: Number, required: true },
+    bookingPlan: { type: String, trim: true },
+    planType: { type: String, trim: true },
     mealPlanSelection: {
         breakfast: { type: Boolean, default: false },
         lunch: { type: Boolean, default: false },

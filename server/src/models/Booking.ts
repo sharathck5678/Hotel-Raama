@@ -37,6 +37,8 @@ export interface IBooking extends Document {
   
   // Historical Snapshots (Locked at booking creation)
   roomPricePerNightSnapshot: number;
+  bookingPlan?: string;
+  planType?: string;
   mealPlanSelection?: IBookingMealSelection;
   extraPerson?: boolean;
   extraPersonChargeSnapshot?: number;
@@ -101,6 +103,8 @@ const BookingSchema = new Schema<IBooking>(
     createdBy: { type: String, trim: true },
 
     roomPricePerNightSnapshot: { type: Number, required: true },
+    bookingPlan: { type: String, trim: true },
+    planType: { type: String, trim: true },
     mealPlanSelection: {
       breakfast: { type: Boolean, default: false },
       lunch: { type: Boolean, default: false },

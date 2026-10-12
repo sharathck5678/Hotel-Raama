@@ -88,6 +88,14 @@ export const BookingConfirmationPage: React.FC = () => {
                 <span className="text-[10px] text-white/60 block uppercase tracking-wider">Room Category</span>
                 <span className="font-semibold text-white">{booking.roomTypeId?.name || 'Executive Room'}</span>
               </div>
+              {(booking.bookingPlan || booking.planType) && (
+                <div>
+                  <span className="text-[10px] text-white/60 block uppercase tracking-wider">Booking Plan</span>
+                  <span className="font-semibold text-white">
+                    {booking.bookingPlan || (booking.planType === 'CP' ? 'CP Plan (With Breakfast)' : 'EP Plan (Room Only)')}
+                  </span>
+                </div>
+              )}
               <div>
                 <span className="text-[10px] text-white/60 block uppercase tracking-wider">Total Amount Paid</span>
                 <span className="font-serif font-bold text-[#D6B369]">₹{booking.totalAmount}</span>

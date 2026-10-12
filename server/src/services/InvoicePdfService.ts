@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import { IBooking } from '../models/Booking';
 import { IOrder } from '../models/Order';
+import { resolveBookingPlanLabel } from '../utils/bookingPlanHelper';
 
 export class InvoicePdfService {
   /**
@@ -34,6 +35,10 @@ export class InvoicePdfService {
         doc.font('Helvetica').text(`Date: ${new Date(booking.createdAt || Date.now()).toLocaleDateString()}`);
         doc.text(`Booking Reference: ${booking.bookingId}`);
         doc.text(`Payment Status: ${(booking.paymentStatus || 'PAID').toUpperCase()}`);
+        const planLabel = resolveBookingPlanLabel(booking);
+        if (planLabel) {
+          doc.text(`Booking Plan: ${planLabel}`);
+        }
 
         doc.font('Helvetica-Bold').text(`Guest Details:`, 320, startY);
         doc.font('Helvetica').text(`Name: ${booking.guestName || 'Valued Guest'}`, 320);
@@ -60,7 +65,9 @@ export class InvoicePdfService {
         // Table Row
         let rowTop = tableTop + 30;
         doc.fillColor('#333333').font('Helvetica');
-        doc.text(roomTypeName || (booking as any).roomTypeId?.name || 'Room Accommodation', 50, rowTop);
+        const baseRoomDesc = roomTypeName || (booking as any).roomTypeId?.name || 'Room Accommodation';
+        const roomDesc = planLabel ? `${baseRoomDesc} (${planLabel})` : baseRoomDesc;
+        doc.text(roomDesc, 50, rowTop);
         doc.text(`${new Date(booking.checkIn).toLocaleDateString()} - ${new Date(booking.checkOut).toLocaleDateString()}`, 250, rowTop);
         doc.text(`${booking.numNights}`, 430, rowTop);
         const roomSubtotal = ((booking.roomPricePerNightSnapshot || 0) * (booking.numNights || 1)).toFixed(2);

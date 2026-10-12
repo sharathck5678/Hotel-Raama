@@ -288,6 +288,8 @@ class PublicController {
                 numNights: pricing.numNights,
                 specialRequests,
                 roomPricePerNightSnapshot: pricing.roomPricePerNight,
+                bookingPlan: (planType === 'CP' || planType === 'BREAKFAST_INCLUDED') ? 'CP Plan (With Breakfast)' : 'EP Plan (Room Only)',
+                planType: (planType === 'CP' || planType === 'BREAKFAST_INCLUDED') ? 'CP' : (planType || 'NON_CP'),
                 mealPlanSelection: {
                     breakfast: !!mealSelection?.breakfast,
                     lunch: !!mealSelection?.lunch,

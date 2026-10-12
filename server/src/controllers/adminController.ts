@@ -1186,6 +1186,8 @@ export class AdminController {
         numGuests: 2,
         numNights,
         roomPricePerNightSnapshot: basePrice,
+        bookingPlan: 'EP Plan (Room Only)',
+        planType: 'NON_CP',
         totalAmount,
         bookingStatus: 'CONFIRMED',
         paymentStatus: 'PAID',

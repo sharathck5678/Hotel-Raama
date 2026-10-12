@@ -1305,60 +1305,105 @@ export const RoomsPage: React.FC = () => {
 
 
               {/* Price Breakdown Calculation */}
-              {calcResult && calcResult.pricing && (
-                <div className="p-4 bg-white/80 rounded-sm border border-[#cbc0ad] space-y-2 text-xs font-sans">
-                  <div className="flex justify-between text-[#333333]">
-                    <span>
-                      Room Charges ({calcResult.pricing.numNights} night{calcResult.pricing.numNights > 1 ? 's' : ''}
-                      {calcResult.pricing.nightlyRates && calcResult.pricing.nightlyRates.length > 1
-                        ? ` • avg ₹${calcResult.pricing.roomPricePerNight}/night`
-                        : ` x ₹${calcResult.pricing.roomPricePerNight}`}):
-                    </span>
-                    <span className="font-semibold">₹{calcResult.pricing.roomTotal}</span>
-                  </div>
+              {calcResult && calcResult.pricing && (() => {
+                const p = calcResult.pricing;
+                const hasCoupon = Boolean(p.discountAmount && p.discountAmount > 0);
+                const discountedRoomPrice = (p.roomTotal || 0) - (p.discountAmount || 0);
+                const hasMeals = Boolean(p.mealPlanTotal && p.mealPlanTotal > 0);
+                const hasExtraPerson = Boolean(p.extraPersonTotal && p.extraPersonTotal > 0);
+                const hasAdditionalCharges = hasMeals || hasExtraPerson;
+                const subtotalAfterDiscount = discountedRoomPrice + (p.mealPlanTotal || 0) + (p.extraPersonTotal || 0);
 
-                  {calcResult.pricing.nightlyRates && calcResult.pricing.nightlyRates.length > 1 && (
-                    <div className="pl-3 py-1 space-y-1 border-l-2 border-[#D6B369]/50 text-[11px] text-[#666666]">
-                      {calcResult.pricing.nightlyRates.map((nr: any, i: number) => (
-                        <div key={i} className="flex justify-between">
-                          <span>Night {i + 1} ({nr.date}):</span>
-                          <span>₹{nr.rate} {nr.isCustomRate ? '(Date rate)' : ''}</span>
+                return (
+                  <div className="p-4 bg-white/85 rounded-sm border border-[#cbc0ad] space-y-3 text-xs font-sans shadow-sm">
+                    {/* ROOM CHARGES */}
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#D6B369]">
+                        Room Charges
+                      </div>
+                      <div className="flex justify-between text-[#333333]">
+                        <span>
+                          Room Charges ({p.numNights} night{p.numNights > 1 ? 's' : ''}
+                          {p.nightlyRates && p.nightlyRates.length > 1
+                            ? ` • avg ₹${Number(p.roomPricePerNight || 0).toLocaleString('en-IN')}/night`
+                            : ` × ₹${Number(p.roomPricePerNight || 0).toLocaleString('en-IN')}`}):
+                        </span>
+                        <span className="font-semibold text-right">₹{Number(p.roomTotal || 0).toLocaleString('en-IN')}</span>
+                      </div>
+
+                      {p.nightlyRates && p.nightlyRates.length > 1 && (
+                        <div className="pl-3 py-1 space-y-1 border-l-2 border-[#D6B369]/50 text-[11px] text-[#666666]">
+                          {p.nightlyRates.map((nr: any, i: number) => (
+                            <div key={i} className="flex justify-between">
+                              <span>Night {i + 1} ({nr.date}):</span>
+                              <span>₹{Number(nr.rate || 0).toLocaleString('en-IN')} {nr.isCustomRate ? '(Date rate)' : ''}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
+
+                      {hasCoupon && (
+                        <>
+                          <div className="flex justify-between text-emerald-700 font-medium">
+                            <span>
+                              Coupon Discount ({p.couponCode}{p.discountPercentage ? ` — ${p.discountPercentage}% of room charges` : ''}):
+                            </span>
+                            <span className="font-semibold text-right">−₹{Number(p.discountAmount || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                          <div className="flex justify-between text-[#00174A] font-semibold bg-[#00174A]/[0.03] px-2.5 py-1.5 rounded-sm border border-[#00174A]/10">
+                            <span>Discounted Room Price:</span>
+                            <span className="text-right">₹{Number(discountedRoomPrice).toLocaleString('en-IN')}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  )}
-                  {calcResult.pricing.extraPersonTotal > 0 && (
-                    <div className="flex justify-between text-emerald-800 font-semibold">
-                      <span>Extra Person ({calcResult.pricing.numNights} night{calcResult.pricing.numNights > 1 ? 's' : ''} x ₹600):</span>
-                      <span>+ ₹{calcResult.pricing.extraPersonTotal}</span>
+
+                    {/* ADDITIONAL CHARGES */}
+                    {hasAdditionalCharges && (
+                      <div className="pt-2 border-t border-dashed border-[#cbc0ad]/70 space-y-1.5">
+                        <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#D6B369]">
+                          Additional Charges
+                        </div>
+                        {hasMeals && (
+                          <div className="flex justify-between text-[#333333]">
+                            <span>Meals Add-on:</span>
+                            <span className="font-medium text-right">₹{Number(p.mealPlanTotal || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
+                        {hasExtraPerson && (
+                          <div className="flex justify-between text-[#333333]">
+                            <span>
+                              Extra Person ({p.numNights} night{p.numNights > 1 ? 's' : ''} × ₹{Number(p.extraPersonChargePerNight || 600).toLocaleString('en-IN')}):
+                            </span>
+                            <span className="font-medium text-right">₹{Number(p.extraPersonTotal || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* TOTALS */}
+                    <div className="pt-2 border-t border-[#cbc0ad] space-y-1.5">
+                      <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#D6B369]">
+                        Totals
+                      </div>
+                      <div className="flex justify-between text-[#333333] font-medium">
+                        <span>Subtotal:</span>
+                        <span className="font-semibold text-right">₹{Number(subtotalAfterDiscount).toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between text-[#666666]">
+                        <span>GST ({p.taxPercentage ?? 5}%):</span>
+                        <span className="text-right">₹{Number(p.taxAmount || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-bold text-[#00174A] pt-2 border-t border-[#cbc0ad]">
+                        <span>Total Payable:</span>
+                        <span className="text-base font-serif font-extrabold text-[#00174A] text-right">
+                          ₹{Number(p.totalAmount || 0).toLocaleString('en-IN')}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  {calcResult.pricing.mealPlanTotal > 0 && (
-                    <div className="flex justify-between text-[#333333]">
-                      <span>Meals Add-on:</span>
-                      <span>+ ₹{calcResult.pricing.mealPlanTotal}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-[#333333] pt-1 border-t border-dashed border-[#cbc0ad]/60 font-medium">
-                    <span>Subtotal:</span>
-                    <span>₹{calcResult.pricing.subtotal}</span>
                   </div>
-                  {calcResult.pricing.discountAmount > 0 && (
-                    <div className="flex justify-between text-emerald-700 font-semibold">
-                      <span>Coupon: {calcResult.pricing.couponCode}</span>
-                      <span>- ₹{calcResult.pricing.discountAmount}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-[#666666]">
-                    <span>GST ({calcResult.pricing.taxPercentage ?? 5}%):</span>
-                    <span>₹{calcResult.pricing.taxAmount}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-bold text-[#00174A] pt-2 border-t border-[#cbc0ad]">
-                    <span>Total:</span>
-                    <span>₹{calcResult.pricing.totalAmount}</span>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Collapsible Terms & Conditions */}
               <div className="border border-[#cbc0ad] rounded-sm bg-white/70 overflow-hidden">
