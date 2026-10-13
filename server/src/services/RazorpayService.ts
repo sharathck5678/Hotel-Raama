@@ -143,5 +143,42 @@ export class RazorpayService {
       return false;
     }
   }
+
+  /**
+   * Execute payment refund via Razorpay API (or mock in test/development mode)
+   */
+  static async refundPayment(
+    paymentId: string,
+    amountInRupees?: number,
+    notes?: any
+  ): Promise<{ id: string; amount?: number; status: string; payment_id: string; notes?: any }> {
+    const isProduction = (process.env.NODE_ENV || '').toLowerCase() === 'production';
+    const isMock = !paymentId || paymentId.startsWith('pay_mock_');
+
+    if (!key_id || !key_secret || !instance || isMock) {
+      if (isProduction && !isMock && (!key_id || !key_secret)) {
+        throw new Error('[RazorpayService] Razorpay API keys missing in production; cannot refund.');
+      }
+      return {
+        id: `rfnd_mock_${crypto.randomBytes(8).toString('hex')}`,
+        payment_id: paymentId,
+        amount: amountInRupees ? Math.round(amountInRupees * 100) : undefined,
+        status: 'processed',
+        notes: notes || {},
+      };
+    }
+
+    try {
+      const refundOptions: any = { notes: notes || {} };
+      if (amountInRupees && amountInRupees > 0) {
+        refundOptions.amount = Math.round(amountInRupees * 100);
+      }
+      const refund = await (instance.payments as any).refund(paymentId, refundOptions);
+      return refund;
+    } catch (error: any) {
+      console.error('[RazorpayService] Error initiating payment refund:', error);
+      throw error;
+    }
+  }
 }
 

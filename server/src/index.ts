@@ -100,6 +100,7 @@ import { Room } from './models/Room';
 import { RoomType } from './models/RoomType';
 import { Coupon } from './models/Coupon';
 import { HotelSetting } from './models/HotelSetting';
+import { PhysicalRoomAllocationService } from './services/PhysicalRoomAllocationService';
 
 // Helper to ensure official coupons in active database (PREMIUM15, GRAND20, MEGA25, PLATINUM30)
 const ensureCoupons = async () => {
@@ -300,6 +301,13 @@ async function runNonCriticalStartupTasks(): Promise<void> {
     console.log('[Startup] ✓ ensureCoupons completed.');
   } catch (err: any) {
     console.error('[Startup Error] ensureCoupons failed:', err.message || err);
+  }
+
+  try {
+    const syncedNights = await PhysicalRoomAllocationService.syncExistingBookings();
+    console.log(`[Startup] ✓ Physical room allocation guards synchronized (${syncedNights} room-nights).`);
+  } catch (err: any) {
+    console.error('[Startup Error] PhysicalRoomAllocationService.syncExistingBookings failed:', err.message || err);
   }
 
   const syncDuration = Date.now() - syncStartTime;

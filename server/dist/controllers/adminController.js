@@ -26,6 +26,9 @@ const InvoicePdfService_1 = require("../services/InvoicePdfService");
 const AvailabilityEngine_1 = require("../services/AvailabilityEngine");
 const MealPricingService_1 = require("../services/MealPricingService");
 const seedDatabase_1 = require("../seed/seedDatabase");
+const asyncLock_1 = require("../utils/asyncLock");
+const PhysicalRoomAllocationService_1 = require("../services/PhysicalRoomAllocationService");
+const PhysicalRoomAllocation_1 = require("../models/PhysicalRoomAllocation");
 const JWT_SECRET = process.env.JWT_SECRET || 'raama_super_secret_jwt_key_2026_production';
 class AdminController {
     /**
@@ -246,9 +249,44 @@ class AdminController {
                 booking.bookingStatus = bookingStatus;
             if (paymentStatus)
                 booking.paymentStatus = paymentStatus;
-            if (assignedRoomId)
-                booking.assignedRoomId = assignedRoomId;
+            if (assignedRoomId && assignedRoomId.toString() !== booking.assignedRoomId?.toString()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Room reassignment must be performed via the dedicated PATCH /api/admin/bookings/:id/assigned-room endpoint.',
+                });
+            }
             await booking.save();
+            // Synchronize PhysicalRoomAllocation on status transition
+            if (bookingStatus === 'CANCELLED' || bookingStatus === 'CHECKED_OUT') {
+                await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+            }
+            else if (bookingStatus === 'CHECKED_IN') {
+                if (booking.assignedRoomId) {
+                    const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(booking.checkIn, booking.checkOut);
+                    const allocatedCount = await PhysicalRoomAllocation_1.PhysicalRoomAllocation.countDocuments({
+                        bookingId: booking._id,
+                        date: { $in: stayDates },
+                    });
+                    if (allocatedCount < stayDates.length) {
+                        await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.allocateRoom({
+                            roomId: booking.assignedRoomId,
+                            checkIn: booking.checkIn,
+                            checkOut: booking.checkOut,
+                            bookingId: booking._id,
+                            bookingStatus: 'CHECKED_IN',
+                        });
+                    }
+                    else {
+                        await PhysicalRoomAllocation_1.PhysicalRoomAllocation.updateMany({ bookingId: booking._id, date: { $in: stayDates } }, { $set: { bookingStatus: 'CHECKED_IN' }, $unset: { expiresAt: 1 } });
+                    }
+                }
+            }
+            else if (bookingStatus === 'CONFIRMED') {
+                if (booking.assignedRoomId) {
+                    const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(booking.checkIn, booking.checkOut);
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.confirmHold(booking._id, stayDates);
+                }
+            }
             // Sync Room status if assigned
             if (booking.assignedRoomId) {
                 if (booking.bookingStatus === 'CHECKED_IN') {
@@ -279,6 +317,287 @@ class AdminController {
         }
         catch (error) {
             return res.status(500).json({ success: false, message: 'Failed to update booking status.' });
+        }
+    }
+    /**
+     * GET /api/admin/bookings/:id/candidate-rooms
+     * Fetch compatible, non-overlapping candidate physical rooms for reassignment.
+     */
+    static async getCandidateRooms(req, res) {
+        try {
+            const { id } = req.params;
+            const query = mongoose_1.default.isValidObjectId(id) && id.length === 24
+                ? { $or: [{ _id: id }, { bookingId: id }] }
+                : { bookingId: id };
+            const booking = await Booking_1.Booking.findOne(query)
+                .populate('roomTypeId assignedRoomId')
+                .lean();
+            if (!booking) {
+                return res.status(404).json({ success: false, message: 'Booking not found.' });
+            }
+            const result = await AvailabilityEngine_1.AvailabilityEngine.getCandidateRoomsForBooking(booking);
+            return res.json({
+                success: true,
+                data: {
+                    booking: {
+                        _id: booking._id,
+                        bookingId: booking.bookingId,
+                        guestName: booking.guestName,
+                        guestPhone: booking.guestPhone,
+                        guestEmail: booking.guestEmail,
+                        roomTypeId: booking.roomTypeId,
+                        assignedRoomId: booking.assignedRoomId,
+                        checkIn: booking.checkIn,
+                        checkOut: booking.checkOut,
+                        numGuests: booking.numGuests,
+                        numNights: booking.numNights,
+                        source: booking.source,
+                        bookingStatus: booking.bookingStatus,
+                    },
+                    currentRoom: result.currentRoom,
+                    candidateRooms: result.candidateRooms,
+                },
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Error fetching candidate rooms:', error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Failed to fetch candidate rooms.',
+            });
+        }
+    }
+    /**
+     * PATCH /api/admin/bookings/:id/assigned-room
+     * Reassign a physical room for an existing online or offline booking.
+     * Enforces strict category compatibility, date-overlap conflict validation,
+     * mutex concurrency protection, and booking audit logging.
+     */
+    static async reassignBookingRoom(req, res) {
+        try {
+            const { id } = req.params;
+            const { targetRoomId, roomId } = req.body;
+            const newRoomId = targetRoomId || roomId;
+            if (!newRoomId) {
+                return res.status(400).json({ success: false, message: 'Target room ID is required.' });
+            }
+            const query = mongoose_1.default.isValidObjectId(id) && id.length === 24
+                ? { $or: [{ _id: id }, { bookingId: id }] }
+                : { bookingId: id };
+            const booking = await Booking_1.Booking.findOne(query);
+            if (!booking) {
+                return res.status(404).json({ success: false, message: 'Booking not found.' });
+            }
+            if (booking.bookingStatus === 'CANCELLED') {
+                return res.status(400).json({ success: false, message: 'Cannot reassign a cancelled booking.' });
+            }
+            if (booking.bookingStatus === 'CHECKED_OUT') {
+                return res.status(400).json({ success: false, message: 'Cannot reassign a checked-out booking.' });
+            }
+            // Load target physical room
+            const targetRoom = await Room_1.Room.findById(newRoomId).populate('roomTypeId');
+            if (!targetRoom || !targetRoom.isActive || targetRoom.isVenue || targetRoom.roomNumber === '104') {
+                return res.status(400).json({ success: false, message: 'Invalid target room.' });
+            }
+            // Check if target room is already the assigned room
+            if (booking.assignedRoomId && booking.assignedRoomId.toString() === targetRoom._id.toString()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Target room is already assigned to this booking.',
+                });
+            }
+            // Category compatibility check
+            const resolved = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(booking.roomTypeId);
+            const poolRoomIdStrs = new Set(resolved.poolRoomIds.map((rid) => rid.toString()));
+            if (!poolRoomIdStrs.has(targetRoom._id.toString())) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'This room is not compatible with the booking.',
+                });
+            }
+            // Occupancy compatibility check
+            const targetRt = targetRoom.roomTypeId;
+            if (targetRt && booking.numGuests && targetRt.maxOccupancy < booking.numGuests) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'This room is not compatible with the booking.',
+                });
+            }
+            // Operational status check
+            if (targetRoom.status === 'MAINTENANCE' || targetRoom.status === 'OUT_OF_SERVICE') {
+                return res.status(409).json({
+                    success: false,
+                    message: 'Target room is currently under maintenance or out of service.',
+                });
+            }
+            // Concurrency lock covering booking, target room, and previous room to prevent all race conditions
+            const lockKeys = [
+                `booking:${booking._id.toString()}`,
+                `room:${targetRoom._id.toString()}`,
+                ...(booking.assignedRoomId ? [`room:${booking.assignedRoomId.toString()}`] : []),
+            ];
+            return await (0, asyncLock_1.withDistributedLock)(lockKeys, async (lockCtx) => {
+                const now = new Date();
+                // Reload fresh booking state inside lock to prevent race conditions from concurrent updates
+                const freshBooking = await Booking_1.Booking.findById(booking._id);
+                if (!freshBooking) {
+                    return res.status(404).json({ success: false, message: 'Booking not found.' });
+                }
+                if (freshBooking.bookingStatus === 'CANCELLED') {
+                    return res.status(400).json({ success: false, message: 'Cannot reassign a cancelled booking.' });
+                }
+                if (freshBooking.bookingStatus === 'CHECKED_OUT') {
+                    return res.status(400).json({ success: false, message: 'Cannot reassign a checked-out booking.' });
+                }
+                if (freshBooking.assignedRoomId && freshBooking.assignedRoomId.toString() === targetRoom._id.toString()) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Target room is already assigned to this booking.',
+                    });
+                }
+                // Authoritative conflict check on target physical room across full stay dates
+                // Date overlap condition: checkIn < booking.checkOut && checkOut > booking.checkIn
+                const conflictingBooking = await Booking_1.Booking.findOne({
+                    _id: { $ne: freshBooking._id },
+                    assignedRoomId: targetRoom._id,
+                    $or: [
+                        { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                        { bookingStatus: 'PENDING', expiresAt: { $gt: now } },
+                    ],
+                    checkIn: { $lt: freshBooking.checkOut },
+                    checkOut: { $gt: freshBooking.checkIn },
+                });
+                if (conflictingBooking) {
+                    return res.status(409).json({
+                        success: false,
+                        message: 'This room is already allocated for overlapping dates.',
+                        conflictingBookingId: conflictingBooking.bookingId,
+                    });
+                }
+                // Capture previous room info for audit log
+                const previousRoomId = freshBooking.assignedRoomId;
+                const previousRoom = previousRoomId ? await Room_1.Room.findById(previousRoomId) : null;
+                // Assert lock is still validly held and fencing token active before persisting assignment
+                await lockCtx.assertFenceValid();
+                // Database-enforced atomic allocation guard: allocate target room first
+                // If another booking already occupies targetRoom on any of these stay dates,
+                // MongoDB's primary key constraint strictly rejects the duplicate allocation.
+                await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.allocateRoom({
+                    roomId: targetRoom._id,
+                    checkIn: freshBooking.checkIn,
+                    checkOut: freshBooking.checkOut,
+                    bookingId: freshBooking._id,
+                    bookingStatus: freshBooking.bookingStatus,
+                });
+                // Persist new physical room assignment using conditional atomic update
+                const prevRoomFilter = previousRoomId ? previousRoomId : { $in: [null, undefined] };
+                const writeResult = await Booking_1.Booking.updateOne({
+                    _id: freshBooking._id,
+                    assignedRoomId: prevRoomFilter,
+                }, {
+                    $set: { assignedRoomId: targetRoom._id },
+                });
+                if (writeResult.matchedCount === 0) {
+                    // Revert newly claimed allocation since the booking itself was modified concurrently
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseRoom({
+                        roomId: targetRoom._id,
+                        checkIn: freshBooking.checkIn,
+                        checkOut: freshBooking.checkOut,
+                        bookingId: freshBooking._id,
+                    });
+                    return res.status(409).json({
+                        success: false,
+                        message: 'Booking assignment was concurrently modified by another operation.',
+                    });
+                }
+                freshBooking.assignedRoomId = targetRoom._id;
+                // Release previous physical room allocation now that new room is secured
+                if (previousRoomId && previousRoomId.toString() !== targetRoom._id.toString()) {
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseRoom({
+                        roomId: previousRoomId,
+                        checkIn: freshBooking.checkIn,
+                        checkOut: freshBooking.checkOut,
+                        bookingId: freshBooking._id,
+                    });
+                }
+                // Immediate post-save validation: ensure no lease expiration or fencing supersede occurred during save
+                try {
+                    await lockCtx.assertFenceValid();
+                    const overlapAfterWrite = await Booking_1.Booking.findOne({
+                        _id: { $ne: freshBooking._id },
+                        assignedRoomId: targetRoom._id,
+                        bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] },
+                        $or: [
+                            { source: 'OFFLINE' },
+                            { source: 'ONLINE', paymentStatus: 'PAID' },
+                        ],
+                        checkIn: { $lt: freshBooking.checkOut },
+                        checkOut: { $gt: freshBooking.checkIn },
+                    });
+                    if (overlapAfterWrite) {
+                        throw new Error(`[Concurrency] Overlapping booking detected for room ${targetRoom.roomNumber}: ${overlapAfterWrite.bookingId}`);
+                    }
+                }
+                catch (postWriteErr) {
+                    // Safe conditional rollback: only revert if assignedRoomId is STILL targetRoom._id
+                    // This strictly prevents overwriting any newer assignment committed by another worker
+                    await Booking_1.Booking.updateOne({
+                        _id: freshBooking._id,
+                        assignedRoomId: targetRoom._id,
+                    }, {
+                        $set: { assignedRoomId: previousRoomId || null },
+                    });
+                    freshBooking.assignedRoomId = previousRoomId;
+                    // Revert allocation guards
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseRoom({
+                        roomId: targetRoom._id,
+                        checkIn: freshBooking.checkIn,
+                        checkOut: freshBooking.checkOut,
+                        bookingId: freshBooking._id,
+                    });
+                    if (previousRoomId) {
+                        await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.allocateRoom({
+                            roomId: previousRoomId,
+                            checkIn: freshBooking.checkIn,
+                            checkOut: freshBooking.checkOut,
+                            bookingId: freshBooking._id,
+                            bookingStatus: freshBooking.bookingStatus,
+                        });
+                    }
+                    throw postWriteErr;
+                }
+                // Record audit log
+                await AuditLog_1.AuditLog.create({
+                    adminId: req.admin.id,
+                    adminEmail: req.admin.email,
+                    action: 'REASSIGN_ROOM',
+                    entity: 'Booking',
+                    entityId: freshBooking._id.toString(),
+                    details: {
+                        bookingId: freshBooking.bookingId,
+                        previousRoomId: previousRoom?._id?.toString() || null,
+                        previousRoomNumber: previousRoom?.roomNumber || 'None',
+                        newRoomId: targetRoom._id.toString(),
+                        newRoomNumber: targetRoom.roomNumber,
+                        checkIn: freshBooking.checkIn,
+                        checkOut: freshBooking.checkOut,
+                        source: freshBooking.source,
+                    },
+                });
+                const updatedBooking = await Booking_1.Booking.findById(freshBooking._id).populate('roomTypeId assignedRoomId');
+                return res.json({
+                    success: true,
+                    message: `Room successfully reassigned to Room #${targetRoom.roomNumber}.`,
+                    data: updatedBooking,
+                });
+            });
+        }
+        catch (error) {
+            console.error('[AdminController] Error reassigning room:', error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Failed to reassign room.',
+            });
         }
     }
     /**
@@ -1066,64 +1385,114 @@ class AdminController {
             if (room.roomNumber === '104') {
                 return res.status(400).json({ success: false, message: 'Room 104 does not exist.' });
             }
-            // 2. Strict concurrency & date-overlap check on this physical room
-            const { available, conflictingBooking } = await AvailabilityEngine_1.AvailabilityEngine.isPhysicalRoomAvailable(room._id, checkInDate, checkOutDate);
-            if (!available) {
-                return res.status(409).json({
-                    success: false,
-                    message: `Room #${room.roomNumber} is already occupied for these dates (Booking: ${conflictingBooking?.bookingId || 'Active Reservation'}).`,
-                });
-            }
-            // 3. Compute duration & snapshot rates
-            const numNights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
-            const rt = room.roomTypeId;
-            const basePrice = rt?.basePrice || 2200;
-            const totalAmount = basePrice * numNights;
-            const bookingId = `HR-OFF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-            const trackingToken = crypto_1.default.randomBytes(16).toString('hex');
-            // 4. Create confirmed offline booking record
-            const booking = await Booking_1.Booking.create({
-                bookingId,
-                source: 'OFFLINE',
-                guestName: (guestName && guestName.trim()) || 'Walk-in Guest',
-                guestEmail: (guestEmail && guestEmail.trim()) || 'offline@hotelraama.com',
-                guestPhone: (guestPhone && guestPhone.trim()) || 'Offline Guest',
-                roomTypeId: rt?._id || room.roomTypeId,
-                assignedRoomId: room._id,
-                checkIn: checkInDate,
-                checkOut: checkOutDate,
-                numGuests: 2,
-                numNights,
-                roomPricePerNightSnapshot: basePrice,
-                bookingPlan: 'EP Plan (Room Only)',
-                planType: 'NON_CP',
-                totalAmount,
-                bookingStatus: 'CONFIRMED',
-                paymentStatus: 'PAID',
-                trackingToken,
-                adminNotes: adminNotes?.trim() || undefined,
-                createdBy: req.admin?.email || 'admin',
-            });
-            // 5. Audit Log
-            await AuditLog_1.AuditLog.create({
-                adminId: req.admin.id,
-                adminEmail: req.admin.email,
-                action: 'CREATE_OFFLINE_BOOKING',
-                entity: 'Booking',
-                entityId: booking._id.toString(),
-                details: {
-                    bookingId: booking.bookingId,
-                    roomNumber: room.roomNumber,
+            // Concurrency lock on target physical room
+            return await (0, asyncLock_1.withDistributedLock)([`room:${room._id.toString()}`], async (lockCtx) => {
+                // 2. Strict concurrency & date-overlap check on this physical room
+                const { available, conflictingBooking } = await AvailabilityEngine_1.AvailabilityEngine.isPhysicalRoomAvailable(room._id, checkInDate, checkOutDate);
+                if (!available) {
+                    return res.status(409).json({
+                        success: false,
+                        message: `Room #${room.roomNumber} is already occupied for these dates (Booking: ${conflictingBooking?.bookingId || 'Active Reservation'}).`,
+                    });
+                }
+                // 3. Compute duration & snapshot rates
+                const numNights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
+                const rt = room.roomTypeId;
+                const basePrice = rt?.basePrice || 2200;
+                const totalAmount = basePrice * numNights;
+                const bookingId = `HR-OFF-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+                const trackingToken = crypto_1.default.randomBytes(16).toString('hex');
+                // Assert lock ownership and fencing token before persisting offline booking
+                await lockCtx.assertFenceValid();
+                const newBookingId = new mongoose_1.default.Types.ObjectId();
+                // Database-enforced atomic allocation guard
+                await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.allocateRoom({
+                    roomId: room._id,
                     checkIn: checkInDate,
                     checkOut: checkOutDate,
-                    guestName: booking.guestName,
-                },
-            });
-            const populatedBooking = await Booking_1.Booking.findById(booking._id).populate('roomTypeId assignedRoomId');
-            return res.status(201).json({
-                success: true,
-                message: `Physical booking ${booking.bookingId} created for Room #${room.roomNumber}.`,
-                data: populatedBooking,
+                    bookingId: newBookingId,
+                    bookingStatus: 'CONFIRMED',
+                });
+                // 4. Create confirmed offline booking record
+                let booking;
+                try {
+                    booking = await Booking_1.Booking.create({
+                        _id: newBookingId,
+                        bookingId,
+                        source: 'OFFLINE',
+                        guestName: (guestName && guestName.trim()) || 'Walk-in Guest',
+                        guestEmail: (guestEmail && guestEmail.trim()) || 'offline@hotelraama.com',
+                        guestPhone: (guestPhone && guestPhone.trim()) || 'Offline Guest',
+                        roomTypeId: rt?._id || room.roomTypeId,
+                        assignedRoomId: room._id,
+                        checkIn: checkInDate,
+                        checkOut: checkOutDate,
+                        numGuests: 2,
+                        numNights,
+                        roomPricePerNightSnapshot: basePrice,
+                        bookingPlan: 'EP Plan (Room Only)',
+                        planType: 'NON_CP',
+                        totalAmount,
+                        bookingStatus: 'CONFIRMED',
+                        paymentStatus: 'PAID',
+                        trackingToken,
+                        adminNotes: adminNotes?.trim() || undefined,
+                        createdBy: req.admin?.email || 'admin',
+                    });
+                }
+                catch (createErr) {
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(newBookingId);
+                    throw createErr;
+                }
+                // Immediate post-create validation: ensure no lease expiration or fencing supersede occurred during creation
+                try {
+                    await lockCtx.assertFenceValid();
+                    const overlapAfterCreate = await Booking_1.Booking.findOne({
+                        _id: { $ne: booking._id },
+                        assignedRoomId: room._id,
+                        bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] },
+                        $or: [
+                            { source: 'OFFLINE' },
+                            { source: 'ONLINE', paymentStatus: 'PAID' },
+                        ],
+                        checkIn: { $lt: checkOutDate },
+                        checkOut: { $gt: checkInDate },
+                    });
+                    if (overlapAfterCreate) {
+                        throw new Error(`[Concurrency] Overlapping booking detected for room ${room.roomNumber}: ${overlapAfterCreate.bookingId}`);
+                    }
+                }
+                catch (postWriteErr) {
+                    // Safe conditional rollback: only delete if booking is still in CONFIRMED state for this room
+                    await Booking_1.Booking.deleteOne({
+                        _id: booking._id,
+                        assignedRoomId: room._id,
+                        bookingStatus: 'CONFIRMED',
+                    });
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                    throw postWriteErr;
+                }
+                // 5. Audit Log
+                await AuditLog_1.AuditLog.create({
+                    adminId: req.admin.id,
+                    adminEmail: req.admin.email,
+                    action: 'CREATE_OFFLINE_BOOKING',
+                    entity: 'Booking',
+                    entityId: booking._id.toString(),
+                    details: {
+                        bookingId: booking.bookingId,
+                        roomNumber: room.roomNumber,
+                        checkIn: checkInDate,
+                        checkOut: checkOutDate,
+                        guestName: booking.guestName,
+                    },
+                });
+                const populatedBooking = await Booking_1.Booking.findById(booking._id).populate('roomTypeId assignedRoomId');
+                return res.status(201).json({
+                    success: true,
+                    message: `Physical booking ${booking.bookingId} created for Room #${room.roomNumber}.`,
+                    data: populatedBooking,
+                });
             });
         }
         catch (error) {
@@ -1161,6 +1530,7 @@ class AdminController {
             if (!booking) {
                 return res.status(404).json({ success: false, message: 'Offline booking not found.' });
             }
+            const previousRoomId = booking.assignedRoomId;
             let targetRoomId = booking.assignedRoomId;
             let checkInDate = booking.checkIn;
             let checkOutDate = booking.checkOut;
@@ -1199,37 +1569,104 @@ class AdminController {
                 booking.totalAmount = booking.roomPricePerNightSnapshot * booking.numNights;
                 datesOrRoomChanged = true;
             }
-            if (datesOrRoomChanged && targetRoomId && booking.bookingStatus !== 'CANCELLED') {
-                const { available, conflictingBooking } = await AvailabilityEngine_1.AvailabilityEngine.isPhysicalRoomAvailable(targetRoomId, checkInDate, checkOutDate, booking._id);
-                if (!available) {
-                    return res.status(409).json({
-                        success: false,
-                        message: `Room is already occupied for these dates (Booking: ${conflictingBooking?.bookingId}).`,
-                    });
+            const lockKeys = [`booking:${booking._id.toString()}`];
+            if (datesOrRoomChanged && targetRoomId) {
+                lockKeys.push(`room:${targetRoomId.toString()}`);
+                if (booking.assignedRoomId && booking.assignedRoomId.toString() !== targetRoomId.toString()) {
+                    lockKeys.push(`room:${booking.assignedRoomId.toString()}`);
                 }
             }
-            if (guestName !== undefined)
-                booking.guestName = guestName.trim();
-            if (guestPhone !== undefined)
-                booking.guestPhone = guestPhone.trim();
-            if (guestEmail !== undefined)
-                booking.guestEmail = guestEmail.trim();
-            if (adminNotes !== undefined)
-                booking.adminNotes = adminNotes.trim();
-            if (bookingStatus && ['CONFIRMED', 'CANCELLED', 'CHECKED_IN', 'CHECKED_OUT'].includes(bookingStatus)) {
-                booking.bookingStatus = bookingStatus;
-            }
-            await booking.save();
-            await AuditLog_1.AuditLog.create({
-                adminId: req.admin.id,
-                adminEmail: req.admin.email,
-                action: 'UPDATE_OFFLINE_BOOKING',
-                entity: 'Booking',
-                entityId: booking._id.toString(),
-                details: { bookingId: booking.bookingId, changes: req.body },
+            return await (0, asyncLock_1.withDistributedLock)(lockKeys, async (lockCtx) => {
+                if (datesOrRoomChanged && targetRoomId && booking.bookingStatus !== 'CANCELLED') {
+                    const { available, conflictingBooking } = await AvailabilityEngine_1.AvailabilityEngine.isPhysicalRoomAvailable(targetRoomId, checkInDate, checkOutDate, booking._id);
+                    if (!available) {
+                        return res.status(409).json({
+                            success: false,
+                            message: `Room is already occupied for these dates (Booking: ${conflictingBooking?.bookingId}).`,
+                        });
+                    }
+                }
+                if (guestName !== undefined)
+                    booking.guestName = guestName.trim();
+                if (guestPhone !== undefined)
+                    booking.guestPhone = guestPhone.trim();
+                if (guestEmail !== undefined)
+                    booking.guestEmail = guestEmail.trim();
+                if (adminNotes !== undefined)
+                    booking.adminNotes = adminNotes.trim();
+                if (bookingStatus && ['CONFIRMED', 'CANCELLED', 'CHECKED_IN', 'CHECKED_OUT'].includes(bookingStatus)) {
+                    booking.bookingStatus = bookingStatus;
+                }
+                // Assert lock ownership and fencing token before updating offline booking
+                await lockCtx.assertFenceValid();
+                if (bookingStatus === 'CANCELLED') {
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                }
+                else if (datesOrRoomChanged && targetRoomId) {
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.reassignRoom({
+                        bookingId: booking._id,
+                        previousRoomId,
+                        targetRoomId,
+                        checkIn: checkInDate,
+                        checkOut: checkOutDate,
+                        bookingStatus: booking.bookingStatus || 'CONFIRMED',
+                    });
+                }
+                await booking.save();
+                // Post-write validation
+                try {
+                    await lockCtx.assertFenceValid();
+                    if (targetRoomId) {
+                        const overlapAfterWrite = await Booking_1.Booking.findOne({
+                            _id: { $ne: booking._id },
+                            assignedRoomId: targetRoomId,
+                            bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] },
+                            $or: [
+                                { source: 'OFFLINE' },
+                                { source: 'ONLINE', paymentStatus: 'PAID' },
+                            ],
+                            checkIn: { $lt: booking.checkOut },
+                            checkOut: { $gt: booking.checkIn },
+                        });
+                        if (overlapAfterWrite) {
+                            throw new Error(`[Concurrency] Overlapping booking detected for room: ${overlapAfterWrite.bookingId}`);
+                        }
+                    }
+                }
+                catch (postErr) {
+                    if (targetRoomId) {
+                        // Safe conditional rollback: only revert if assignedRoomId is STILL targetRoomId
+                        await Booking_1.Booking.updateOne({
+                            _id: booking._id,
+                            assignedRoomId: targetRoomId,
+                        }, {
+                            $set: { assignedRoomId: previousRoomId || null },
+                        });
+                        booking.assignedRoomId = previousRoomId;
+                        if (previousRoomId && previousRoomId.toString() !== targetRoomId.toString()) {
+                            await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.reassignRoom({
+                                bookingId: booking._id,
+                                previousRoomId: targetRoomId,
+                                targetRoomId: previousRoomId,
+                                checkIn: checkInDate,
+                                checkOut: checkOutDate,
+                                bookingStatus: booking.bookingStatus || 'CONFIRMED',
+                            });
+                        }
+                    }
+                    throw postErr;
+                }
+                await AuditLog_1.AuditLog.create({
+                    adminId: req.admin.id,
+                    adminEmail: req.admin.email,
+                    action: 'UPDATE_OFFLINE_BOOKING',
+                    entity: 'Booking',
+                    entityId: booking._id.toString(),
+                    details: { bookingId: booking.bookingId, changes: req.body },
+                });
+                const updated = await Booking_1.Booking.findById(booking._id).populate('roomTypeId assignedRoomId');
+                return res.json({ success: true, message: 'Offline booking updated successfully.', data: updated });
             });
-            const updated = await Booking_1.Booking.findById(booking._id).populate('roomTypeId assignedRoomId');
-            return res.json({ success: true, message: 'Offline booking updated successfully.', data: updated });
         }
         catch (error) {
             return res.status(500).json({ success: false, message: error.message || 'Failed to update offline booking.' });
@@ -1247,6 +1684,7 @@ class AdminController {
             }
             booking.bookingStatus = 'CANCELLED';
             await booking.save();
+            await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
             await AuditLog_1.AuditLog.create({
                 adminId: req.admin.id,
                 adminEmail: req.admin.email,

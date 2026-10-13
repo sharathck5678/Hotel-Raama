@@ -34,7 +34,7 @@ export interface IBooking extends Document {
   specialRequests?: string;
   adminNotes?: string;
   createdBy?: string;
-  
+
   // Historical Snapshots (Locked at booking creation)
   roomPricePerNightSnapshot: number;
   bookingPlan?: string;
@@ -52,11 +52,18 @@ export interface IBooking extends Document {
 
   bookingStatus: BookingStatus;
   paymentStatus: PaymentStatus;
-  
+
   // Payment Integration Data
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
+
+  // Refund Tracking
+  refundId?: string;
+  refundAmount?: number;
+  refundStatus?: string;
+  refundInitiatedAt?: Date;
+  refundReason?: string;
 
   trackingToken: string;
   expiresAt?: Date; // Temporary hold expiry for unpaid PENDING bookings
@@ -136,6 +143,13 @@ const BookingSchema = new Schema<IBooking>(
     razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
+
+    // Refund Tracking
+    refundId: { type: String, index: true },
+    refundAmount: { type: Number },
+    refundStatus: { type: String },
+    refundInitiatedAt: { type: Date },
+    refundReason: { type: String },
 
     trackingToken: { type: String, required: true, unique: true },
     expiresAt: { type: Date },

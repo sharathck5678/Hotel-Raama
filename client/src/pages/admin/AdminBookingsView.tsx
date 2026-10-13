@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Mail, MessageSquareHeart, Info, X } from 'lucide-react';
+import { Download, Mail, MessageSquareHeart, Info, X, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { fetchAdminBookings, updateBookingStatus, sendBookingFeedbackRequest } from '../../services/api';
 import { downloadBookingInvoicePdf } from '../../services/clientPdfService';
 import { ScrollReveal } from '../../components/ScrollReveal';
+import { ReassignRoomModal } from '../../components/admin/ReassignRoomModal';
 
 export const AdminBookingsView: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [reassigningBooking, setReassigningBooking] = useState<any | null>(null);
 
   const getCouponDiscountPercent = (code?: string, snapshotPct?: number) => {
     if (snapshotPct) return snapshotPct;
@@ -217,6 +219,16 @@ export const AdminBookingsView: React.FC = () => {
                       >
                         <Info size={11} /> Details
                       </button>
+                      {b.assignedRoomId && (
+                        <button
+                          type="button"
+                          onClick={() => setReassigningBooking(b)}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-white hover:bg-[#F7F0DF] text-[#8C6B1C] border border-[#8C6B1C]/30 hover:border-[#8C6B1C] rounded-sm font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                          title="Change Assigned Room"
+                        >
+                          <ArrowRightLeft size={11} /> Reassign Room
+                        </button>
+                      )}
                       {b.bookingStatus === 'CONFIRMED' && (
                         <button
                           onClick={() => handleStatusUpdate(b._id, 'CHECKED_IN')}
@@ -397,6 +409,20 @@ export const AdminBookingsView: React.FC = () => {
             </div>
 
             <div className="mt-4 pt-3 border-t border-[#10184A]/15 flex justify-end gap-2">
+              {selectedBooking.assignedRoomId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const b = selectedBooking;
+                    setSelectedBooking(null);
+                    setReassigningBooking(b);
+                  }}
+                  className="px-3 py-1.5 bg-[#D6B369] text-[#00174A] rounded-sm text-xs font-bold hover:bg-[#E8C56A] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                  title="Change Assigned Room"
+                >
+                  <ArrowRightLeft size={13} /> Reassign Room
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => downloadBookingInvoicePdf(selectedBooking)}
@@ -415,6 +441,14 @@ export const AdminBookingsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Physical Room Reassignment Modal */}
+      <ReassignRoomModal
+        isOpen={!!reassigningBooking}
+        booking={reassigningBooking}
+        onClose={() => setReassigningBooking(null)}
+        onSuccess={() => loadBookings()}
+      />
     </div>
   );
 };

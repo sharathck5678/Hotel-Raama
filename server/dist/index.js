@@ -92,6 +92,7 @@ const Room_1 = require("./models/Room");
 const RoomType_1 = require("./models/RoomType");
 const Coupon_1 = require("./models/Coupon");
 const HotelSetting_1 = require("./models/HotelSetting");
+const PhysicalRoomAllocationService_1 = require("./services/PhysicalRoomAllocationService");
 // Helper to ensure official coupons in active database (PREMIUM15, GRAND20, MEGA25, PLATINUM30)
 const ensureCoupons = async () => {
     try {
@@ -281,6 +282,13 @@ async function runNonCriticalStartupTasks() {
     }
     catch (err) {
         console.error('[Startup Error] ensureCoupons failed:', err.message || err);
+    }
+    try {
+        const syncedNights = await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.syncExistingBookings();
+        console.log(`[Startup] ✓ Physical room allocation guards synchronized (${syncedNights} room-nights).`);
+    }
+    catch (err) {
+        console.error('[Startup Error] PhysicalRoomAllocationService.syncExistingBookings failed:', err.message || err);
     }
     const syncDuration = Date.now() - syncStartTime;
     console.log(`[Startup] Background synchronization completed in ${syncDuration}ms.`);

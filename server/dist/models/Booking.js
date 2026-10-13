@@ -50,6 +50,12 @@ const BookingSchema = new mongoose_1.Schema({
     razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
+    // Refund Tracking
+    refundId: { type: String, index: true },
+    refundAmount: { type: Number },
+    refundStatus: { type: String },
+    refundInitiatedAt: { type: Date },
+    refundReason: { type: String },
     trackingToken: { type: String, required: true, unique: true },
     expiresAt: { type: Date },
     // Email Notification Status Tracking

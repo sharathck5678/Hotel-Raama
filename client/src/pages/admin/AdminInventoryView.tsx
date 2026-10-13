@@ -14,6 +14,7 @@ import {
   Trash2,
   Tag,
   Utensils,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -27,6 +28,7 @@ import { ScrollReveal } from '../../components/ScrollReveal';
 import { AdminAvailabilityRatesView } from './AdminAvailabilityRatesView';
 import { AdminBaseRatesView } from './AdminBaseRatesView';
 import { AdminMealAddonsView } from './AdminMealAddonsView';
+import { ReassignRoomModal } from '../../components/admin/ReassignRoomModal';
 
 export interface IInventoryRoom {
   _id: string;
@@ -123,6 +125,7 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingBooking, setEditingBooking] = useState<IOfflineBookingRecord | null>(null);
+  const [reassigningBooking, setReassigningBooking] = useState<any | null>(null);
 
   // Form states for Offline Booking
   const [formRoomId, setFormRoomId] = useState<string>('');
@@ -741,7 +744,7 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
                             )}
 
                             {/* Card Footer: Action */}
-                            <div className="mt-3 pt-2">
+                            <div className="mt-3 pt-2 space-y-1.5">
                               {isAvailable ? (
                                 <button
                                   onClick={() => openAddModalForRoom(room)}
@@ -749,19 +752,38 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
                                 >
                                   <Plus size={12} /> Book Offline
                                 </button>
-                              ) : room.activeBooking?.source === 'OFFLINE' ? (
-                                <button
-                                  onClick={() =>
-                                    handleCancelBooking(room.activeBooking!._id, room.roomNumber)
-                                  }
-                                  className="w-full py-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 hover:border-rose-400 text-[10px] font-bold uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
-                                >
-                                  Cancel Booking
-                                </button>
                               ) : (
-                                <div className="text-center text-[10px] font-medium text-[#667085] py-0.5">
-                                  Online Reservation
-                                </div>
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setReassigningBooking({
+                                        ...room.activeBooking,
+                                        assignedRoomId: { _id: room._id, roomNumber: room.roomNumber },
+                                        roomTypeId: room.roomType,
+                                      })
+                                    }
+                                    className="w-full py-1.5 bg-[#D6B369]/20 hover:bg-[#D6B369] text-[#8C6B1C] hover:text-[#00174A] border border-[#D6B369]/40 hover:border-[#D6B369] text-[10px] font-bold uppercase tracking-wider rounded-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                                    title="Change Assigned Room"
+                                  >
+                                    <ArrowRightLeft size={11} /> Reassign Room
+                                  </button>
+                                  {room.activeBooking?.source === 'OFFLINE' ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleCancelBooking(room.activeBooking!._id, room.roomNumber)
+                                      }
+                                      className="w-full py-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 hover:border-rose-400 text-[10px] font-bold uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
+                                    >
+                                      Cancel Booking
+                                    </button>
+                                  ) : (
+                                    <div className="text-center text-[9px] font-medium text-[#667085] py-0.5">
+                                      Online Reservation
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -868,6 +890,13 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
                         <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
                           {!isCancelled && (
                             <>
+                              <button
+                                onClick={() => setReassigningBooking(bk)}
+                                title="Change Assigned Room"
+                                className="p-1.5 text-[#8C6B1C] hover:bg-[#F7F0DF] rounded-xs cursor-pointer"
+                              >
+                                <ArrowRightLeft size={14} />
+                              </button>
                               <button
                                 onClick={() => openEditModal(bk)}
                                 title="Edit booking dates or guest"
@@ -1172,6 +1201,17 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
           </div>
         </div>
       )}
+
+      {/* Physical Room Reassignment Modal */}
+      <ReassignRoomModal
+        isOpen={!!reassigningBooking}
+        booking={reassigningBooking}
+        onClose={() => setReassigningBooking(null)}
+        onSuccess={() => {
+          loadInventory(checkIn, checkOut);
+          loadOfflineBookings();
+        }}
+      />
     </div>
   );
 };

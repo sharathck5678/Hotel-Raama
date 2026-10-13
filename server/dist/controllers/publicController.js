@@ -27,6 +27,8 @@ const seedDatabase_1 = require("../seed/seedDatabase");
 const aadharValidator_1 = require("../utils/aadharValidator");
 const gstinValidator_1 = require("../utils/gstinValidator");
 const MealPricingService_1 = require("../services/MealPricingService");
+const asyncLock_1 = require("../utils/asyncLock");
+const PhysicalRoomAllocationService_1 = require("../services/PhysicalRoomAllocationService");
 class PublicController {
     static async resolveRoomTypeId(roomTypeId) {
         if (!roomTypeId)
@@ -273,135 +275,214 @@ class PublicController {
             const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes hold
             // 3. Create Razorpay Payment Order
             const razorpayOrder = await RazorpayService_1.RazorpayService.createOrder(pricing.totalAmount, bookingId);
-            // 4. Create PENDING Booking Record
-            const booking = await Booking_1.Booking.create({
-                bookingId,
-                guestName,
-                guestEmail,
-                guestPhone,
-                guestAadhar: guestAadhar ? guestAadhar.trim() : undefined,
-                roomTypeId: resolvedRoomTypeId,
-                assignedRoomId: availability.assignedRoomId,
-                checkIn: checkInDate,
-                checkOut: checkOutDate,
-                numGuests: numGuests || 1,
-                numNights: pricing.numNights,
-                specialRequests,
-                roomPricePerNightSnapshot: pricing.roomPricePerNight,
-                bookingPlan: (planType === 'CP' || planType === 'BREAKFAST_INCLUDED') ? 'CP Plan (With Breakfast)' : 'EP Plan (Room Only)',
-                planType: (planType === 'CP' || planType === 'BREAKFAST_INCLUDED') ? 'CP' : (planType || 'NON_CP'),
-                mealPlanSelection: {
-                    breakfast: !!mealSelection?.breakfast,
-                    lunch: !!mealSelection?.lunch,
-                    dinner: !!mealSelection?.dinner,
-                    pricePerNight: pricing.mealPlanPricePerNight,
-                    totalPrice: pricing.mealPlanTotal,
-                },
-                extraPerson: !!extraPerson,
-                extraPersonChargeSnapshot: pricing.extraPersonTotal,
-                couponCodeSnapshot: pricing.couponCode,
-                discountPercentageSnapshot: pricing.discountPercentage || 0,
-                discountAmountSnapshot: pricing.discountAmount,
-                gstin: pricing.gstin,
-                taxRateSnapshot: pricing.taxPercentage,
-                taxAmountSnapshot: pricing.taxAmount,
-                totalAmount: pricing.totalAmount,
-                bookingStatus: 'PENDING',
-                paymentStatus: 'PENDING',
-                razorpayOrderId: razorpayOrder.id,
-                trackingToken,
-                expiresAt,
-            });
-            // 5. Authoritative Concurrency / Overbooking Protection
-            // Verify that this reservation hold did not exceed sellable capacity on any stay night
-            const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
-            const { pooledTypeIds, poolRooms, poolRoomIds, totalPhysical } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(resolvedRoomTypeId);
-            const todayStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date());
-            const maintenanceCount = poolRooms.filter((r) => r.status === 'MAINTENANCE' || r.status === 'OUT_OF_SERVICE').length;
-            const dailyInvs = await DailyInventory_1.DailyInventory.find({
-                roomTypeId: { $in: pooledTypeIds },
-                date: { $in: stayDates },
-            }).lean();
-            // Aggregate DailyInventory records per stay date across all pooled room types
-            const dailyInvMap = new Map();
-            for (const nightStr of stayDates) {
-                const invsForDate = dailyInvs.filter((inv) => inv.date === nightStr);
-                // Stop Sell check is strictly specific to the requested room category (resolvedRoomTypeId)
-                const targetTypeInv = invsForDate.find((inv) => inv.roomTypeId.toString() === resolvedRoomTypeId.toString());
-                const isStopSell = !!targetTypeInv?.stopSell;
-                const minStay = targetTypeInv?.minStay || (invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.minStay || 1)) : 1);
-                const blockedRooms = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.blockedRooms || 0)) : 0;
-                const overrides = invsForDate
-                    .map((inv) => inv.inventoryOverride)
-                    .filter((o) => o !== undefined && o !== null);
-                const inventoryOverride = overrides.length > 0 ? Math.min(...overrides) : null;
-                dailyInvMap.set(nightStr, { stopSell: isStopSell, minStay, blockedRooms, inventoryOverride });
-            }
-            const priorBookings = await Booking_1.Booking.find({
-                _id: { $lt: booking._id },
-                $and: [
-                    {
-                        $or: [
-                            { assignedRoomId: { $in: poolRoomIds } },
-                            { roomTypeId: { $in: pooledTypeIds } },
-                        ],
+            // Concurrency protection: Lock target physical room during reservation hold creation
+            let targetPhysicalRoomId = availability.assignedRoomId;
+            const roomLockKeys = targetPhysicalRoomId ? [`room:${targetPhysicalRoomId.toString()}`] : [];
+            return await (0, asyncLock_1.withDistributedLock)(roomLockKeys, async (lockCtx) => {
+                // Double check physical room availability under lock
+                if (targetPhysicalRoomId) {
+                    const { available: physicalAvail } = await AvailabilityEngine_1.AvailabilityEngine.isPhysicalRoomAvailable(targetPhysicalRoomId, checkInDate, checkOutDate);
+                    if (!physicalAvail) {
+                        // Find another compatible physical room in the shared pool
+                        const { poolRooms: poolRms } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(resolvedRoomTypeId);
+                        let fallbackRoom = null;
+                        for (const pr of poolRms) {
+                            if (pr.isActive && !pr.isVenue && pr.roomNumber !== '104' && pr._id.toString() !== targetPhysicalRoomId.toString()) {
+                                const { available: candAvail } = await AvailabilityEngine_1.AvailabilityEngine.isPhysicalRoomAvailable(pr._id, checkInDate, checkOutDate);
+                                if (candAvail) {
+                                    fallbackRoom = pr;
+                                    break;
+                                }
+                            }
+                        }
+                        targetPhysicalRoomId = fallbackRoom ? fallbackRoom._id : undefined;
+                    }
+                }
+                // Assert lock is still validly held and fencing token active before creating booking hold
+                await lockCtx.assertFenceValid();
+                const newBookingMongoId = new mongoose_1.default.Types.ObjectId();
+                // Database-enforced atomic allocation guard for physical room if assigned
+                if (targetPhysicalRoomId) {
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.allocateRoom({
+                        roomId: targetPhysicalRoomId,
+                        checkIn: checkInDate,
+                        checkOut: checkOutDate,
+                        bookingId: newBookingMongoId,
+                        bookingStatus: 'PENDING',
+                        expiresAt,
+                    });
+                }
+                // 4. Create PENDING Booking Record
+                let booking;
+                try {
+                    booking = await Booking_1.Booking.create({
+                        _id: newBookingMongoId,
+                        bookingId,
+                        guestName,
+                        guestEmail,
+                        guestPhone,
+                        guestAadhar: guestAadhar ? guestAadhar.trim() : undefined,
+                        roomTypeId: resolvedRoomTypeId,
+                        assignedRoomId: targetPhysicalRoomId,
+                        checkIn: checkInDate,
+                        checkOut: checkOutDate,
+                        numGuests: numGuests || 1,
+                        numNights: pricing.numNights,
+                        specialRequests,
+                        roomPricePerNightSnapshot: pricing.roomPricePerNight,
+                        bookingPlan: (planType === 'CP' || planType === 'BREAKFAST_INCLUDED') ? 'CP Plan (With Breakfast)' : 'EP Plan (Room Only)',
+                        planType: (planType === 'CP' || planType === 'BREAKFAST_INCLUDED') ? 'CP' : (planType || 'NON_CP'),
+                        mealPlanSelection: {
+                            breakfast: !!mealSelection?.breakfast,
+                            lunch: !!mealSelection?.lunch,
+                            dinner: !!mealSelection?.dinner,
+                            pricePerNight: pricing.mealPlanPricePerNight,
+                            totalPrice: pricing.mealPlanTotal,
+                        },
+                        extraPerson: !!extraPerson,
+                        extraPersonChargeSnapshot: pricing.extraPersonTotal,
+                        couponCodeSnapshot: pricing.couponCode,
+                        discountPercentageSnapshot: pricing.discountPercentage || 0,
+                        discountAmountSnapshot: pricing.discountAmount,
+                        gstin: pricing.gstin,
+                        taxRateSnapshot: pricing.taxPercentage,
+                        taxAmountSnapshot: pricing.taxAmount,
+                        totalAmount: pricing.totalAmount,
+                        bookingStatus: 'PENDING',
+                        paymentStatus: 'PENDING',
+                        razorpayOrderId: razorpayOrder.id,
+                        trackingToken,
+                        expiresAt,
+                    });
+                }
+                catch (createErr) {
+                    if (targetPhysicalRoomId) {
+                        await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(newBookingMongoId);
+                    }
+                    throw createErr;
+                }
+                // 5. Authoritative Concurrency / Overbooking Protection
+                // Verify that this reservation hold did not exceed sellable capacity on any stay night
+                const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(checkInDate, checkOutDate);
+                const { pooledTypeIds, poolRooms, poolRoomIds, totalPhysical } = await AvailabilityEngine_1.AvailabilityEngine.resolvePooledRoomTypes(resolvedRoomTypeId);
+                const todayStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date());
+                const maintenanceCount = poolRooms.filter((r) => r.status === 'MAINTENANCE' || r.status === 'OUT_OF_SERVICE').length;
+                const dailyInvs = await DailyInventory_1.DailyInventory.find({
+                    roomTypeId: { $in: pooledTypeIds },
+                    date: { $in: stayDates },
+                }).lean();
+                // Aggregate DailyInventory records per stay date across all pooled room types
+                const dailyInvMap = new Map();
+                for (const nightStr of stayDates) {
+                    const invsForDate = dailyInvs.filter((inv) => inv.date === nightStr);
+                    // Stop Sell check is strictly specific to the requested room category (resolvedRoomTypeId)
+                    const targetTypeInv = invsForDate.find((inv) => inv.roomTypeId.toString() === resolvedRoomTypeId.toString());
+                    const isStopSell = !!targetTypeInv?.stopSell;
+                    const minStay = targetTypeInv?.minStay || (invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.minStay || 1)) : 1);
+                    const blockedRooms = invsForDate.length > 0 ? Math.max(...invsForDate.map((inv) => inv.blockedRooms || 0)) : 0;
+                    const overrides = invsForDate
+                        .map((inv) => inv.inventoryOverride)
+                        .filter((o) => o !== undefined && o !== null);
+                    const inventoryOverride = overrides.length > 0 ? Math.min(...overrides) : null;
+                    dailyInvMap.set(nightStr, { stopSell: isStopSell, minStay, blockedRooms, inventoryOverride });
+                }
+                const priorBookings = await Booking_1.Booking.find({
+                    _id: { $lt: booking._id },
+                    $and: [
+                        {
+                            $or: [
+                                { assignedRoomId: { $in: poolRoomIds } },
+                                { roomTypeId: { $in: pooledTypeIds } },
+                            ],
+                        },
+                        {
+                            $or: [
+                                { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+                                { bookingStatus: 'PENDING', expiresAt: { $gt: new Date() } },
+                            ],
+                        },
+                    ],
+                }).lean();
+                let isOverbooked = false;
+                for (const nightStr of stayDates) {
+                    let sellableCap = totalPhysical;
+                    const inv = dailyInvMap.get(nightStr);
+                    if (inv?.stopSell) {
+                        isOverbooked = true;
+                        break;
+                    }
+                    if (inv?.inventoryOverride !== undefined && inv?.inventoryOverride !== null) {
+                        sellableCap = Math.min(totalPhysical, Math.max(0, inv.inventoryOverride));
+                    }
+                    const maintToday = nightStr === todayStr ? maintenanceCount : 0;
+                    const blockedOnNight = Math.min(totalPhysical, Math.max(0, (inv?.blockedRooms || 0) + maintToday));
+                    const netSellable = Math.max(0, sellableCap - blockedOnNight);
+                    // Count active bookings created prior to this booking overlapping this night across shared pool
+                    const activeCount = priorBookings.filter((b) => {
+                        const bInStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkIn));
+                        const bOutStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkOut));
+                        return bInStr <= nightStr && bOutStr > nightStr;
+                    }).length;
+                    // If existing bookings already met or exceeded sellable capacity, this new hold causes an overbooking
+                    if (activeCount >= netSellable) {
+                        isOverbooked = true;
+                        break;
+                    }
+                }
+                if (isOverbooked) {
+                    // Immediate conditional rollback of overbooked hold
+                    await Booking_1.Booking.updateOne({
+                        _id: booking._id,
+                        bookingStatus: 'PENDING',
+                    }, {
+                        $set: {
+                            bookingStatus: 'CANCELLED',
+                            paymentStatus: 'FAILED',
+                        },
+                    });
+                    if (targetPhysicalRoomId) {
+                        await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                    }
+                    return res.status(409).json({
+                        success: false,
+                        message: 'ROOM_NO_LONGER_AVAILABLE',
+                    });
+                }
+                // Post-create validation: ensure lock was not lost/stolen during creation
+                if (targetPhysicalRoomId) {
+                    try {
+                        await lockCtx.assertFenceValid();
+                    }
+                    catch (fenceErr) {
+                        // Immediate conditional rollback: only cancel if still in PENDING status
+                        await Booking_1.Booking.updateOne({
+                            _id: booking._id,
+                            bookingStatus: 'PENDING',
+                        }, {
+                            $set: {
+                                bookingStatus: 'CANCELLED',
+                                paymentStatus: 'FAILED',
+                            },
+                        });
+                        await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                        return res.status(409).json({
+                            success: false,
+                            message: 'ROOM_NO_LONGER_AVAILABLE',
+                        });
+                    }
+                }
+                return res.status(201).json({
+                    success: true,
+                    message: 'Booking hold created successfully.',
+                    data: {
+                        bookingId: booking.bookingId,
+                        trackingToken: booking.trackingToken,
+                        totalAmount: booking.totalAmount,
+                        razorpayOrderId: razorpayOrder.id,
+                        razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
+                        expiresAt: booking.expiresAt,
                     },
-                    {
-                        $or: [
-                            { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
-                            { bookingStatus: 'PENDING', expiresAt: { $gt: new Date() } },
-                        ],
-                    },
-                ],
-            }).lean();
-            let isOverbooked = false;
-            for (const nightStr of stayDates) {
-                let sellableCap = totalPhysical;
-                const inv = dailyInvMap.get(nightStr);
-                if (inv?.stopSell) {
-                    isOverbooked = true;
-                    break;
-                }
-                if (inv?.inventoryOverride !== undefined && inv?.inventoryOverride !== null) {
-                    sellableCap = Math.min(totalPhysical, Math.max(0, inv.inventoryOverride));
-                }
-                const maintToday = nightStr === todayStr ? maintenanceCount : 0;
-                const blockedOnNight = Math.min(totalPhysical, Math.max(0, (inv?.blockedRooms || 0) + maintToday));
-                const netSellable = Math.max(0, sellableCap - blockedOnNight);
-                // Count active bookings created prior to this booking overlapping this night across shared pool
-                const activeCount = priorBookings.filter((b) => {
-                    const bInStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkIn));
-                    const bOutStr = AvailabilityEngine_1.AvailabilityEngine.formatDateStr(new Date(b.checkOut));
-                    return bInStr <= nightStr && bOutStr > nightStr;
-                }).length;
-                // If existing bookings already met or exceeded sellable capacity, this new hold causes an overbooking
-                if (activeCount >= netSellable) {
-                    isOverbooked = true;
-                    break;
-                }
-            }
-            if (isOverbooked) {
-                // Immediate rollback of overbooked hold
-                await Booking_1.Booking.findByIdAndUpdate(booking._id, {
-                    bookingStatus: 'CANCELLED',
-                    paymentStatus: 'FAILED',
                 });
-                return res.status(409).json({
-                    success: false,
-                    message: 'ROOM_NO_LONGER_AVAILABLE',
-                });
-            }
-            return res.status(201).json({
-                success: true,
-                message: 'Booking hold created successfully.',
-                data: {
-                    bookingId: booking.bookingId,
-                    trackingToken: booking.trackingToken,
-                    totalAmount: booking.totalAmount,
-                    razorpayOrderId: razorpayOrder.id,
-                    razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
-                    expiresAt: booking.expiresAt,
-                },
             });
         }
         catch (error) {
@@ -433,38 +514,106 @@ class PublicController {
                     },
                 });
             }
-            // 2. Pre-confirmation State Validation: Cannot confirm cancelled or invalid states
+            // 2. Order ID Verification: Submitted razorpayOrderId must match the booking's order ID
+            if (booking.razorpayOrderId && booking.razorpayOrderId !== razorpayOrderId) {
+                return res.status(400).json({ success: false, message: 'Provided order ID does not match this booking.' });
+            }
+            // 3. Server-side HMAC-SHA256 Signature Verification
+            const isValid = RazorpayService_1.RazorpayService.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+            if (!isValid) {
+                await Booking_1.Booking.updateOne({ _id: booking._id, bookingStatus: 'PENDING' }, { $set: { bookingStatus: 'CANCELLED', paymentStatus: 'FAILED' } });
+                await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                return res.status(400).json({ success: false, message: 'Payment verification failed. Invalid signature.' });
+            }
+            // 4. Pre-confirmation State Validation: Cannot confirm cancelled bookings
+            // If payment was captured at gateway (signature is valid), initiate and track an automated refund
             if (booking.bookingStatus === 'CANCELLED') {
-                return res.status(400).json({ success: false, message: 'Booking is cancelled and cannot be confirmed.' });
+                let refundResult = null;
+                try {
+                    refundResult = await RazorpayService_1.RazorpayService.refundPayment(razorpayPaymentId, booking.totalAmount, `Automatic refund: Booking ${booking.bookingId} cancelled prior to payment confirmation.`);
+                }
+                catch (refundErr) {
+                    console.error(`[verifyPayment] Error executing refund for payment ${razorpayPaymentId}:`, refundErr);
+                }
+                await Booking_1.Booking.updateOne({ _id: booking._id }, {
+                    $set: {
+                        bookingStatus: 'CANCELLED',
+                        paymentStatus: refundResult?.id ? 'REFUNDED' : 'FAILED',
+                        razorpayPaymentId,
+                        razorpaySignature,
+                        refundId: refundResult?.id,
+                        refundAmount: refundResult?.amount ? refundResult.amount / 100 : booking.totalAmount,
+                        refundStatus: refundResult?.status || (refundResult?.id ? 'processed' : 'failed'),
+                        refundInitiatedAt: new Date(),
+                        refundReason: 'Booking was cancelled prior to payment verification.',
+                    },
+                });
+                await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                return res.status(409).json({
+                    success: false,
+                    message: 'BOOKING_CANCELLED_REFUND_INITIATED',
+                    error: 'Booking was cancelled before payment was verified. An automated refund has been initiated.',
+                    refund: refundResult,
+                });
             }
             if (booking.bookingStatus !== 'PENDING') {
                 return res.status(400).json({ success: false, message: 'Booking is not in a pending state for payment.' });
             }
-            // 3. Expiration Check: Expired hold cannot reclaim room
-            if (booking.expiresAt && new Date(booking.expiresAt).getTime() < Date.now()) {
-                booking.paymentStatus = 'FAILED';
-                booking.bookingStatus = 'CANCELLED';
-                await booking.save();
+            // 5. Expiration Check: Expired hold cannot reclaim room
+            const now = new Date();
+            if (booking.expiresAt && new Date(booking.expiresAt).getTime() < now.getTime()) {
+                await Booking_1.Booking.updateOne({ _id: booking._id, bookingStatus: 'PENDING' }, { $set: { bookingStatus: 'CANCELLED', paymentStatus: 'FAILED' } });
+                await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
                 return res.status(400).json({ success: false, message: 'Booking hold has expired. Please initiate a new reservation.' });
             }
-            // 4. Order ID Verification: Submitted razorpayOrderId must match the booking's order ID
-            if (booking.razorpayOrderId && booking.razorpayOrderId !== razorpayOrderId) {
-                return res.status(400).json({ success: false, message: 'Provided order ID does not match this booking.' });
+            // 6. Verify and promote physical room allocation hold
+            // If the hold expired and another booking claimed the room, confirmHold returns success: false
+            const stayDates = AvailabilityEngine_1.AvailabilityEngine.getStayDateStrings(booking.checkIn, booking.checkOut);
+            if (booking.assignedRoomId) {
+                const confirmResult = await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.confirmHold(booking._id, stayDates);
+                if (!confirmResult.success) {
+                    // Allocation hold was expired and claimed by another booking, or incomplete.
+                    // Initiate actual Razorpay refund and track on booking.
+                    let refundResult = null;
+                    try {
+                        refundResult = await RazorpayService_1.RazorpayService.refundPayment(razorpayPaymentId, booking.totalAmount, `Automatic refund: Booking hold expired and room claimed by another reservation.`);
+                    }
+                    catch (refundErr) {
+                        console.error(`[verifyPayment] Error executing refund for payment ${razorpayPaymentId}:`, refundErr);
+                    }
+                    await Booking_1.Booking.updateOne({ _id: booking._id }, {
+                        $set: {
+                            bookingStatus: 'CANCELLED',
+                            paymentStatus: refundResult?.id ? 'REFUNDED' : 'FAILED',
+                            razorpayPaymentId,
+                            razorpaySignature,
+                            refundId: refundResult?.id,
+                            refundAmount: refundResult?.amount ? refundResult.amount / 100 : booking.totalAmount,
+                            refundStatus: refundResult?.status || (refundResult?.id ? 'processed' : 'failed'),
+                            refundInitiatedAt: new Date(),
+                            refundReason: 'Booking hold expired and room claimed by another reservation.',
+                        },
+                    });
+                    await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                    return res.status(409).json({
+                        success: false,
+                        message: 'HOLD_EXPIRED_OR_ROOM_UNAVAILABLE',
+                        error: 'Booking hold expired and the room was claimed by another reservation. Payment has been refunded.',
+                        refund: refundResult,
+                    });
+                }
             }
-            // 5. Server-side HMAC-SHA256 Signature Verification
-            const isValid = RazorpayService_1.RazorpayService.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
-            if (!isValid) {
-                booking.paymentStatus = 'FAILED';
-                booking.bookingStatus = 'CANCELLED';
-                await booking.save();
-                return res.status(400).json({ success: false, message: 'Payment verification failed. Invalid signature.' });
-            }
-            // 6. Atomic Transition to CONFIRMED & PAID
-            // Only one concurrent request can match { bookingStatus: 'PENDING', paymentStatus: { $ne: 'PAID' } }
+            // 6. Atomic Transition to CONFIRMED & PAID on Booking document
+            // Strictly conditional on PENDING status, non-PAID, and unexpired hold
             const confirmedBooking = await Booking_1.Booking.findOneAndUpdate({
                 _id: booking._id,
                 bookingStatus: 'PENDING',
                 paymentStatus: { $ne: 'PAID' },
+                $or: [
+                    { expiresAt: { $exists: false } },
+                    { expiresAt: null },
+                    { expiresAt: { $gt: now } },
+                ],
             }, {
                 $set: {
                     paymentStatus: 'PAID',
@@ -476,10 +625,11 @@ class PublicController {
                     expiresAt: 1,
                 },
             }, { new: true });
-            // If another concurrent request already updated this booking, fetch current state and return idempotently
             if (!confirmedBooking) {
+                // Check if a concurrent/duplicate verification callback already succeeded and confirmed the booking
                 const latestBooking = await Booking_1.Booking.findOne({ bookingId });
-                if (latestBooking && latestBooking.paymentStatus === 'PAID') {
+                if (latestBooking && latestBooking.paymentStatus === 'PAID' && latestBooking.bookingStatus === 'CONFIRMED') {
+                    // Idempotent duplicate: DO NOT release allocations!
                     return res.json({
                         success: true,
                         message: 'Payment already verified! Booking confirmed.',
@@ -490,13 +640,42 @@ class PublicController {
                         },
                     });
                 }
-                return res.status(400).json({ success: false, message: 'Booking state could not be confirmed.' });
+                // Another state transition won (e.g. cancellation, admin modification).
+                // Since payment succeeded at the gateway, initiate and track an actual Razorpay refund.
+                let refundResult = null;
+                try {
+                    refundResult = await RazorpayService_1.RazorpayService.refundPayment(razorpayPaymentId, booking.totalAmount, `Automatic refund: Booking ${booking.bookingId} could not be confirmed (state transition conflict).`);
+                }
+                catch (refundErr) {
+                    console.error(`[verifyPayment] Refund execution failed for payment ${razorpayPaymentId}:`, refundErr);
+                }
+                await Booking_1.Booking.updateOne({ _id: booking._id }, {
+                    $set: {
+                        bookingStatus: 'CANCELLED',
+                        paymentStatus: refundResult?.id ? 'REFUNDED' : 'FAILED',
+                        razorpayPaymentId,
+                        razorpaySignature,
+                        refundId: refundResult?.id,
+                        refundAmount: refundResult?.amount ? refundResult.amount / 100 : booking.totalAmount,
+                        refundStatus: refundResult?.status || (refundResult?.id ? 'processed' : 'failed'),
+                        refundInitiatedAt: new Date(),
+                        refundReason: 'State transition conflict during confirmation; hold released.',
+                    },
+                });
+                // Safe release of physical room allocation for this booking
+                await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
+                return res.status(409).json({
+                    success: false,
+                    message: 'BOOKING_CONFIRMATION_FAILED_REFUND_INITIATED',
+                    error: 'Booking could not be confirmed due to a concurrent state transition. An automated refund has been initiated.',
+                    refund: refundResult,
+                });
             }
-            // 7. Update assigned physical room status to RESERVED
+            // 8. Update assigned physical room status to RESERVED
             if (confirmedBooking.assignedRoomId) {
                 await Room_1.Room.findByIdAndUpdate(confirmedBooking.assignedRoomId, { status: 'RESERVED' });
             }
-            // 8. Downstream Async Email Notifications (Hotel & Guest)
+            // 9. Downstream Async Email Notifications (Hotel & Guest)
             // Only the single atomic transition winner triggers email dispatch
             // Failure to send email will NOT roll back payment or corrupt confirmed booking state
             EmailService_1.EmailService.processBookingEmails(confirmedBooking._id.toString()).catch((emailErr) => {
@@ -551,13 +730,25 @@ class PublicController {
             if (!booking) {
                 return res.status(404).json({ success: false, message: 'Booking not found.' });
             }
-            // If booking was already paid, do not cancel via public endpoint
-            if (booking.paymentStatus === 'PAID') {
-                return res.status(400).json({ success: false, message: 'Paid bookings cannot be cancelled via this endpoint.' });
+            // Atomic conditional cancellation: only cancels if still PENDING and not PAID
+            const cancelledBooking = await Booking_1.Booking.findOneAndUpdate({
+                _id: booking._id,
+                bookingStatus: 'PENDING',
+                paymentStatus: { $ne: 'PAID' },
+            }, {
+                $set: {
+                    bookingStatus: 'CANCELLED',
+                    paymentStatus: 'FAILED',
+                },
+            }, { new: true });
+            if (!cancelledBooking) {
+                const current = await Booking_1.Booking.findById(booking._id);
+                if (current?.paymentStatus === 'PAID' || current?.bookingStatus === 'CONFIRMED') {
+                    return res.status(400).json({ success: false, message: 'Paid or confirmed bookings cannot be cancelled via this endpoint.' });
+                }
+                return res.json({ success: true, message: 'Booking hold already cancelled.' });
             }
-            booking.bookingStatus = 'CANCELLED';
-            booking.paymentStatus = 'FAILED';
-            await booking.save();
+            await PhysicalRoomAllocationService_1.PhysicalRoomAllocationService.releaseBooking(booking._id);
             return res.json({ success: true, message: 'Booking hold cancelled successfully.' });
         }
         catch (error) {

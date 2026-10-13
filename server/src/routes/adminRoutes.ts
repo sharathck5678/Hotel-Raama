@@ -18,6 +18,8 @@ router.get('/dashboard', AdminController.getDashboardMetrics);
 // Bookings
 router.get('/bookings', AdminController.getBookings);
 router.patch('/bookings/:id/status', AdminController.updateBookingStatus);
+router.get('/bookings/:id/candidate-rooms', AdminController.getCandidateRooms);
+router.patch('/bookings/:id/assigned-room', AdminController.reassignBookingRoom);
 router.post('/bookings/:id/send-feedback-request', AdminController.sendBookingFeedbackRequest);
 
 // Customer Private Feedback (Admin Only)

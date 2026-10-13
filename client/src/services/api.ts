@@ -391,6 +391,25 @@ export const updateBookingStatus = (id: string, payload: any) =>
       };
     });
 
+export const fetchCandidateRoomsForBooking = (bookingId: string) =>
+  api
+    .get(`/admin/bookings/${bookingId}/candidate-rooms`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch candidate rooms.',
+      data: { candidateRooms: [] },
+    }));
+
+export const reassignBookingRoom = (bookingId: string, targetRoomId: string) =>
+  api
+    .patch(`/admin/bookings/${bookingId}/assigned-room`, { targetRoomId })
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to reassign room.',
+    }));
+
 export const fetchAdminOrders = () =>
   api
     .get('/admin/orders')

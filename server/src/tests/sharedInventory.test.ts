@@ -5,6 +5,7 @@ import { Room } from '../models/Room';
 import { DailyInventory } from '../models/DailyInventory';
 import { DailyRate } from '../models/DailyRate';
 import { Booking } from '../models/Booking';
+import { PhysicalRoomAllocation } from '../models/PhysicalRoomAllocation';
 import { AvailabilityEngine } from '../services/AvailabilityEngine';
 import { AdminController } from '../controllers/adminController';
 import { PublicController } from '../controllers/publicController';
@@ -93,6 +94,12 @@ async function runSharedInventoryTests() {
           { _id: { $in: createdBookingIds } },
           { guestEmail: { $regex: /@example\.com$/i } },
           { checkIn: { $in: [d1In, d2In, dMultiIn] } },
+        ],
+      });
+      await PhysicalRoomAllocation.deleteMany({
+        $or: [
+          { bookingId: { $in: createdBookingIds } },
+          { date: { $in: testDates } },
         ],
       });
       createdBookingIds.length = 0;

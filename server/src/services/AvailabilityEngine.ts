@@ -5,6 +5,7 @@ import { Booking } from '../models/Booking';
 import { DailyInventory } from '../models/DailyInventory';
 import { DailyRate } from '../models/DailyRate';
 import { RatePlan } from '../models/RatePlan';
+import { PhysicalRoomAllocation } from '../models/PhysicalRoomAllocation';
 import { OFFICIAL_ROOMS_SPEC } from '../seed/seedDatabase';
 import { RatePlanService } from './RatePlanService';
 
@@ -884,9 +885,51 @@ export class AvailabilityEngine {
     }
 
     const conflictingBooking = await Booking.findOne(query).lean();
+    if (conflictingBooking) {
+      return {
+        available: false,
+        conflictingBooking: conflictingBooking || undefined,
+      };
+    }
+
+    // Secondary verification against database-enforced physical room allocation guards
+    const stayDates = AvailabilityEngine.getStayDateStrings(checkIn, checkOut);
+    if (stayDates.length > 0) {
+      const allocQuery: any = {
+        roomId: rId,
+        date: { $in: stayDates },
+        $or: [
+          { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+          { bookingStatus: 'PENDING', expiresAt: { $gt: now } },
+        ],
+      };
+      if (excludeBookingId) {
+        const bId = typeof excludeBookingId === 'string' ? new Types.ObjectId(excludeBookingId) : excludeBookingId;
+        allocQuery.bookingId = { $ne: bId };
+      }
+      const existingAlloc = await PhysicalRoomAllocation.findOne(allocQuery).lean();
+      if (existingAlloc) {
+        const associatedBooking = await Booking.findById(existingAlloc.bookingId).lean();
+        if (associatedBooking && !['CANCELLED', 'CHECKED_OUT'].includes(associatedBooking.bookingStatus)) {
+          return {
+            available: false,
+            conflictingBooking: {
+              _id: existingAlloc.bookingId,
+              bookingId: associatedBooking.bookingId,
+              assignedRoomId: rId,
+              bookingStatus: existingAlloc.bookingStatus,
+            },
+          };
+        } else {
+          // Orphaned or cancelled allocation: prune it and continue
+          await PhysicalRoomAllocation.deleteMany({ bookingId: existingAlloc.bookingId });
+        }
+      }
+    }
+
     return {
-      available: !conflictingBooking,
-      conflictingBooking: conflictingBooking || undefined,
+      available: true,
+      conflictingBooking: undefined,
     };
   }
 
@@ -987,6 +1030,159 @@ export class AvailabilityEngine {
         checkOut,
       },
       rooms: inventoryRooms,
+    };
+  }
+
+  /**
+   * Find all candidate physical rooms compatible with a given booking
+   * and available across its entire stay date range.
+   *
+   * Excludes:
+   * - Currently assigned room
+   * - Rooms with overlapping bookings for the stay window
+   * - Rooms under MAINTENANCE or OUT_OF_SERVICE
+   * - Inactive rooms, venues, Room 104
+   * - Incompatible room categories or occupancy requirements
+   */
+  static async getCandidateRoomsForBooking(bookingOrId: string | Types.ObjectId | any): Promise<{
+    booking: any;
+    currentRoom: any;
+    candidateRooms: Array<{
+      _id: string;
+      roomNumber: string;
+      floor: number;
+      roomType: {
+        _id: string;
+        name: string;
+        code: string;
+        basePrice: number;
+        cpPrice: number;
+        isAc: boolean;
+        maxOccupancy: number;
+      };
+    }>;
+  }> {
+    const now = new Date();
+    let booking: any = bookingOrId;
+
+    if (
+      typeof bookingOrId === 'string' ||
+      bookingOrId instanceof Types.ObjectId ||
+      (booking && !booking.roomTypeId)
+    ) {
+      const bId = bookingOrId?._id || bookingOrId;
+      booking = await Booking.findById(bId).populate('roomTypeId assignedRoomId').lean();
+    } else if (booking && (!booking.roomTypeId?.code || !booking.assignedRoomId?.roomNumber)) {
+      booking = await Booking.findById(booking._id).populate('roomTypeId assignedRoomId').lean();
+    }
+
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    const checkIn = new Date(booking.checkIn);
+    const checkOut = new Date(booking.checkOut);
+    const stayDates = this.getStayDateStrings(checkIn, checkOut);
+
+    // Resolve room type pool
+    const resolved = await this.resolvePooledRoomTypes(booking.roomTypeId._id || booking.roomTypeId);
+    const { primaryType, pooledTypes, poolRooms, poolRoomIds } = resolved;
+
+    const currentAssignedId = booking.assignedRoomId?._id
+      ? booking.assignedRoomId._id.toString()
+      : booking.assignedRoomId
+      ? booking.assignedRoomId.toString()
+      : null;
+
+    // Find all overlapping bookings for rooms in this shared pool
+    const conflictingBookings = await Booking.find({
+      _id: { $ne: booking._id },
+      assignedRoomId: { $in: poolRoomIds },
+      $or: [
+        { bookingStatus: { $in: ['CONFIRMED', 'CHECKED_IN'] } },
+        { bookingStatus: 'PENDING', expiresAt: { $gt: now } },
+      ],
+      checkIn: { $lt: checkOut },
+      checkOut: { $gt: checkIn },
+    })
+      .select('assignedRoomId checkIn checkOut bookingStatus')
+      .lean();
+
+    const occupiedRoomIdStrs = new Set(
+      conflictingBookings
+        .map((b) => b.assignedRoomId?.toString())
+        .filter(Boolean) as string[]
+    );
+
+    const bookingRt: any = booking.roomTypeId;
+    const candidateRooms: any[] = [];
+
+    for (const room of poolRooms) {
+      const rIdStr = room._id.toString();
+
+      // 1. Exclude the currently assigned room
+      if (currentAssignedId && rIdStr === currentAssignedId) {
+        continue;
+      }
+
+      // 2. Exclude Room 104, inactive rooms, or event venues
+      if (room.roomNumber === '104' || !room.isActive || room.isVenue) {
+        continue;
+      }
+
+      // 3. Exclude operational maintenance or out-of-service rooms
+      if (room.status === 'MAINTENANCE' || room.status === 'OUT_OF_SERVICE') {
+        continue;
+      }
+
+      // 4. Exclude rooms with overlapping bookings during the stay
+      if (occupiedRoomIdStrs.has(rIdStr)) {
+        continue;
+      }
+
+      // 5. Check category & occupancy compatibility
+      const rt =
+        pooledTypes.find((t) => t._id.toString() === room.roomTypeId.toString()) ||
+        bookingRt ||
+        primaryType;
+
+      if (rt && booking.numGuests && rt.maxOccupancy < booking.numGuests) {
+        continue;
+      }
+
+      if (rt && bookingRt && rt.isAc !== bookingRt.isAc) {
+        continue;
+      }
+
+      candidateRooms.push({
+        _id: rIdStr,
+        roomNumber: room.roomNumber,
+        floor: room.floor,
+        roomType: {
+          _id: rt?._id?.toString() || '',
+          name: rt?.name || 'Executive Room',
+          code: rt?.code || 'EXEC_DBL_AC',
+          basePrice: rt?.basePrice || 2200,
+          cpPrice: rt?.cpPrice || 2500,
+          isAc: rt?.isAc ?? true,
+          maxOccupancy: rt?.maxOccupancy || 2,
+        },
+      });
+    }
+
+    // Sort candidate rooms by floor, then numeric roomNumber
+    candidateRooms.sort((a, b) => {
+      if (a.floor !== b.floor) return a.floor - b.floor;
+      const numA = parseInt(a.roomNumber, 10);
+      const numB = parseInt(b.roomNumber, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.roomNumber.localeCompare(b.roomNumber);
+    });
+
+    return {
+      booking,
+      currentRoom: booking.assignedRoomId || null,
+      candidateRooms,
     };
   }
 }
