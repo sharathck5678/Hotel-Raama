@@ -16,27 +16,22 @@ async function updateCouponsAndGst() {
     const settingResult = await HotelSetting.updateMany({}, { $set: { taxPercentage: 5 } });
     console.log(`[HotelSetting] Updated tax percentage to 5% GST:`, settingResult);
 
-    // 2. Safely deactivate obsolete coupons including WELCOME10, WELCOME15
-    await Coupon.updateMany(
-      { code: { $nin: ['PREMIUM15', 'GRAND20', 'MEGA25', 'PLATINUM30'] } },
-      { $set: { isActive: false } }
-    );
-
-    // 3. Upsert official active coupons: PREMIUM15 (15%), GRAND20 (20%), MEGA25 (25%), PLATINUM30 (30%)
+    // 2. Safely ensure baseline coupons exist
     const now = new Date(2020, 0, 1);
     const nextYears = new Date(new Date().getFullYear() + 5, 11, 31);
 
-    const activeList = [
-      { code: 'PREMIUM15', discountValue: 15 },
-      { code: 'GRAND20', discountValue: 20 },
-      { code: 'MEGA25', discountValue: 25 },
-      { code: 'PLATINUM30', discountValue: 30 },
+    const baselineCoupons = [
+      { code: 'WELCOME10', discountValue: 10, isActive: false },
+      { code: 'PREMIUM15', discountValue: 15, isActive: true },
+      { code: 'GRAND20', discountValue: 20, isActive: true },
+      { code: 'MEGA25', discountValue: 25, isActive: true },
+      { code: 'PLATINUM30', discountValue: 30, isActive: true },
     ];
 
-    for (const coup of activeList) {
-      await Coupon.findOneAndUpdate(
-        { code: coup.code },
-        {
+    for (const coup of baselineCoupons) {
+      const existing = await Coupon.findOne({ code: coup.code });
+      if (!existing) {
+        await Coupon.create({
           code: coup.code,
           discountType: 'PERCENTAGE',
           discountValue: coup.discountValue,
@@ -45,12 +40,14 @@ async function updateCouponsAndGst() {
           endDate: nextYears,
           maxUsage: 100000,
           usedCount: 0,
-          isActive: true,
-        },
-        { upsert: true, new: true }
-      );
-      console.log(`[Coupons] Verified active coupon ${coup.code} (${coup.discountValue}%).`);
+          isActive: coup.isActive,
+        });
+        console.log(`[Coupons] Created baseline coupon ${coup.code} (${coup.discountValue}%, active: ${coup.isActive}).`);
+      } else {
+        console.log(`[Coupons] Preserved existing coupon ${coup.code} (${existing.discountValue}%, active: ${existing.isActive}).`);
+      }
     }
+
 
     const allCoupons = await Coupon.find();
     console.log(

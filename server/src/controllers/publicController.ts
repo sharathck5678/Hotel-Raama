@@ -5,7 +5,7 @@ import { RoomType } from '../models/RoomType';
 import { Room } from '../models/Room';
 import { Booking } from '../models/Booking';
 import { Feedback } from '../models/Feedback';
-import { Coupon } from '../models/Coupon';
+import { Coupon, validateCouponSchedule } from '../models/Coupon';
 import { Order } from '../models/Order';
 import { MenuCategory } from '../models/MenuCategory';
 import { MenuItem } from '../models/MenuItem';
@@ -1520,8 +1520,26 @@ export class PublicController {
 
       const cleanCode = rawCode.toUpperCase();
 
-      // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
-      if (!(cleanCode in OFFICIAL_COUPONS)) {
+      let dbCoupon: any = null;
+      if (mongoose.connection.readyState === 1) {
+        dbCoupon = await Coupon.findOne({ code: cleanCode });
+      }
+
+      let discountPercentage: number | undefined;
+
+      if (dbCoupon) {
+        const scheduleResult = validateCouponSchedule(dbCoupon, { checkIn, checkOut });
+        if (!scheduleResult.valid) {
+          return res.status(400).json({
+            success: false,
+            message: scheduleResult.error || 'Invalid coupon code.',
+            data: { valid: false },
+          });
+        }
+        discountPercentage = dbCoupon.discountValue;
+      } else if (cleanCode in OFFICIAL_COUPONS && mongoose.connection.readyState !== 1) {
+        discountPercentage = OFFICIAL_COUPONS[cleanCode];
+      } else {
         return res.status(400).json({
           success: false,
           message: 'Invalid coupon code.',
@@ -1529,12 +1547,7 @@ export class PublicController {
         });
       }
 
-      const dbCoupon = await Coupon.findOne({
-        code: cleanCode,
-        isActive: true,
-      });
-
-      if (dbCoupon && !dbCoupon.isActive) {
+      if (discountPercentage === undefined) {
         return res.status(400).json({
           success: false,
           message: 'Invalid coupon code.',
@@ -1542,8 +1555,9 @@ export class PublicController {
         });
       }
 
-      const discountPercentage = OFFICIAL_COUPONS[cleanCode];
       const requiresGSTIN = discountPercentage > 15;
+
+
       const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
 
       let gstinResult: ReturnType<typeof validateGSTIN> | undefined;
@@ -1596,6 +1610,13 @@ export class PublicController {
             !!extraPerson,
             gstinResult?.normalizedGstin
           );
+          if (pricing.couponError) {
+            return res.status(400).json({
+              success: false,
+              message: pricing.couponError,
+              data: { valid: false },
+            });
+          }
           pricingSummary = pricing;
           discountAmount = pricing.discountAmount;
         }

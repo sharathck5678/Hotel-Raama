@@ -102,47 +102,43 @@ import { Coupon } from './models/Coupon';
 import { HotelSetting } from './models/HotelSetting';
 import { PhysicalRoomAllocationService } from './services/PhysicalRoomAllocationService';
 
-// Helper to ensure official coupons in active database (PREMIUM15, GRAND20, MEGA25, PLATINUM30)
-const ensureCoupons = async () => {
+// Helper to safely ensure baseline coupons exist without overriding admin modifications
+export const ensureCoupons = async () => {
   try {
-    // Safely deactivate WELCOME10, WELCOME15 and any other obsolete coupons
-    await Coupon.updateMany(
-      { code: { $nin: ['PREMIUM15', 'GRAND20', 'MEGA25', 'PLATINUM30'] } },
-      { $set: { isActive: false } }
-    );
-
-    const now = new Date(2020, 0, 1);
-    const futureDate = new Date(new Date().getFullYear() + 5, 11, 31);
-
-    const activeCouponsConfig = [
-      { code: 'PREMIUM15', discountValue: 15 },
-      { code: 'GRAND20', discountValue: 20 },
-      { code: 'MEGA25', discountValue: 25 },
-      { code: 'PLATINUM30', discountValue: 30 },
+    const baselineCoupons = [
+      { code: 'WELCOME10', discountValue: 10, isActive: false },
+      { code: 'PREMIUM15', discountValue: 15, isActive: true },
+      { code: 'GRAND20', discountValue: 20, isActive: true },
+      { code: 'MEGA25', discountValue: 25, isActive: true },
+      { code: 'PLATINUM30', discountValue: 30, isActive: true },
     ];
 
-    for (const coup of activeCouponsConfig) {
-      await Coupon.findOneAndUpdate(
-        { code: coup.code },
-        {
+    const farPast = new Date(2020, 0, 1);
+    const farFuture = new Date(new Date().getFullYear() + 5, 11, 31);
+
+    for (const coup of baselineCoupons) {
+      const existing = await Coupon.findOne({ code: coup.code });
+      if (!existing) {
+        await Coupon.create({
           code: coup.code,
           discountType: 'PERCENTAGE',
           discountValue: coup.discountValue,
           minBookingAmount: 0,
-          startDate: now,
-          endDate: futureDate,
+          startDate: farPast,
+          endDate: farFuture,
           maxUsage: 100000,
-          isActive: true,
-        },
-        { upsert: true, new: true }
-      );
+          isActive: coup.isActive,
+        });
+        console.log(`[Setup] Initialized baseline coupon ${coup.code} (${coup.discountValue}%, active: ${coup.isActive})`);
+      }
     }
 
-    console.log('[Setup] Verified active coupons: PREMIUM15 (15%), GRAND20 (20%), MEGA25 (25%), PLATINUM30 (30%). Obsolete coupons (including WELCOME10, WELCOME15) deactivated.');
+    console.log('[Setup] Verified baseline coupons seeded and preserved without resetting admin changes.');
   } catch (err) {
     console.warn('[Setup] Coupon sync warning:', err);
   }
 };
+
 
 import { invalidateHotelSettingsCache } from './services/HotelSettingService';
 

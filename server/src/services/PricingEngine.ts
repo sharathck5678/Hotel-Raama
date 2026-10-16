@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { RoomType } from '../models/RoomType';
 import { MealPlan } from '../models/MealPlan';
-import { Coupon } from '../models/Coupon';
+import { Coupon, validateCouponSchedule } from '../models/Coupon';
 import { DailyRate } from '../models/DailyRate';
 import { getHotelSettings } from './HotelSettingService';
 import { validateGSTIN, IGSTINValidationResult } from '../utils/gstinValidator';
@@ -226,50 +226,37 @@ export class PricingEngine {
       } else {
         const cleanCode = rawCode.toUpperCase();
 
-        // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
-        if (!(cleanCode in OFFICIAL_COUPONS)) {
-          couponError = 'Invalid coupon code.';
-        } else {
-          const dbCoupon = await Coupon.findOne({
-            code: cleanCode,
-            isActive: true,
-          });
+        let dbCoupon: any = null;
+        if (mongoose.connection.readyState === 1) {
+          dbCoupon = await Coupon.findOne({ code: cleanCode });
+        }
 
-          if (dbCoupon && !dbCoupon.isActive) {
-            couponError = 'Invalid coupon code.';
+        let percentage: number | undefined;
+
+        if (dbCoupon) {
+          const scheduleResult = validateCouponSchedule(dbCoupon, { checkIn, checkOut });
+          if (!scheduleResult.valid) {
+            couponError = scheduleResult.error || 'Invalid coupon code.';
           } else {
-            const percentage = OFFICIAL_COUPONS[cleanCode];
-            const requiresGSTIN = percentage > 15;
-            const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
+            percentage = dbCoupon.discountValue;
+          }
+        } else if (cleanCode in OFFICIAL_COUPONS && mongoose.connection.readyState !== 1) {
+          percentage = OFFICIAL_COUPONS[cleanCode];
+        } else {
+          couponError = 'Invalid coupon code.';
+        }
 
-            if (requiresGSTIN) {
-              if (!hasGstin) {
-                couponError = 'GSTIN is required to apply this coupon.';
-              } else {
-                gstinValidation = validateGSTIN(gstin);
-                if (!gstinValidation.isValid) {
-                  couponError = 'Please enter a valid GSTIN.';
-                } else {
-                  validCouponCode = cleanCode;
-                  discountPercentage = percentage;
-                  discountAmount = Math.round((roomTotal * discountPercentage) / 100);
-                  discountAmount = Math.min(discountAmount, roomTotal);
-                  couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
-                }
-              }
+        if (percentage !== undefined && !couponError) {
+          const requiresGSTIN = percentage > 15;
+          const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
+
+          if (requiresGSTIN) {
+            if (!hasGstin) {
+              couponError = 'GSTIN is required to apply this coupon.';
             } else {
-              // Discounts <= 15% (e.g. WELCOME10, PREMIUM15): GSTIN is optional
-              if (hasGstin) {
-                gstinValidation = validateGSTIN(gstin);
-                if (!gstinValidation.isValid) {
-                  couponError = 'Please enter a valid GSTIN.';
-                } else {
-                  validCouponCode = cleanCode;
-                  discountPercentage = percentage;
-                  discountAmount = Math.round((roomTotal * discountPercentage) / 100);
-                  discountAmount = Math.min(discountAmount, roomTotal);
-                  couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
-                }
+              gstinValidation = validateGSTIN(gstin);
+              if (!gstinValidation.isValid) {
+                couponError = 'Please enter a valid GSTIN.';
               } else {
                 validCouponCode = cleanCode;
                 discountPercentage = percentage;
@@ -278,8 +265,29 @@ export class PricingEngine {
                 couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
               }
             }
+          } else {
+            // Discounts <= 15% (e.g. WELCOME10, PREMIUM15): GSTIN is optional
+            if (hasGstin) {
+              gstinValidation = validateGSTIN(gstin);
+              if (!gstinValidation.isValid) {
+                couponError = 'Please enter a valid GSTIN.';
+              } else {
+                validCouponCode = cleanCode;
+                discountPercentage = percentage;
+                discountAmount = Math.round((roomTotal * discountPercentage) / 100);
+                discountAmount = Math.min(discountAmount, roomTotal);
+                couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+              }
+            } else {
+              validCouponCode = cleanCode;
+              discountPercentage = percentage;
+              discountAmount = Math.round((roomTotal * discountPercentage) / 100);
+              discountAmount = Math.min(discountAmount, roomTotal);
+              couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+            }
           }
         }
+
       }
     } else if (gstin && gstin.trim().length > 0) {
       gstinValidation = validateGSTIN(gstin);

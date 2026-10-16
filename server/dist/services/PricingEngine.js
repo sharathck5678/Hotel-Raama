@@ -1,7 +1,40 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PricingEngine = exports.OFFICIAL_COUPONS = void 0;
-const mongoose_1 = require("mongoose");
+const mongoose_1 = __importStar(require("mongoose"));
 const RoomType_1 = require("../models/RoomType");
 const Coupon_1 = require("../models/Coupon");
 const DailyRate_1 = require("../models/DailyRate");
@@ -159,54 +192,37 @@ class PricingEngine {
             }
             else {
                 const cleanCode = rawCode.toUpperCase();
-                // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
-                if (!(cleanCode in exports.OFFICIAL_COUPONS)) {
-                    couponError = 'Invalid coupon code.';
+                let dbCoupon = null;
+                if (mongoose_1.default.connection.readyState === 1) {
+                    dbCoupon = await Coupon_1.Coupon.findOne({ code: cleanCode });
                 }
-                else {
-                    const dbCoupon = await Coupon_1.Coupon.findOne({
-                        code: cleanCode,
-                        isActive: true,
-                    });
-                    if (dbCoupon && !dbCoupon.isActive) {
-                        couponError = 'Invalid coupon code.';
+                let percentage;
+                if (dbCoupon) {
+                    const scheduleResult = (0, Coupon_1.validateCouponSchedule)(dbCoupon, { checkIn, checkOut });
+                    if (!scheduleResult.valid) {
+                        couponError = scheduleResult.error || 'Invalid coupon code.';
                     }
                     else {
-                        const percentage = exports.OFFICIAL_COUPONS[cleanCode];
-                        const requiresGSTIN = percentage > 15;
-                        const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
-                        if (requiresGSTIN) {
-                            if (!hasGstin) {
-                                couponError = 'GSTIN is required to apply this coupon.';
-                            }
-                            else {
-                                gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
-                                if (!gstinValidation.isValid) {
-                                    couponError = 'Please enter a valid GSTIN.';
-                                }
-                                else {
-                                    validCouponCode = cleanCode;
-                                    discountPercentage = percentage;
-                                    discountAmount = Math.round((roomTotal * discountPercentage) / 100);
-                                    discountAmount = Math.min(discountAmount, roomTotal);
-                                    couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
-                                }
-                            }
+                        percentage = dbCoupon.discountValue;
+                    }
+                }
+                else if (cleanCode in exports.OFFICIAL_COUPONS && mongoose_1.default.connection.readyState !== 1) {
+                    percentage = exports.OFFICIAL_COUPONS[cleanCode];
+                }
+                else {
+                    couponError = 'Invalid coupon code.';
+                }
+                if (percentage !== undefined && !couponError) {
+                    const requiresGSTIN = percentage > 15;
+                    const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
+                    if (requiresGSTIN) {
+                        if (!hasGstin) {
+                            couponError = 'GSTIN is required to apply this coupon.';
                         }
                         else {
-                            // Discounts <= 15% (e.g. WELCOME10, PREMIUM15): GSTIN is optional
-                            if (hasGstin) {
-                                gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
-                                if (!gstinValidation.isValid) {
-                                    couponError = 'Please enter a valid GSTIN.';
-                                }
-                                else {
-                                    validCouponCode = cleanCode;
-                                    discountPercentage = percentage;
-                                    discountAmount = Math.round((roomTotal * discountPercentage) / 100);
-                                    discountAmount = Math.min(discountAmount, roomTotal);
-                                    couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
-                                }
+                            gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
+                            if (!gstinValidation.isValid) {
+                                couponError = 'Please enter a valid GSTIN.';
                             }
                             else {
                                 validCouponCode = cleanCode;
@@ -215,6 +231,29 @@ class PricingEngine {
                                 discountAmount = Math.min(discountAmount, roomTotal);
                                 couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
                             }
+                        }
+                    }
+                    else {
+                        // Discounts <= 15% (e.g. WELCOME10, PREMIUM15): GSTIN is optional
+                        if (hasGstin) {
+                            gstinValidation = (0, gstinValidator_1.validateGSTIN)(gstin);
+                            if (!gstinValidation.isValid) {
+                                couponError = 'Please enter a valid GSTIN.';
+                            }
+                            else {
+                                validCouponCode = cleanCode;
+                                discountPercentage = percentage;
+                                discountAmount = Math.round((roomTotal * discountPercentage) / 100);
+                                discountAmount = Math.min(discountAmount, roomTotal);
+                                couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
+                            }
+                        }
+                        else {
+                            validCouponCode = cleanCode;
+                            discountPercentage = percentage;
+                            discountAmount = Math.round((roomTotal * discountPercentage) / 100);
+                            discountAmount = Math.min(discountAmount, roomTotal);
+                            couponMessage = `Coupon ${cleanCode} applied! ${discountPercentage}% discount added.`;
                         }
                     }
                 }

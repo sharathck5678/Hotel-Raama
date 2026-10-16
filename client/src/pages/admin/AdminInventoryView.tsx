@@ -28,6 +28,7 @@ import { ScrollReveal } from '../../components/ScrollReveal';
 import { AdminAvailabilityRatesView } from './AdminAvailabilityRatesView';
 import { AdminBaseRatesView } from './AdminBaseRatesView';
 import { AdminMealAddonsView } from './AdminMealAddonsView';
+import { AdminCouponsView } from './AdminCouponsView';
 import { ReassignRoomModal } from '../../components/admin/ReassignRoomModal';
 
 export interface IInventoryRoom {
@@ -84,18 +85,20 @@ export interface IOfflineBookingRecord {
 }
 
 export interface AdminInventoryViewProps {
-  initialTab?: 'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES' | 'MEAL_ADDONS';
+  initialTab?: 'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES' | 'MEAL_ADDONS' | 'COUPONS';
 }
 
 export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialTab }) => {
   const location = useLocation();
-  const [mainTab, setMainTab] = useState<'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES' | 'MEAL_ADDONS'>(() => {
+  const [mainTab, setMainTab] = useState<'PHYSICAL' | 'AVAILABILITY' | 'BASE_RATES' | 'MEAL_ADDONS' | 'COUPONS'>(() => {
     if (initialTab) return initialTab;
+    if (location.pathname.includes('coupon')) return 'COUPONS';
     if (location.pathname.includes('meal-addon') || location.pathname.includes('meals')) return 'MEAL_ADDONS';
     if (location.pathname.includes('base-rates')) return 'BASE_RATES';
     if (location.pathname.includes('availability')) return 'AVAILABILITY';
     return 'PHYSICAL';
   });
+
 
   // Date range state (default today and tomorrow)
   const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -433,6 +436,17 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
             <Utensils size={15} className={mainTab === 'MEAL_ADDONS' ? 'text-[#D6B369]' : 'text-[#667085]'} />
             Edit Meal Addon
           </button>
+          <button
+            onClick={() => setMainTab('COUPONS')}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-t-sm transition-all cursor-pointer border-b-2 ${
+              mainTab === 'COUPONS'
+                ? 'border-[#D6B369] bg-[#00174A] text-[#FAF9F6] shadow-sm'
+                : 'border-transparent bg-white/70 hover:bg-white text-[#00174A]/80 hover:text-[#00174A]'
+            }`}
+          >
+            <Tag size={15} className={mainTab === 'COUPONS' ? 'text-[#D6B369]' : 'text-[#667085]'} />
+            Coupon Management
+          </button>
         </div>
       </ScrollReveal>
 
@@ -442,8 +456,11 @@ export const AdminInventoryView: React.FC<AdminInventoryViewProps> = ({ initialT
         <AdminBaseRatesView />
       ) : mainTab === 'MEAL_ADDONS' ? (
         <AdminMealAddonsView />
+      ) : mainTab === 'COUPONS' ? (
+        <AdminCouponsView />
       ) : (
         <>
+
           {/* Metrics Bar */}
           <div className="grid grid-cols-3 gap-3 sm:gap-4 font-sans">
         <div className="bg-white p-3.5 sm:p-4 rounded-sm border border-[#10184A]/15 shadow-xs flex items-center justify-between">

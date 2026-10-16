@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { Room } from '../models/Room';
 import { RoomType } from '../models/RoomType';
 import { Booking } from '../models/Booking';
+import { Coupon } from '../models/Coupon';
 import { DailyRate } from '../models/DailyRate';
 import { DailyInventory } from '../models/DailyInventory';
 import { RatePlan } from '../models/RatePlan';
@@ -192,8 +193,9 @@ async function runDateWiseInventoryTests() {
     if (!test6Pass) throw new Error(`TEST 6 Failed: Expected roomTotal 4700, got ${priceResult.roomTotal}`);
 
     // -------------------------------------------------------------
-    // TEST 7: WELCOME10 applies 10%
+    // TEST 7: WELCOME10 applies 10% (when enabled)
     // -------------------------------------------------------------
+    await Coupon.updateOne({ code: 'WELCOME10' }, { $set: { isActive: true } });
     const priceWelcome10 = await PricingEngine.calculateBookingPrice(
       execType._id.toString(),
       oct5Date,
@@ -208,7 +210,10 @@ async function runDateWiseInventoryTests() {
     const expectedDiscount10 = Math.round((4700 * 10) / 100); // 470
     const test7Pass = priceWelcome10.discountAmount === expectedDiscount10 && priceWelcome10.couponCode === 'WELCOME10';
     console.log(`[TEST 7] WELCOME10 coupon gives 10% discount: ${test7Pass} (discount = ₹${priceWelcome10.discountAmount})`);
+    // Immediately restore WELCOME10 default inactive state
+    await Coupon.updateOne({ code: 'WELCOME10' }, { $set: { isActive: false } });
     if (!test7Pass) throw new Error(`TEST 7 Failed: Expected discount 470, got ${priceWelcome10.discountAmount}`);
+
 
     // -------------------------------------------------------------
     // TEST 8: PREMIUM15 applies 15%

@@ -911,3 +911,82 @@ export const fetchEffectiveMealRates = (checkIn?: string, checkOut?: string) => 
     }));
 };
 
+// ==========================================
+// COUPON MANAGEMENT APIS (ADMIN)
+// ==========================================
+
+export interface IAdminCoupon {
+  _id: string;
+  code: string;
+  discountPercentage: number;
+  discountType: 'PERCENTAGE' | 'FLAT';
+  isActive: boolean;
+  startDate: string | null;
+  endDate: string | null;
+  effectiveStatus: 'Active' | 'Disabled' | 'Scheduled' | 'Expired';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const fetchAdminCoupons = () =>
+  api
+    .get('/admin/coupons')
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to fetch coupons.',
+      data: [],
+    }));
+
+export const createAdminCoupon = (payload: {
+  code: string;
+  discountPercentage: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  isActive?: boolean;
+}) =>
+  api
+    .post('/admin/coupons', payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to create coupon.',
+    }));
+
+export const updateAdminCoupon = (
+  id: string,
+  payload: {
+    code?: string;
+    discountPercentage?: number;
+    startDate?: string | null;
+    endDate?: string | null;
+    isActive?: boolean;
+  }
+) =>
+  api
+    .put(`/admin/coupons/${id}`, payload)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to update coupon.',
+    }));
+
+export const toggleAdminCouponStatus = (id: string, isActive: boolean) =>
+  api
+    .patch(`/admin/coupons/${id}/status`, { isActive })
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to update coupon status.',
+    }));
+
+export const deleteAdminCoupon = (id: string) =>
+  api
+    .delete(`/admin/coupons/${id}`)
+    .then((res) => res.data)
+    .catch((err) => ({
+      success: false,
+      message: err.response?.data?.message || 'Failed to delete coupon.',
+    }));
+
+

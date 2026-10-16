@@ -1256,26 +1256,39 @@ class PublicController {
                 });
             }
             const cleanCode = rawCode.toUpperCase();
-            // The ONLY permitted active coupons are PREMIUM15, GRAND20, MEGA25, PLATINUM30
-            if (!(cleanCode in PricingEngine_1.OFFICIAL_COUPONS)) {
+            let dbCoupon = null;
+            if (mongoose_1.default.connection.readyState === 1) {
+                dbCoupon = await Coupon_1.Coupon.findOne({ code: cleanCode });
+            }
+            let discountPercentage;
+            if (dbCoupon) {
+                const scheduleResult = (0, Coupon_1.validateCouponSchedule)(dbCoupon, { checkIn, checkOut });
+                if (!scheduleResult.valid) {
+                    return res.status(400).json({
+                        success: false,
+                        message: scheduleResult.error || 'Invalid coupon code.',
+                        data: { valid: false },
+                    });
+                }
+                discountPercentage = dbCoupon.discountValue;
+            }
+            else if (cleanCode in PricingEngine_1.OFFICIAL_COUPONS && mongoose_1.default.connection.readyState !== 1) {
+                discountPercentage = PricingEngine_1.OFFICIAL_COUPONS[cleanCode];
+            }
+            else {
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid coupon code.',
                     data: { valid: false },
                 });
             }
-            const dbCoupon = await Coupon_1.Coupon.findOne({
-                code: cleanCode,
-                isActive: true,
-            });
-            if (dbCoupon && !dbCoupon.isActive) {
+            if (discountPercentage === undefined) {
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid coupon code.',
                     data: { valid: false },
                 });
             }
-            const discountPercentage = PricingEngine_1.OFFICIAL_COUPONS[cleanCode];
             const requiresGSTIN = discountPercentage > 15;
             const hasGstin = typeof gstin === 'string' && gstin.trim().length > 0;
             let gstinResult;
@@ -1315,6 +1328,13 @@ class PublicController {
                 const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
                 if (resolvedRoomTypeId) {
                     const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, new Date(checkIn), new Date(checkOut), numGuests || 1, mealSelection, cleanCode, planType || 'NON_CP', !!extraPerson, gstinResult?.normalizedGstin);
+                    if (pricing.couponError) {
+                        return res.status(400).json({
+                            success: false,
+                            message: pricing.couponError,
+                            data: { valid: false },
+                        });
+                    }
                     pricingSummary = pricing;
                     discountAmount = pricing.discountAmount;
                 }

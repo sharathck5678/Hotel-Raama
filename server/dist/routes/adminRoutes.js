@@ -53,6 +53,13 @@ router.get('/meals/date-wise', adminController_1.AdminController.getDateWiseMeal
 router.post('/meals/bulk-update', adminController_1.AdminController.bulkUpdateDateWiseMealPrices);
 router.delete('/meals/date-wise/:date', adminController_1.AdminController.deleteDateWiseMealPrice);
 router.get('/meals/effective-rates', adminController_1.AdminController.getEffectiveMealRates);
+// Coupon Management (Inventory Management -> Coupons)
+router.get('/coupons', adminController_1.AdminController.getCoupons);
+router.post('/coupons', adminController_1.AdminController.createCoupon);
+router.put('/coupons/:id', adminController_1.AdminController.updateCoupon);
+router.patch('/coupons/:id', adminController_1.AdminController.updateCoupon);
+router.patch('/coupons/:id/status', adminController_1.AdminController.toggleCouponStatus);
+router.delete('/coupons/:id', adminController_1.AdminController.deleteCoupon);
 // Reports & Billing
 router.get('/reports/customer-history', adminController_1.AdminController.getCustomerHistory);
 router.get('/billing/invoice/:type/:id', adminController_1.AdminController.downloadInvoicePdf);

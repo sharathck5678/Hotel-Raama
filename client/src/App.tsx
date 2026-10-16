@@ -203,7 +203,9 @@ export const App: React.FC = () => {
               <Route path="inventory/availability" element={<AdminInventoryView initialTab="AVAILABILITY" />} />
               <Route path="inventory/base-rates" element={<AdminInventoryView initialTab="BASE_RATES" />} />
               <Route path="inventory/meal-addons" element={<AdminInventoryView initialTab="MEAL_ADDONS" />} />
+              <Route path="inventory/coupons" element={<AdminInventoryView initialTab="COUPONS" />} />
               <Route path="feedback" element={<AdminFeedbackView />} />
+
               <Route path="rooms" element={<AdminRoomsView />} />
               <Route path="qr-codes" element={<QrOrderingSectionPage />} />
               <Route path="customers" element={<AdminCustomerHistoryView />} />

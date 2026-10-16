@@ -10,7 +10,7 @@ import { Room } from '../models/Room';
 import { RoomType } from '../models/RoomType';
 import { MenuItem } from '../models/MenuItem';
 import { MenuCategory } from '../models/MenuCategory';
-import { Coupon } from '../models/Coupon';
+import { Coupon, getEffectiveCouponStatus } from '../models/Coupon';
 import { MealPlan } from '../models/MealPlan';
 import { AuditLog } from '../models/AuditLog';
 import { HotelSetting } from '../models/HotelSetting';
@@ -2718,5 +2718,417 @@ export class AdminController {
       return res.status(500).json({ success: false, message: error.message || 'Failed to fetch effective rates.' });
     }
   }
+
+  // ==========================================
+  // COUPON MANAGEMENT METHODS
+  // ==========================================
+
+  /**
+   * GET /api/admin/coupons
+   * List all coupons with effective status calculated
+   */
+  static async getCoupons(_req: AuthRequest, res: Response) {
+    try {
+      const coupons = await Coupon.find().sort({ createdAt: -1 });
+      const now = new Date();
+
+      const data = coupons.map((c) => ({
+        _id: c._id.toString(),
+        code: c.code,
+        discountPercentage: c.discountValue,
+        discountType: c.discountType || 'PERCENTAGE',
+        isActive: c.isActive,
+        startDate: c.startDate ? c.startDate.toISOString() : null,
+        endDate: c.endDate ? c.endDate.toISOString() : null,
+        effectiveStatus: getEffectiveCouponStatus(c, now),
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }));
+
+      return res.json({ success: true, data });
+    } catch (error: any) {
+      console.error('[AdminController] Error fetching coupons:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to fetch coupons.' });
+    }
+  }
+
+  /**
+   * POST /api/admin/coupons
+   * Create a new coupon
+   */
+  static async createCoupon(req: AuthRequest, res: Response) {
+    try {
+      const { code, discountPercentage, startDate, endDate, isActive } = req.body;
+
+      if (!code || typeof code !== 'string') {
+        return res.status(400).json({ success: false, message: 'Coupon code is required.' });
+      }
+
+      const cleanCode = code.trim().toUpperCase();
+      if (!cleanCode) {
+        return res.status(400).json({ success: false, message: 'Coupon code cannot be empty.' });
+      }
+
+      if (/\s+/.test(cleanCode) || /[,+&]/.test(cleanCode)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Coupon code cannot contain spaces or separator characters (, + &).',
+        });
+      }
+
+      const pct = Number(discountPercentage);
+      if (isNaN(pct) || pct <= 0 || pct >= 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Discount percentage must be a number greater than 0% and less than 100%.',
+        });
+      }
+
+      // Check case-insensitive duplicate
+      const duplicate = await Coupon.findOne({
+        code: { $regex: new RegExp(`^${cleanCode}$`, 'i') },
+      });
+      if (duplicate) {
+        return res.status(400).json({
+          success: false,
+          message: `Coupon code "${cleanCode}" already exists.`,
+        });
+      }
+
+      let parsedStart: Date | null = null;
+      let parsedEnd: Date | null = null;
+
+      if (startDate !== undefined && startDate !== null && startDate !== '') {
+        parsedStart = new Date(startDate);
+        if (isNaN(parsedStart.getTime())) {
+          return res.status(400).json({ success: false, message: 'Invalid start date and time format.' });
+        }
+      }
+
+      if (endDate !== undefined && endDate !== null && endDate !== '') {
+        parsedEnd = new Date(endDate);
+        if (isNaN(parsedEnd.getTime())) {
+          return res.status(400).json({ success: false, message: 'Invalid end date and time format.' });
+        }
+      }
+
+      if (parsedStart && parsedEnd && parsedEnd <= parsedStart) {
+        return res.status(400).json({
+          success: false,
+          message: 'Scheduled end time must be later than scheduled start time.',
+        });
+      }
+
+      const activeFlag = isActive !== undefined ? !!isActive : true;
+
+      const coupon = await Coupon.create({
+        code: cleanCode,
+        discountType: 'PERCENTAGE',
+        discountValue: pct,
+        minBookingAmount: 0,
+        startDate: parsedStart,
+        endDate: parsedEnd,
+        maxUsage: 100000,
+        usedCount: 0,
+        isActive: activeFlag,
+      });
+
+      try {
+        if (req.admin) {
+          await AuditLog.create({
+            adminId: req.admin.id,
+            adminEmail: req.admin.email,
+            action: 'CREATE_COUPON',
+            entity: 'Coupon',
+            details: { code: cleanCode, discountPercentage: pct, isActive: activeFlag, ip: req.ip },
+          });
+        }
+      } catch (auditErr) {
+        console.error('[AdminController] Audit log error on create coupon:', auditErr);
+      }
+
+      const now = new Date();
+      return res.status(201).json({
+        success: true,
+        message: `Coupon ${cleanCode} created successfully.`,
+        data: {
+          _id: coupon._id.toString(),
+          code: coupon.code,
+          discountPercentage: coupon.discountValue,
+          discountType: coupon.discountType,
+          isActive: coupon.isActive,
+          startDate: coupon.startDate ? coupon.startDate.toISOString() : null,
+          endDate: coupon.endDate ? coupon.endDate.toISOString() : null,
+          effectiveStatus: getEffectiveCouponStatus(coupon, now),
+          createdAt: coupon.createdAt,
+          updatedAt: coupon.updatedAt,
+        },
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Error creating coupon:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to create coupon.' });
+    }
+  }
+
+  /**
+   * PUT /api/admin/coupons/:id
+   * Edit an existing coupon
+   */
+  static async updateCoupon(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { code, discountPercentage, startDate, endDate, isActive } = req.body;
+
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: 'Invalid coupon ID.' });
+      }
+
+      const coupon = await Coupon.findById(id);
+      if (!coupon) {
+        return res.status(404).json({ success: false, message: 'Coupon not found.' });
+      }
+
+      const systemCoupons = ['WELCOME10', 'PREMIUM15', 'GRAND20', 'MEGA25', 'PLATINUM30'];
+
+      if (code !== undefined) {
+        if (typeof code !== 'string') {
+          return res.status(400).json({ success: false, message: 'Invalid coupon code format.' });
+        }
+        const cleanCode = code.trim().toUpperCase();
+        if (!cleanCode) {
+          return res.status(400).json({ success: false, message: 'Coupon code cannot be empty.' });
+        }
+        if (/\s+/.test(cleanCode) || /[,+&]/.test(cleanCode)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Coupon code cannot contain spaces or separator characters (, + &).',
+          });
+        }
+
+        if (systemCoupons.includes(coupon.code) && cleanCode !== coupon.code) {
+          return res.status(400).json({
+            success: false,
+            message: 'System coupon codes (WELCOME10, PREMIUM15, GRAND20, MEGA25, PLATINUM30) cannot be renamed.',
+          });
+        }
+
+        if (cleanCode !== coupon.code) {
+          const duplicate = await Coupon.findOne({
+            code: { $regex: new RegExp(`^${cleanCode}$`, 'i') },
+            _id: { $ne: coupon._id },
+          });
+          if (duplicate) {
+            return res.status(400).json({
+              success: false,
+              message: `Coupon code "${cleanCode}" already exists.`,
+            });
+          }
+          coupon.code = cleanCode;
+        }
+      }
+
+      if (discountPercentage !== undefined) {
+        const pct = Number(discountPercentage);
+        if (isNaN(pct) || pct <= 0 || pct >= 100) {
+          return res.status(400).json({
+            success: false,
+            message: 'Discount percentage must be a number greater than 0% and less than 100%.',
+          });
+        }
+        coupon.discountValue = pct;
+      }
+
+      if (startDate !== undefined) {
+        if (startDate === null || startDate === '') {
+          coupon.startDate = null;
+        } else {
+          const d = new Date(startDate);
+          if (isNaN(d.getTime())) {
+            return res.status(400).json({ success: false, message: 'Invalid start date and time format.' });
+          }
+          coupon.startDate = d;
+        }
+      }
+
+      if (endDate !== undefined) {
+        if (endDate === null || endDate === '') {
+          coupon.endDate = null;
+        } else {
+          const d = new Date(endDate);
+          if (isNaN(d.getTime())) {
+            return res.status(400).json({ success: false, message: 'Invalid end date and time format.' });
+          }
+          coupon.endDate = d;
+        }
+      }
+
+      if (coupon.startDate && coupon.endDate) {
+        if (new Date(coupon.endDate) <= new Date(coupon.startDate)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Scheduled end time must be later than scheduled start time.',
+          });
+        }
+      }
+
+      if (isActive !== undefined) {
+        coupon.isActive = !!isActive;
+      }
+
+      await coupon.save();
+
+      try {
+        if (req.admin) {
+          await AuditLog.create({
+            adminId: req.admin.id,
+            adminEmail: req.admin.email,
+            action: 'UPDATE_COUPON',
+            entity: 'Coupon',
+            details: {
+              couponId: coupon._id,
+              code: coupon.code,
+              discountPercentage: coupon.discountValue,
+              isActive: coupon.isActive,
+              ip: req.ip,
+            },
+          });
+        }
+      } catch (auditErr) {
+        console.error('[AdminController] Audit log error on update coupon:', auditErr);
+      }
+
+      const now = new Date();
+      return res.json({
+        success: true,
+        message: `Coupon ${coupon.code} updated successfully.`,
+        data: {
+          _id: coupon._id.toString(),
+          code: coupon.code,
+          discountPercentage: coupon.discountValue,
+          discountType: coupon.discountType,
+          isActive: coupon.isActive,
+          startDate: coupon.startDate ? coupon.startDate.toISOString() : null,
+          endDate: coupon.endDate ? coupon.endDate.toISOString() : null,
+          effectiveStatus: getEffectiveCouponStatus(coupon, now),
+          createdAt: coupon.createdAt,
+          updatedAt: coupon.updatedAt,
+        },
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Error updating coupon:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to update coupon.' });
+    }
+  }
+
+  /**
+   * PATCH /api/admin/coupons/:id/status
+   * Enable or disable a coupon
+   */
+  static async toggleCouponStatus(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: 'Invalid coupon ID.' });
+      }
+
+      const coupon = await Coupon.findById(id);
+      if (!coupon) {
+        return res.status(404).json({ success: false, message: 'Coupon not found.' });
+      }
+
+      const nextStatus = typeof isActive === 'boolean' ? isActive : !coupon.isActive;
+      coupon.isActive = nextStatus;
+      await coupon.save();
+
+      try {
+        if (req.admin) {
+          await AuditLog.create({
+            adminId: req.admin.id,
+            adminEmail: req.admin.email,
+            action: nextStatus ? 'ENABLE_COUPON' : 'DISABLE_COUPON',
+            entity: 'Coupon',
+            details: { couponId: coupon._id, code: coupon.code, isActive: nextStatus, ip: req.ip },
+          });
+        }
+      } catch (auditErr) {
+        console.error('[AdminController] Audit log error on toggle coupon:', auditErr);
+      }
+
+      const now = new Date();
+      return res.json({
+        success: true,
+        message: `Coupon ${coupon.code} has been ${nextStatus ? 'enabled' : 'disabled'} successfully.`,
+        data: {
+          _id: coupon._id.toString(),
+          code: coupon.code,
+          discountPercentage: coupon.discountValue,
+          discountType: coupon.discountType,
+          isActive: coupon.isActive,
+          startDate: coupon.startDate ? coupon.startDate.toISOString() : null,
+          endDate: coupon.endDate ? coupon.endDate.toISOString() : null,
+          effectiveStatus: getEffectiveCouponStatus(coupon, now),
+          createdAt: coupon.createdAt,
+          updatedAt: coupon.updatedAt,
+        },
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Error toggling coupon status:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to update coupon status.' });
+    }
+  }
+
+  /**
+   * DELETE /api/admin/coupons/:id
+   * Delete a custom coupon (system coupons protected)
+   */
+  static async deleteCoupon(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: 'Invalid coupon ID.' });
+      }
+
+      const coupon = await Coupon.findById(id);
+      if (!coupon) {
+        return res.status(404).json({ success: false, message: 'Coupon not found.' });
+      }
+
+      const systemCoupons = ['WELCOME10', 'PREMIUM15', 'GRAND20', 'MEGA25', 'PLATINUM30'];
+      if (systemCoupons.includes(coupon.code)) {
+        return res.status(400).json({
+          success: false,
+          message: 'System coupon codes (WELCOME10, PREMIUM15, GRAND20, MEGA25, PLATINUM30) cannot be deleted.',
+        });
+      }
+
+      await Coupon.findByIdAndDelete(id);
+
+      try {
+        if (req.admin) {
+          await AuditLog.create({
+            adminId: req.admin.id,
+            adminEmail: req.admin.email,
+            action: 'DELETE_COUPON',
+            entity: 'Coupon',
+            details: { couponId: id, code: coupon.code, ip: req.ip },
+          });
+        }
+      } catch (auditErr) {
+        console.error('[AdminController] Audit log error on delete coupon:', auditErr);
+      }
+
+      return res.json({
+        success: true,
+        message: `Coupon ${coupon.code} deleted successfully.`,
+      });
+    } catch (error: any) {
+      console.error('[AdminController] Error deleting coupon:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Failed to delete coupon.' });
+    }
+  }
 }
+
 

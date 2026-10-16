@@ -440,14 +440,8 @@ export const RoomsPage: React.FC = () => {
 
     const cleanCodeToApply = rawCode.toUpperCase();
     const couponMeta = ACTIVE_COUPONS[cleanCodeToApply];
-    if (!couponMeta) {
-      toast.error('Invalid coupon code.');
-      setCouponStatus({ valid: false, message: 'Invalid coupon code.' });
-      return;
-    }
-
     const cleanGstin = gstin.trim().toUpperCase();
-    const requiresGSTIN = couponMeta.discount > 15;
+    const requiresGSTIN = couponMeta ? couponMeta.discount > 15 : false;
 
     if (requiresGSTIN) {
       if (!cleanGstin) {
@@ -456,6 +450,7 @@ export const RoomsPage: React.FC = () => {
         setCouponStatus({ valid: false, message: 'GSTIN is required to apply this coupon.' });
         return;
       }
+
 
       const gstinCheck = validateGSTIN(cleanGstin);
       if (!gstinCheck.isValid) {
