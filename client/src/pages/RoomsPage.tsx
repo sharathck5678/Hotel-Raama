@@ -18,6 +18,18 @@ export const ACTIVE_COUPONS: Record<string, { discount: number; requiresGstin: b
   PLATINUM30: { discount: 30, requiresGstin: true },
 };
 
+// Helpers for Room Occupancy Rules
+const isSuiteRoom = (room: any): boolean => {
+  if (!room) return false;
+  return room.code === 'SUITE_ROOM' || Boolean(room.name && room.name.toLowerCase().includes('suite'));
+};
+
+const getRoomMaxOccupancy = (room: any): number => {
+  if (!room) return 1;
+  if (isSuiteRoom(room)) return 2;
+  return Math.max(1, room.maxOccupancy || 1);
+};
+
 // Interactive Room Image Slideshow Component
 const RoomSlideshow: React.FC<{
   images?: string[];
@@ -295,7 +307,7 @@ export const RoomsPage: React.FC = () => {
             if (found) {
               setSelectedRoom(found);
               setGuestCountManuallyChanged(false);
-              setNumGuests(Math.max(1, found.maxOccupancy || 1));
+              setNumGuests(getRoomMaxOccupancy(found));
             }
           } else if (selectedRoom) {
             const found = res.data.find((r: any) => r._id === selectedRoom._id);
@@ -318,7 +330,7 @@ export const RoomsPage: React.FC = () => {
   // Set default adult count to room's configured maximum adult capacity (or preserve manual selection if valid)
   useEffect(() => {
     if (selectedRoom) {
-      const maxAllowed = Math.max(1, selectedRoom.maxOccupancy || 1);
+      const maxAllowed = getRoomMaxOccupancy(selectedRoom);
       setNumGuests((prev) => {
         if (guestCountManuallyChanged) {
           return prev > maxAllowed ? maxAllowed : prev < 1 ? 1 : prev;
@@ -837,7 +849,7 @@ export const RoomsPage: React.FC = () => {
                     <div className="flex justify-between items-start">
                       <h3 className="text-2xl font-serif text-[#00174A]">{room.name}</h3>
                       <span className="text-[10px] font-sans text-[#666666] bg-[#0B1849]/5 px-2.5 py-1 rounded-sm uppercase tracking-wider font-semibold border border-[#cbc0ad]">
-                        Max {room.maxOccupancy} Guests
+                        {isSuiteRoom(room) ? 'Max Occupancy: 2 Guests' : `Max ${room.maxOccupancy} Guests`}
                       </span>
                     </div>
 
@@ -895,7 +907,7 @@ export const RoomsPage: React.FC = () => {
                         setSelectedRoom(room);
                         setExtraPerson(false);
                         setGuestCountManuallyChanged(false);
-                        const defaultAdults = Math.max(1, room.maxOccupancy || 1);
+                        const defaultAdults = getRoomMaxOccupancy(room);
                         setNumGuests(defaultAdults);
                       }}
                       className="px-5 py-2.5 rounded-sm bg-[#D6B369] text-[#00174A] font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#E8C56A] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -933,7 +945,7 @@ export const RoomsPage: React.FC = () => {
                 <span className="text-[#D6B369] text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Direct Booking</span>
                 <h2 className="text-3xl font-serif text-[#00174A]">{selectedRoom.name}</h2>
                 <p className="text-xs font-sans text-[#666666] mt-1">
-                  Rate: ₹{calcResult?.pricing?.roomPricePerNight ?? selectedRoom.dateWiseRate ?? (planType === 'CP' ? (selectedRoom.cpPrice || selectedRoom.basePrice) : selectedRoom.basePrice)} / night · Max Occupancy: {selectedRoom.maxOccupancy || 2} {selectedRoom.maxOccupancy === 1 ? 'Guest' : 'Guests'}
+                  Rate: ₹{calcResult?.pricing?.roomPricePerNight ?? selectedRoom.dateWiseRate ?? (planType === 'CP' ? (selectedRoom.cpPrice || selectedRoom.basePrice) : selectedRoom.basePrice)} / night · {isSuiteRoom(selectedRoom) ? 'Max Occupancy: 2 Guests' : `Max Occupancy: ${selectedRoom.maxOccupancy || 2} ${selectedRoom.maxOccupancy === 1 ? 'Guest' : 'Guests'}`}
                 </p>
               </div>
 
@@ -983,17 +995,17 @@ export const RoomsPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-[10px] font-sans uppercase tracking-wider text-[#666666] mb-1.5 font-semibold">
-                    Guests (Max {selectedRoom.maxOccupancy || 1})
+                    Guests (Max {getRoomMaxOccupancy(selectedRoom)})
                   </label>
                   <select
-                    value={Math.min(numGuests, selectedRoom.maxOccupancy || 1)}
+                    value={Math.min(numGuests, getRoomMaxOccupancy(selectedRoom))}
                     onChange={(e) => {
                       setNumGuests(parseInt(e.target.value, 10));
                       setGuestCountManuallyChanged(true);
                     }}
                     className="w-full bg-white border border-[#cbc0ad] rounded-sm px-3.5 py-2 text-xs font-sans text-[#333333] focus:border-[#00174A] focus:outline-none cursor-pointer"
                   >
-                    {Array.from({ length: Math.max(1, selectedRoom.maxOccupancy || 1) }, (_, i) => i + 1).map((n) => (
+                    {Array.from({ length: getRoomMaxOccupancy(selectedRoom) }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n} className="bg-white text-[#333333]">
                         {n} {n === 1 ? 'Guest' : 'Guests'}
                       </option>

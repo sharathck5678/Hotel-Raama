@@ -42,6 +42,7 @@ const HotelSettingService_1 = require("./HotelSettingService");
 const gstinValidator_1 = require("../utils/gstinValidator");
 const AvailabilityEngine_1 = require("./AvailabilityEngine");
 const MealPricingService_1 = require("./MealPricingService");
+const occupancyValidator_1 = require("../utils/occupancyValidator");
 exports.OFFICIAL_COUPONS = {
     PREMIUM15: 15,
     GRAND20: 20,
@@ -79,6 +80,10 @@ class PricingEngine {
                 throw new Error('Invalid Room Type');
             }
         }
+        const occupancyCheck = (0, occupancyValidator_1.validateRoomOccupancy)(roomType, numGuests);
+        if (!occupancyCheck.isValid) {
+            throw new Error(occupancyCheck.message || 'Suite Room allows a maximum of 2 guests.');
+        }
         const ratePlanCode = planType === 'CP' ? 'BREAKFAST_INCLUDED' : 'ROOM_ONLY';
         // 3. Fetch any custom DailyRate records for this room type, rate plan, and stay dates
         let customRates;
@@ -108,7 +113,8 @@ class PricingEngine {
         const defaultSingle = isSingleCategory ? defaultBase : Math.max(0, defaultBase - 200);
         const defaultDouble = defaultBase;
         // Room max occupancy determines the threshold beyond which extra person charges apply
-        const maxOcc = roomType.maxOccupancy || 2;
+        const isSuite = roomType.code === 'SUITE_ROOM' || Boolean(roomType.name && /suite/i.test(roomType.name));
+        const maxOcc = isSuite ? 2 : (roomType.maxOccupancy || 2);
         const requestedExtra = extraPerson ? 1 : 0;
         const totalGuests = Math.max(numGuests, 1) + requestedExtra;
         const extraCount = (totalGuests > maxOcc && (extraPerson || numGuests > maxOcc))

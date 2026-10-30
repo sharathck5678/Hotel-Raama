@@ -7,6 +7,7 @@ import { getHotelSettings } from './HotelSettingService';
 import { validateGSTIN, IGSTINValidationResult } from '../utils/gstinValidator';
 import { AvailabilityEngine } from './AvailabilityEngine';
 import { MealPricingService, IEffectiveMealPricesResult } from './MealPricingService';
+import { validateRoomOccupancy } from '../utils/occupancyValidator';
 
 export interface IMealSelectionInput {
   breakfast?: boolean;
@@ -97,6 +98,11 @@ export class PricingEngine {
       }
     }
 
+    const occupancyCheck = validateRoomOccupancy(roomType, numGuests);
+    if (!occupancyCheck.isValid) {
+      throw new Error(occupancyCheck.message || 'Suite Room allows a maximum of 2 guests.');
+    }
+
     const ratePlanCode = planType === 'CP' ? 'BREAKFAST_INCLUDED' : 'ROOM_ONLY';
 
     // 3. Fetch any custom DailyRate records for this room type, rate plan, and stay dates
@@ -133,7 +139,8 @@ export class PricingEngine {
     const defaultDouble = defaultBase;
 
     // Room max occupancy determines the threshold beyond which extra person charges apply
-    const maxOcc = roomType.maxOccupancy || 2;
+    const isSuite = roomType.code === 'SUITE_ROOM' || Boolean(roomType.name && /suite/i.test(roomType.name));
+    const maxOcc = isSuite ? 2 : (roomType.maxOccupancy || 2);
     const requestedExtra = extraPerson ? 1 : 0;
     const totalGuests = Math.max(numGuests, 1) + requestedExtra;
     const extraCount = (totalGuests > maxOcc && (extraPerson || numGuests > maxOcc))

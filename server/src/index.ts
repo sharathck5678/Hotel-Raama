@@ -266,6 +266,7 @@ async function runNonCriticalStartupTasks(): Promise<void> {
 
   try {
     await ensureDatabaseSeeded();
+    await RoomType.updateOne({ code: 'SUITE_ROOM' }, { $set: { maxOccupancy: 2 } });
     console.log('[Startup] ✓ ensureDatabaseSeeded completed.');
   } catch (err: any) {
     console.error('[Startup Error] ensureDatabaseSeeded failed:', err.message || err);

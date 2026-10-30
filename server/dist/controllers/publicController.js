@@ -29,6 +29,7 @@ const gstinValidator_1 = require("../utils/gstinValidator");
 const MealPricingService_1 = require("../services/MealPricingService");
 const asyncLock_1 = require("../utils/asyncLock");
 const PhysicalRoomAllocationService_1 = require("../services/PhysicalRoomAllocationService");
+const occupancyValidator_1 = require("../utils/occupancyValidator");
 class PublicController {
     static async resolveRoomTypeId(roomTypeId) {
         if (!roomTypeId)
@@ -220,6 +221,14 @@ class PublicController {
             if (!resolvedRoomTypeId) {
                 return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
             }
+            const roomType = await RoomType_1.RoomType.findById(resolvedRoomTypeId);
+            if (!roomType) {
+                return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+            }
+            const occupancyCheck = (0, occupancyValidator_1.validateRoomOccupancy)(roomType, numGuests);
+            if (!occupancyCheck.isValid) {
+                return res.status(400).json({ success: false, message: occupancyCheck.message });
+            }
             // Check availability
             const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
             // Calculate server pricing
@@ -235,7 +244,8 @@ class PublicController {
             });
         }
         catch (error) {
-            return res.status(500).json({ success: false, message: error.message || 'Error checking availability.' });
+            const statusCode = error.message?.includes('allows a maximum of 2 guests') ? 400 : 500;
+            return res.status(statusCode).json({ success: false, message: error.message || 'Error checking availability.' });
         }
     }
     /**
@@ -258,6 +268,14 @@ class PublicController {
             const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
             if (!resolvedRoomTypeId) {
                 return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+            }
+            const roomType = await RoomType_1.RoomType.findById(resolvedRoomTypeId);
+            if (!roomType) {
+                return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+            }
+            const occupancyCheck = (0, occupancyValidator_1.validateRoomOccupancy)(roomType, numGuests);
+            if (!occupancyCheck.isValid) {
+                return res.status(400).json({ success: false, message: occupancyCheck.message });
             }
             // 1. Transactional Availability Check
             const availability = await AvailabilityEngine_1.AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
@@ -486,7 +504,8 @@ class PublicController {
             });
         }
         catch (error) {
-            return res.status(500).json({ success: false, message: error.message || 'Failed to create booking.' });
+            const statusCode = error.message?.includes('allows a maximum of 2 guests') ? 400 : 500;
+            return res.status(statusCode).json({ success: false, message: error.message || 'Failed to create booking.' });
         }
     }
     /**
@@ -1327,6 +1346,17 @@ class PublicController {
             if (roomTypeId && checkIn && checkOut) {
                 const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
                 if (resolvedRoomTypeId) {
+                    const roomType = await RoomType_1.RoomType.findById(resolvedRoomTypeId);
+                    if (roomType) {
+                        const occupancyCheck = (0, occupancyValidator_1.validateRoomOccupancy)(roomType, numGuests);
+                        if (!occupancyCheck.isValid) {
+                            return res.status(400).json({
+                                success: false,
+                                message: occupancyCheck.message,
+                                data: { valid: false },
+                            });
+                        }
+                    }
                     const pricing = await PricingEngine_1.PricingEngine.calculateBookingPrice(resolvedRoomTypeId, new Date(checkIn), new Date(checkOut), numGuests || 1, mealSelection, cleanCode, planType || 'NON_CP', !!extraPerson, gstinResult?.normalizedGstin);
                     if (pricing.couponError) {
                         return res.status(400).json({
@@ -1355,6 +1385,13 @@ class PublicController {
             });
         }
         catch (error) {
+            if (error.message?.includes('allows a maximum of 2 guests')) {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message,
+                    data: { valid: false },
+                });
+            }
             return res.status(500).json({
                 success: false,
                 message: 'Unable to apply coupon. Please try again.',

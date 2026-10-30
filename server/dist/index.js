@@ -254,6 +254,7 @@ async function runNonCriticalStartupTasks() {
     console.log('[Startup] Starting background database synchronization tasks...');
     try {
         await (0, seedDatabase_1.ensureDatabaseSeeded)();
+        await RoomType_1.RoomType.updateOne({ code: 'SUITE_ROOM' }, { $set: { maxOccupancy: 2 } });
         console.log('[Startup] ✓ ensureDatabaseSeeded completed.');
     }
     catch (err) {

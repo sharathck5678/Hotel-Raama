@@ -24,6 +24,7 @@ import { validateGSTIN } from '../utils/gstinValidator';
 import { MealPricingService } from '../services/MealPricingService';
 import { withDistributedLock } from '../utils/asyncLock';
 import { PhysicalRoomAllocationService } from '../services/PhysicalRoomAllocationService';
+import { validateRoomOccupancy } from '../utils/occupancyValidator';
 
 export class PublicController {
   private static async resolveRoomTypeId(roomTypeId: any): Promise<string | null> {
@@ -280,6 +281,16 @@ export class PublicController {
         return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
       }
 
+      const roomType = await RoomType.findById(resolvedRoomTypeId);
+      if (!roomType) {
+        return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+      }
+
+      const occupancyCheck = validateRoomOccupancy(roomType, numGuests);
+      if (!occupancyCheck.isValid) {
+        return res.status(400).json({ success: false, message: occupancyCheck.message });
+      }
+
       // Check availability
       const availability = await AvailabilityEngine.checkAvailability(resolvedRoomTypeId, checkInDate, checkOutDate);
       
@@ -307,7 +318,8 @@ export class PublicController {
         },
       });
     } catch (error: any) {
-      return res.status(500).json({ success: false, message: error.message || 'Error checking availability.' });
+      const statusCode = error.message?.includes('allows a maximum of 2 guests') ? 400 : 500;
+      return res.status(statusCode).json({ success: false, message: error.message || 'Error checking availability.' });
     }
   }
 
@@ -350,6 +362,16 @@ export class PublicController {
       const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
       if (!resolvedRoomTypeId) {
         return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+      }
+
+      const roomType = await RoomType.findById(resolvedRoomTypeId);
+      if (!roomType) {
+        return res.status(400).json({ success: false, message: 'Invalid or unrecognized room type.' });
+      }
+
+      const occupancyCheck = validateRoomOccupancy(roomType, numGuests);
+      if (!occupancyCheck.isValid) {
+        return res.status(400).json({ success: false, message: occupancyCheck.message });
       }
 
       // 1. Transactional Availability Check
@@ -628,7 +650,8 @@ export class PublicController {
         });
       });
     } catch (error: any) {
-      return res.status(500).json({ success: false, message: error.message || 'Failed to create booking.' });
+      const statusCode = error.message?.includes('allows a maximum of 2 guests') ? 400 : 500;
+      return res.status(statusCode).json({ success: false, message: error.message || 'Failed to create booking.' });
     }
   }
 
@@ -1599,6 +1622,17 @@ export class PublicController {
       if (roomTypeId && checkIn && checkOut) {
         const resolvedRoomTypeId = await PublicController.resolveRoomTypeId(roomTypeId);
         if (resolvedRoomTypeId) {
+          const roomType = await RoomType.findById(resolvedRoomTypeId);
+          if (roomType) {
+            const occupancyCheck = validateRoomOccupancy(roomType, numGuests);
+            if (!occupancyCheck.isValid) {
+              return res.status(400).json({
+                success: false,
+                message: occupancyCheck.message,
+                data: { valid: false },
+              });
+            }
+          }
           const pricing = await PricingEngine.calculateBookingPrice(
             resolvedRoomTypeId,
             new Date(checkIn),
@@ -1637,6 +1671,13 @@ export class PublicController {
         },
       });
     } catch (error: any) {
+      if (error.message?.includes('allows a maximum of 2 guests')) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+          data: { valid: false },
+        });
+      }
       return res.status(500).json({
         success: false,
         message: 'Unable to apply coupon. Please try again.',

@@ -104,7 +104,7 @@ export const FALLBACK_ROOM_TYPES = [
     description: 'Presidential suite with separate living lounge, master bedroom, luxury bathtub, and VIP service.',
     basePrice: 3500,
     cpPrice: 4000,
-    maxOccupancy: 4,
+    maxOccupancy: 2,
     isAc: true,
     amenities: HOTEL_FACILITIES,
     images: ['/suite-room.webp', '/hotel-corridor.webp', '/suite-room-angle.webp'],
@@ -5605,7 +5605,12 @@ export const mockCalculateAvailability = (payload: any) => {
   const baseRate = isSingle ? (isSingleCategory ? defaultBase : Math.max(0, defaultBase - 200)) : defaultBase;
   const roomTotal = baseRate * numNights;
 
-  const maxOcc = room.maxOccupancy || 2;
+  const isSuite = room.code === 'SUITE_ROOM' || /suite/i.test(room.name || '');
+  if (isSuite && numGuests > 2) {
+    throw new Error('Suite Room allows a maximum of 2 guests.');
+  }
+
+  const maxOcc = isSuite ? 2 : (room.maxOccupancy || 2);
   const requestedExtra = payload.extraPerson ? 1 : 0;
   const totalGuests = Math.max(numGuests, 1) + requestedExtra;
   const extraCount = (totalGuests > maxOcc && (payload.extraPerson || numGuests > maxOcc))
